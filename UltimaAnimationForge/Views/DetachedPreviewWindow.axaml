@@ -1,0 +1,170 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:UltimaAnimationForge.ViewModels"
+        x:Class="UltimaAnimationForge.Views.DetachedPreviewWindow"
+        x:DataType="vm:DetachedPreviewViewModel"
+        Width="1000"
+        Height="760"
+        MinWidth="760"
+        MinHeight="560"
+        Background="#1B1F25"
+        Foreground="White"
+        Title="Detached Preview"
+        mc:Ignorable="d">
+
+    <Design.DataContext>
+        <vm:DetachedPreviewViewModel />
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <Border Grid.Row="0"
+                Background="#23282F"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="12,10">
+            <WrapPanel Orientation="Horizontal"
+                       VerticalAlignment="Center">
+                <CheckBox Content="Follow Main Selection"
+                          IsChecked="{Binding FollowMainSelection, Mode=TwoWay}"
+                          VerticalAlignment="Center"
+                          Margin="0,0,12,0" />
+
+                <Button Content="Copy Main Selection"
+                        Command="{Binding CopyMainSelectionCommand}"
+                        Margin="0,0,14,0" />
+
+                <TextBlock Text="Animation"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0" />
+
+                <ComboBox Width="250"
+                          ItemsSource="{Binding AnimationEntries}"
+                          SelectedItem="{Binding SelectedAnimation, Mode=TwoWay}"
+                          IsEnabled="{Binding !FollowMainSelection}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Text="Action"
+                           VerticalAlignment="Center"
+                           Margin="14,0,8,0" />
+
+                <ComboBox Width="150"
+                          ItemsSource="{Binding ActionOptions}"
+                          SelectedItem="{Binding SelectedAction, Mode=TwoWay}"
+                          IsEnabled="{Binding !FollowMainSelection}" />
+
+                <TextBlock Text="Dir"
+                           VerticalAlignment="Center"
+                           Margin="14,0,8,0" />
+
+                <ComboBox Width="130"
+                          ItemsSource="{Binding DirectionOptions}"
+                          SelectedItem="{Binding SelectedDirection, Mode=TwoWay}"
+                          IsEnabled="{Binding !FollowMainSelection}" />
+            </WrapPanel>
+        </Border>
+
+        <Border Grid.Row="1"
+                Background="#1E232A"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+            <WrapPanel Orientation="Horizontal"
+                       VerticalAlignment="Center">
+                <Button Command="{Binding PlayCommand}"
+                        Width="40"
+                        Height="32"
+                        Margin="0,0,6,0"
+                        Content="▶" />
+
+                <Button Command="{Binding PauseCommand}"
+                        Width="40"
+                        Height="32"
+                        Margin="0,0,6,0"
+                        Content="⏸" />
+
+                <Button Command="{Binding PreviousFrameCommand}"
+                        Width="40"
+                        Height="32"
+                        Margin="0,0,6,0"
+                        Content="◀" />
+
+                <Button Command="{Binding NextFrameCommand}"
+                        Width="40"
+                        Height="32"
+                        Margin="0,0,14,0"
+                        Content="▶" />
+
+                <TextBlock Text="Speed"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0" />
+
+                <Slider Width="140"
+                        Minimum="1"
+                        Maximum="20"
+                        Value="{Binding PlaybackSpeed, Mode=TwoWay}"
+                        Margin="0,0,8,0" />
+
+                <TextBlock Text="{Binding PlaybackSpeedText}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,14,0" />
+
+                <TextBlock Text="Zoom"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0" />
+
+                <Slider Width="140"
+                        Minimum="1"
+                        Maximum="8"
+                        Value="{Binding ZoomLevel, Mode=TwoWay}"
+                        Margin="0,0,8,0" />
+
+                <TextBlock Text="{Binding ZoomText}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,14,0" />
+
+                <CheckBox Content="Checker Background"
+                          IsChecked="{Binding ShowCheckerBackground, Mode=TwoWay}"
+                          VerticalAlignment="Center" />
+            </WrapPanel>
+        </Border>
+
+        <Border Grid.Row="2"
+                Background="#1E232A"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+            <StackPanel Spacing="4">
+                <TextBlock Text="{Binding CurrentFrameDisplayText}"
+                           HorizontalAlignment="Center"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding PreviewInfoText}"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="3"
+                Background="{Binding PreviewBackgroundBrush}"
+                Padding="12">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <Grid HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      MinHeight="420">
+                    <Image Source="{Binding PreviewBitmap}"
+                           Width="{Binding PreviewImageWidth}"
+                           Height="{Binding PreviewImageHeight}"
+                           Stretch="Fill" />
+                </Grid>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Window>

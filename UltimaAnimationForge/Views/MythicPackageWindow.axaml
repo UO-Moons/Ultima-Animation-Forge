@@ -1,0 +1,290 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UltimaAnimationForge.Views.MythicPackageWindow"
+        x:CompileBindings="False"
+        Width="1400"
+        Height="820"
+        MinWidth="1180"
+        MinHeight="720"
+        Title="EC / KR Mythic Package Viewer"
+        Background="#15181D">
+
+    <Grid RowDefinitions="Auto,*"
+          ColumnDefinitions="360,*">
+
+        <!-- Top toolbar -->
+        <Border Grid.Row="0"
+                Grid.ColumnSpan="2"
+                Background="#20242B"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="12,10">
+            <Grid ColumnDefinitions="Auto,*"
+                  RowDefinitions="Auto,Auto"
+                  RowSpacing="8">
+
+                <WrapPanel Grid.Row="0"
+                           Grid.Column="0"
+                           Orientation="Horizontal">
+                    <Button Content="Open Package"
+                            Command="{Binding OpenPackageCommand}"
+                            MinWidth="112"
+                            Margin="0,0,8,0"
+                            Padding="12,7" />
+
+                    <!--  <Button Content="Open Dictionary"
+                            Command="{Binding OpenDictionaryCommand}"
+                            MinWidth="124"
+                            Margin="0,0,8,0"
+                            Padding="12,7" />-->
+
+					<Button Content="Export Body VD"
+							Command="{Binding ExportFullAmouVdCommand}"
+							MinWidth="150"
+                            Margin="0,0,8,0"
+                            Padding="12,7" />
+
+                    <!--  <Button Content="Open Animation XML"
+                            Command="{Binding OpenAnimationCollectionCommand}"
+                            MinWidth="150"
+                            Margin="0,0,18,0"
+                            Padding="12,7" /> -->
+
+                    <Button Content="Export Selected"
+                            Command="{Binding ExportSelectedCommand}"
+                            MinWidth="124"
+                            Margin="0,0,8,0"
+                            Padding="12,7" />
+
+                    <Button Content="Export All"
+                            Command="{Binding ExportAllCommand}"
+                            MinWidth="96"
+                            Margin="0,0,8,0"
+                            Padding="12,7" />
+
+                    <Button Content="Export Frames"
+                            Command="{Binding ExportAmouFramesCommand}"
+                            MinWidth="120"
+                            Margin="0,0,8,0"
+                            Padding="12,7" />
+                </WrapPanel>
+
+                <TextBlock Grid.Row="1"
+                           Grid.ColumnSpan="2"
+                           Text="{Binding PackagePath}"
+                           Foreground="#C6D0DC"
+                           FontSize="12"
+                           TextTrimming="CharacterEllipsis" />
+            </Grid>
+        </Border>
+
+        <!-- Left browser -->
+        <Border Grid.Row="1"
+                Grid.Column="0"
+                Background="#1B1F26"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,1,0"
+                Padding="10">
+            <Grid RowDefinitions="Auto,Auto,Auto,*"
+                  RowSpacing="8">
+
+                <TextBlock Grid.Row="0"
+                           Text="Animation Browser"
+                           Foreground="#D5DCE4"
+                           FontWeight="Bold" />
+
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="Auto,*"
+                      RowDefinitions="Auto,Auto"
+                      ColumnSpacing="8"
+                      RowSpacing="8">
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Text="Body"
+                               Foreground="#D5DCE4"
+                               VerticalAlignment="Center" />
+
+                    <ComboBox Grid.Row="0"
+                              Grid.Column="1"
+                              HorizontalAlignment="Stretch"
+                              ItemsSource="{Binding EcBodyOptions}"
+                              SelectedItem="{Binding SelectedEcBody, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Text="Action"
+                               Foreground="#D5DCE4"
+                               VerticalAlignment="Center" />
+
+                    <ComboBox Grid.Row="1"
+                              Grid.Column="1"
+                              HorizontalAlignment="Stretch"
+                              ItemsSource="{Binding EcActionOptions}"
+                              SelectedItem="{Binding SelectedEcAction, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+
+                <TextBlock Grid.Row="2"
+                           Text="Package Entries"
+                           Foreground="#D5DCE4"
+                           FontWeight="Bold"
+                           Margin="0,4,0,0" />
+
+                <ListBox Grid.Row="3"
+                         ItemsSource="{Binding Entries}"
+                         SelectedItem="{Binding SelectedEntry, Mode=TwoWay}"
+                         Background="#15181D"
+                         Foreground="#D5DCE4">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}"
+                                       FontSize="12"
+                                       TextTrimming="CharacterEllipsis" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Main content -->
+        <Grid Grid.Row="1"
+              Grid.Column="1"
+              RowDefinitions="*,Auto"
+              Margin="12">
+
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="420,*"
+                  ColumnSpacing="12">
+
+                <!-- Preview column -->
+                <Border Grid.Column="0"
+                        Background="#0F1115"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14">
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Row="0"
+                                   Text="Preview"
+                                   Foreground="#D5DCE4"
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,10" />
+
+                        <Border Grid.Row="1"
+                                Background="#20242B"
+                                BorderBrush="#4A5564"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12">
+                            <Viewbox Stretch="Uniform">
+                                <Image Source="{Binding PreviewBitmap}"
+                                       Width="320"
+                                       Height="320"
+                                       Stretch="Uniform" />
+                            </Viewbox>
+                        </Border>
+
+                        <StackPanel Grid.Row="2"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Spacing="10"
+                                    Margin="0,12,0,0">
+                            <Button Content="&lt;"
+                                    Command="{Binding PreviousFrameCommand}"
+                                    Width="40"
+                                    Height="32" />
+
+                            <TextBlock Text="{Binding CurrentFrameText}"
+                                       Foreground="#D5DCE4"
+                                       VerticalAlignment="Center"
+                                       FontWeight="Bold" />
+
+                            <Button Content="&gt;"
+                                    Command="{Binding NextFrameCommand}"
+                                    Width="40"
+                                    Height="32" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Debug / hex column -->
+                <Grid Grid.Column="1"
+                      RowDefinitions="260,*"
+                      RowSpacing="12">
+
+                    <Border Grid.Row="0"
+                            Background="#0F1115"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Grid.Row="0"
+                                       Text="Debug Info"
+                                       Foreground="#D5DCE4"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,8" />
+
+                            <ScrollViewer Grid.Row="1"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                <TextBlock Text="{Binding SelectedInfoText}"
+                                           Foreground="#D5DCE4"
+                                           FontFamily="Consolas"
+                                           FontSize="12"
+                                           TextWrapping="Wrap" />
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Background="#0F1115"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Grid.Row="0"
+                                       Text="Hex Preview"
+                                       Foreground="#D5DCE4"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,8" />
+
+<ScrollViewer Grid.Row="1"
+              HorizontalScrollBarVisibility="Auto"
+              VerticalScrollBarVisibility="Auto">
+    <TextBox Text="{Binding HexPreviewText}"
+             FontFamily="Consolas"
+             FontSize="12"
+             IsReadOnly="True"
+             AcceptsReturn="True"
+             TextWrapping="NoWrap"
+             Background="#0B0D10"
+             Foreground="#D5DCE4"
+             BorderThickness="0"
+             MinHeight="180" />
+</ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <TextBlock Grid.Row="1"
+                       Text="{Binding StatusText}"
+                       Foreground="#9EA8B4"
+                       Margin="0,8,0,0"
+                       TextTrimming="CharacterEllipsis" />
+        </Grid>
+    </Grid>
+</Window>

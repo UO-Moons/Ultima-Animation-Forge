@@ -1,0 +1,1609 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:vm="using:UltimaAnimationForge.ViewModels"
+		x:Class="UltimaAnimationForge.Views.MainWindow"
+		x:DataType="vm:MainWindowViewModel"
+		Width="1500"
+		Height="940"
+		MinWidth="1180"
+		MinHeight="760"
+		Background="#1B1F25"
+		Foreground="White"
+		Title="Ultima Animation Forge Alpha 9"
+		DragDrop.AllowDrop="True"
+		mc:Ignorable="d">
+
+	<Design.DataContext>
+		<vm:MainWindowViewModel />
+	</Design.DataContext>
+
+	<Window.KeyBindings>
+		<KeyBinding Gesture="Ctrl+O" Command="{Binding OpenFolderCommand}" />
+		<KeyBinding Gesture="Ctrl+S" Command="{Binding SaveChangesCommand}" />
+		<KeyBinding Gesture="Ctrl+E" Command="{Binding ExportFramesCommand}" />
+		<KeyBinding Gesture="Ctrl+Shift+E" Command="{Binding ExportVdCommand}" />
+		<KeyBinding Gesture="Ctrl+I" Command="{Binding ImportVdCommand}" />
+		<KeyBinding Gesture="Ctrl+Shift+I" Command="{Binding ImportVdToUopCommand}" />
+		<KeyBinding Gesture="Ctrl+P" Command="{Binding PlayCommand}" />
+		<KeyBinding Gesture="Ctrl+Shift+P" Command="{Binding PauseCommand}" />
+		<KeyBinding Gesture="Ctrl+Left" Command="{Binding PreviousFrameCommand}" />
+		<KeyBinding Gesture="Ctrl+Right" Command="{Binding NextFrameCommand}" />
+		<KeyBinding Gesture="Ctrl+R" Command="{Binding ReplaceSelectedFrameCommand}" />
+		<KeyBinding Gesture="Ctrl+Shift+R" Command="{Binding ImportPngSequenceCommand}" />
+		<KeyBinding Gesture="Ctrl+Delete" Command="{Binding DeleteAnimationCommand}" />
+		<KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoFrameEditCommand}" />
+
+		<KeyBinding Gesture="Alt+1" Command="{Binding Direction0Command}" />
+		<KeyBinding Gesture="Alt+2" Command="{Binding Direction1Command}" />
+		<KeyBinding Gesture="Alt+3" Command="{Binding Direction2Command}" />
+		<KeyBinding Gesture="Alt+4" Command="{Binding Direction3Command}" />
+		<KeyBinding Gesture="Alt+5" Command="{Binding Direction4Command}" />
+
+		<KeyBinding Gesture="Alt+C" Command="{Binding ToggleCheckerCommand}" />
+		<KeyBinding Gesture="Alt+L" Command="{Binding ToggleLoopCommand}" />
+	</Window.KeyBindings>
+
+	<Window.Styles>
+		<Style Selector="Button">
+			<Setter Property="Background" Value="#3A424D" />
+			<Setter Property="Foreground" Value="White" />
+			<Setter Property="BorderBrush" Value="#56606D" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="CornerRadius" Value="6" />
+			<Setter Property="Padding" Value="12,7" />
+			<Setter Property="MinHeight" Value="32" />
+		</Style>
+
+		<Style Selector="Button:pointerover">
+			<Setter Property="Background" Value="#46505D" />
+		</Style>
+
+		<Style Selector="Button:pressed">
+			<Setter Property="Background" Value="#2E353F" />
+		</Style>
+
+		<Style Selector="TextBox">
+			<Setter Property="Background" Value="#101419" />
+			<Setter Property="Foreground" Value="White" />
+			<Setter Property="BorderBrush" Value="#505A66" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="Padding" Value="8,6" />
+			<Setter Property="CornerRadius" Value="6" />
+		</Style>
+
+		<Style Selector="ComboBox">
+			<Setter Property="Background" Value="#101419" />
+			<Setter Property="Foreground" Value="White" />
+			<Setter Property="BorderBrush" Value="#505A66" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="MinHeight" Value="32" />
+		</Style>
+
+		<Style Selector="Slider">
+			<Setter Property="VerticalAlignment" Value="Center" />
+		</Style>
+
+		<Style Selector="Menu">
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="Foreground" Value="White" />
+		</Style>
+
+		<Style Selector="MenuItem">
+			<Setter Property="Foreground" Value="White" />
+		</Style>
+
+		<Style Selector="MenuItem.topAction">
+			<Setter Property="Background" Value="#3A424D" />
+			<Setter Property="BorderBrush" Value="#56606D" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="Padding" Value="12,7" />
+			<Setter Property="Margin" Value="0,0,8,0" />
+		</Style>
+
+		<Style Selector="MenuItem.topAction:pointerover">
+			<Setter Property="Background" Value="#46505D" />
+		</Style>
+
+		<Style Selector="ListBox">
+			<Setter Property="Background" Value="#1F242B" />
+			<Setter Property="BorderBrush" Value="#303844" />
+			<Setter Property="BorderThickness" Value="1" />
+		</Style>
+
+		<Style Selector="ListBoxItem">
+			<Setter Property="Padding" Value="0" />
+			<Setter Property="Margin" Value="0,0,0,6" />
+			<Setter Property="Background" Value="Transparent" />
+		</Style>
+
+		<Style Selector="ListBoxItem:pointerover">
+			<Setter Property="Background" Value="#24303B" />
+		</Style>
+
+		<Style Selector="ListBoxItem:selected">
+			<Setter Property="Background" Value="#1B3E58" />
+		</Style>
+
+		<Style Selector="ListBoxItem:selected:pointerover">
+			<Setter Property="Background" Value="#254F6F" />
+		</Style>
+
+		<Style Selector="ListBoxItem /template/ ContentPresenter">
+			<Setter Property="Background" Value="{TemplateBinding Background}" />
+			<Setter Property="Padding" Value="0" />
+		</Style>
+
+		<Style Selector="Border.card">
+			<Setter Property="Background" Value="#232A32" />
+			<Setter Property="BorderBrush" Value="#343D49" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="CornerRadius" Value="8" />
+			<Setter Property="Padding" Value="0" />
+		</Style>
+
+		<Style Selector="ListBoxItem:pointerover Border.card">
+			<Setter Property="Background" Value="#283440" />
+			<Setter Property="BorderBrush" Value="#66839C" />
+		</Style>
+
+		<Style Selector="ListBoxItem:selected Border.card">
+			<Setter Property="Background" Value="#22455F" />
+			<Setter Property="BorderBrush" Value="#73D0FF" />
+			<Setter Property="BorderThickness" Value="2" />
+		</Style>
+
+		<Style Selector="ListBoxItem:selected:pointerover Border.card">
+			<Setter Property="Background" Value="#2C5372" />
+			<Setter Property="BorderBrush" Value="#94DEFF" />
+			<Setter Property="BorderThickness" Value="2" />
+		</Style>
+
+		<Style Selector="Border.selectionBar">
+			<Setter Property="Background" Value="Transparent" />
+		</Style>
+
+		<Style Selector="ListBoxItem:pointerover Border.selectionBar">
+			<Setter Property="Background" Value="#57718B" />
+		</Style>
+
+		<Style Selector="ListBoxItem:selected Border.selectionBar">
+			<Setter Property="Background" Value="#73D0FF" />
+		</Style>
+
+		<Style Selector="ListBoxItem:selected:pointerover Border.selectionBar">
+			<Setter Property="Background" Value="#94DEFF" />
+		</Style>
+
+		<Style Selector="TextBlock.subtleText">
+			<Setter Property="Foreground" Value="#A9BED0" />
+		</Style>
+
+		<Style Selector="ListBoxItem:selected TextBlock.subtleText">
+			<Setter Property="Foreground" Value="#DDF4FF" />
+		</Style>
+
+		<Style Selector="ListBox.thumbnailList">
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderThickness" Value="0" />
+		</Style>
+
+		<Style Selector="ListBox.thumbnailList ListBoxItem">
+			<Setter Property="Padding" Value="0" />
+			<Setter Property="Margin" Value="0,0,8,0" />
+			<Setter Property="Background" Value="Transparent" />
+		</Style>
+
+		<Style Selector="ListBox.thumbnailList ListBoxItem /template/ ContentPresenter">
+			<Setter Property="Background" Value="{TemplateBinding Background}" />
+			<Setter Property="Padding" Value="0" />
+			<Setter Property="HorizontalAlignment" Value="Left" />
+			<Setter Property="VerticalAlignment" Value="Top" />
+		</Style>
+
+		<Style Selector="Border.thumbCard">
+			<Setter Property="Background" Value="#182028" />
+			<Setter Property="BorderBrush" Value="#37424D" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="CornerRadius" Value="7" />
+			<Setter Property="Padding" Value="6" />
+			<Setter Property="Width" Value="58" />
+			<Setter Property="Height" Value="78" />
+		</Style>
+
+		<Style Selector="ListBox.thumbnailList ListBoxItem:pointerover Border.thumbCard">
+			<Setter Property="Background" Value="#22303B" />
+			<Setter Property="BorderBrush" Value="#6D8AA2" />
+		</Style>
+
+		<Style Selector="ListBox.thumbnailList ListBoxItem:selected Border.thumbCard">
+			<Setter Property="Background" Value="#1E3A4E" />
+			<Setter Property="BorderBrush" Value="#7DD8FF" />
+			<Setter Property="BorderThickness" Value="2" />
+		</Style>
+
+		<Style Selector="ListBox.thumbnailList ListBoxItem:selected:pointerover Border.thumbCard">
+			<Setter Property="Background" Value="#284A62" />
+			<Setter Property="BorderBrush" Value="#9BE3FF" />
+			<Setter Property="BorderThickness" Value="2" />
+		</Style>
+
+		<Style Selector="Border.thumbImageHost">
+			<Setter Property="Background" Value="#0F1419" />
+			<Setter Property="BorderBrush" Value="#2D3741" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="CornerRadius" Value="4" />
+			<Setter Property="Padding" Value="2" />
+			<Setter Property="Width" Value="44" />
+			<Setter Property="Height" Value="44" />
+			<Setter Property="HorizontalAlignment" Value="Center" />
+			<Setter Property="VerticalAlignment" Value="Top" />
+		</Style>
+
+		<Style Selector="TextBlock.thumbLabel">
+			<Setter Property="Foreground" Value="#D6E2ED" />
+		</Style>
+
+		<Style Selector="ListBox.thumbnailList ListBoxItem:selected TextBlock.thumbLabel">
+			<Setter Property="Foreground" Value="White" />
+		</Style>
+
+		<Style Selector="Expander">
+			<Setter Property="Foreground" Value="White" />
+		</Style>
+
+		<Style Selector="Expander /template/ ToggleButton">
+			<Setter Property="Background" Value="#232A32" />
+			<Setter Property="Foreground" Value="White" />
+		</Style>
+	</Window.Styles>
+
+	<Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+
+		<!-- top bar -->
+		<Border Grid.Row="0"
+				Background="#23282F"
+				BorderBrush="#343B46"
+				BorderThickness="0,0,0,1"
+				Padding="12,10">
+			<Grid ColumnDefinitions="*,360">
+				<WrapPanel Grid.Column="0"
+						   Orientation="Horizontal"
+						   VerticalAlignment="Center">
+					<TextBlock Text="Profile"
+							   VerticalAlignment="Center"
+							   Margin="0,0,8,0"
+							   Foreground="#D5DCE4" />
+
+					<ComboBox Width="180"
+							  ItemsSource="{Binding ProfileOptions}"
+							  SelectedIndex="{Binding SelectedProfileIndex, Mode=TwoWay}"
+							  Margin="0,0,8,0" />
+
+					<Button Content="Manage Profiles"
+							Command="{Binding ManageProfilesCommand}"
+							Margin="0,0,8,0" />
+
+					<Button Content="Open UO Folder"
+							Command="{Binding OpenFolderCommand}"
+							Margin="0,0,8,0" />
+
+					<Button Content="Save Changes"
+							Command="{Binding SaveChangesCommand}"
+							IsEnabled="{Binding CanSaveChanges}"
+							Margin="0,0,8,0" />
+
+					<Button Content="?"
+							Command="{Binding HelpCommand}"
+							Width="36"
+							Margin="0,0,8,0"
+							ToolTip.Tip="Show help and shortcuts" />
+
+					<Button Content="Preview Window"
+							Command="{Binding PopOutPreviewCommand}"
+							Margin="0,0,8,0" />
+
+					<Menu Background="Transparent"
+						  IsVisible="{Binding ShowAnimationOnlyControls}">
+						<MenuItem Header="Edit ▼"
+								  Classes="topAction">
+							        <MenuItem Header="MUL Slot View"
+                  ToggleType="CheckBox"
+                  IsChecked="{Binding ShowMulSlotView, Mode=TwoWay}" />
+							<MenuItem Header="Replace Frame"
+									  Command="{Binding ReplaceSelectedFrameCommand}" />
+							<MenuItem Header="Remove Frame"
+									  Command="{Binding RemoveSelectedFrameCommand}" />
+							<MenuItem Header="Import PNG Sequence"
+									  Command="{Binding ImportPngSequenceCommand}" />
+							<Separator />
+							<MenuItem Header="Undo"
+									  Command="{Binding UndoFrameEditCommand}"
+									  IsEnabled="{Binding CanUndoFrameEdit}" />
+						</MenuItem>
+					</Menu>
+
+					<Menu Background="Transparent">
+						<MenuItem Header="Import / Export ▼"
+								  Classes="topAction">
+							<MenuItem Header="Open EC / KR Package Viewer"
+									Command="{Binding OpenMythicPackageViewerCommand}" />
+							<Separator />
+							<MenuItem Header="Create Empty MUL/IDX"
+									  Command="{Binding CreateEmptyLegacyMulIdxCommand}" />
+							<Separator />
+							<MenuItem Header="Export Frames"
+									  Command="{Binding ExportFramesCommand}" />
+							<MenuItem Header="Export VD"
+									  Command="{Binding ExportVdCommand}"
+									  IsVisible="{Binding ShowAnimationView}" />
+							<Separator />
+							<MenuItem Header="Import VD"
+									  Command="{Binding ImportVdCommand}"
+									  IsVisible="{Binding ShowSlotView}" />
+							<MenuItem Header="Import UOP VD"
+									  Command="{Binding ImportVdToUopCommand}"
+									  IsVisible="{Binding ShowSlotView}" />
+							<MenuItem Header="Import Sprite Sheet"
+									  Command="{Binding ImportSpriteSheetCommand}" />
+							<Separator />
+							<MenuItem Header="Delete Animation"
+									  Command="{Binding DeleteAnimationCommand}"
+									  IsVisible="{Binding ShowAnimationView}" />
+						</MenuItem>
+					</Menu>
+					<Button Content="Uox3 - Discord"
+						Command="{Binding OpenDiscordCommand}"
+						Margin="6,0"/>
+				</WrapPanel>
+
+				<Border Grid.Column="1"
+						Background="#1A1F25"
+						BorderBrush="#39414D"
+						BorderThickness="1"
+						CornerRadius="8"
+						Padding="10,8"
+						Margin="12,0,0,0">
+					<StackPanel Spacing="4">
+						<TextBlock Text="{Binding StatusText}"
+								   Foreground="#EDF1F5"
+								   TextWrapping="Wrap"
+								   TextTrimming="CharacterEllipsis"
+								   MaxLines="2" />
+						<TextBlock Text="{Binding UnsavedChangesText}"
+								   Foreground="#F2C14E"
+								   FontWeight="Bold"
+								   IsVisible="{Binding HasAnyUnsavedChanges}" />
+					</StackPanel>
+				</Border>
+			</Grid>
+		</Border>
+
+<!-- filters -->
+<Border Grid.Row="1"
+        Background="#1E232A"
+        BorderBrush="#343B46"
+        BorderThickness="0,0,0,1"
+        Padding="12,10">
+    <Grid ColumnDefinitions="Auto,144,12,Auto,98,12,Auto,100,118,12,Auto,128,18,Auto,8,Auto,132,8,Auto,176,8,Auto,124,8,Auto,108,*"
+          VerticalAlignment="Center">
+
+        <!-- File -->
+        <TextBlock Grid.Column="0"
+                   Text="File"
+                   VerticalAlignment="Center"
+                   Margin="0,0,8,0"
+                   Foreground="#D5DCE4" />
+
+        <ComboBox Grid.Column="1"
+                  ItemsSource="{Binding AnimationFileOptions}"
+                  SelectedItem="{Binding SelectedAnimationFile}"
+                  VerticalAlignment="Center" />
+
+        <!-- Type -->
+        <TextBlock Grid.Column="3"
+                   Text="Type"
+                   VerticalAlignment="Center"
+                   Margin="0,0,8,0"
+                   Foreground="#D5DCE4"
+                   IsVisible="{Binding ShowAnimationOnlyControls}" />
+
+        <ComboBox Grid.Column="4"
+                  ItemsSource="{Binding BodyTypeOptions}"
+                  SelectedItem="{Binding SelectedBodyType}"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding ShowAnimationOnlyControls}" />
+
+        <!-- Direction -->
+        <TextBlock Grid.Column="6"
+                   Text="Dir"
+                   VerticalAlignment="Center"
+                   Margin="0,0,8,0"
+                   Foreground="#D5DCE4"
+                   IsVisible="{Binding ShowActionDirectionControls}" />
+
+        <Slider Grid.Column="7"
+                Minimum="0"
+                Maximum="4"
+                TickFrequency="1"
+                IsSnapToTickEnabled="True"
+                Value="{Binding SelectedDirectionSliderValue}"
+                VerticalAlignment="Center"
+                IsVisible="{Binding ShowActionDirectionControls}" />
+
+        <ComboBox Grid.Column="8"
+                  ItemsSource="{Binding DirectionOptions}"
+                  SelectedItem="{Binding SelectedDirection}"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding ShowActionDirectionControls}" />
+
+        <!-- Action -->
+        <TextBlock Grid.Column="10"
+                   Text="Action"
+                   VerticalAlignment="Center"
+                   Margin="0,0,8,0"
+                   Foreground="#D5DCE4"
+                   IsVisible="{Binding ShowActionDirectionControls}" />
+
+        <ComboBox Grid.Column="11"
+                  ItemsSource="{Binding ActionOptions}"
+                  SelectedItem="{Binding SelectedAction}"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding ShowActionDirectionControls}" />
+
+        <!-- Compare target -->
+        <TextBlock Grid.Column="13"
+                   Text="{Binding CompareTargetHeaderText}"
+                   VerticalAlignment="Center"
+                   Margin="0,0,6,0"
+                   Foreground="#9FB2C8"
+                   FontWeight="SemiBold"
+                   IsVisible="{Binding ShowCompareSelectorBar}" />
+
+        <TextBlock Grid.Column="15"
+                   Text="File"
+                   VerticalAlignment="Center"
+                   Margin="0,0,4,0"
+                   Foreground="#D5DCE4"
+                   IsVisible="{Binding ShowCompareSelectorBar}" />
+
+        <ComboBox Grid.Column="16"
+                  Width="132"
+                  ItemsSource="{Binding CompareAnimationFileOptions}"
+                  SelectedItem="{Binding CompareSelectedAnimationFile}"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding ShowCompareSelectorBar}" />
+
+        <TextBlock Grid.Column="18"
+                   Text="Body"
+                   VerticalAlignment="Center"
+                   Margin="0,0,4,0"
+                   Foreground="#D5DCE4"
+                   IsVisible="{Binding ShowCompareSelectorBar}" />
+
+        <ComboBox Grid.Column="19"
+                  Width="176"
+                  ItemsSource="{Binding CompareAnimationEntries}"
+                  SelectedItem="{Binding CompareSelectedAnimation}"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding ShowCompareSelectorBar}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Spacing="0">
+                        <TextBlock Text="{Binding DisplayName}"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding SecondaryText}"
+                                   FontSize="11"
+                                   Foreground="#9FB2C8"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <TextBlock Grid.Column="21"
+                   Text="Action"
+                   VerticalAlignment="Center"
+                   Margin="0,0,4,0"
+                   Foreground="#D5DCE4"
+                   IsVisible="{Binding ShowCompareSelectorBar}" />
+
+        <ComboBox Grid.Column="22"
+                  Width="124"
+                  ItemsSource="{Binding CompareActionOptions}"
+                  SelectedItem="{Binding CompareSelectedAction}"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding ShowCompareSelectorBar}" />
+
+        <TextBlock Grid.Column="24"
+                   Text="Dir"
+                   VerticalAlignment="Center"
+                   Margin="0,0,4,0"
+                   Foreground="#D5DCE4"
+                   IsVisible="{Binding ShowCompareSelectorBar}" />
+
+        <ComboBox Grid.Column="25"
+                  Width="108"
+                  ItemsSource="{Binding CompareDirectionOptions}"
+                  SelectedItem="{Binding CompareSelectedDirection}"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  IsVisible="{Binding ShowCompareSelectorBar}" />
+    </Grid>
+</Border>
+
+		<!-- live preview row -->
+		<Border Grid.Row="4"
+				Background="#1E232A"
+				BorderBrush="#343B46"
+				BorderThickness="0,0,0,1"
+				Padding="12,8"
+				IsVisible="{Binding ShowAnimationOnlyControls}">
+			<StackPanel Spacing="8">
+				<TextBlock Text="Live Preview"
+						   FontWeight="Bold"
+						   Foreground="#D5DCE4" />
+
+				<WrapPanel Orientation="Horizontal"
+						   VerticalAlignment="Center">
+					<CheckBox Content="Sharpen"
+							  IsChecked="{Binding LivePreviewSharpenEnabled}"
+							  VerticalAlignment="Center"
+							  Margin="0,0,6,0" />
+
+					<NumericUpDown Width="70"
+								   Minimum="0"
+								   Maximum="5"
+								   Increment="0.1"
+								   FormatString="0.0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding LivePreviewSharpenAmountValue, Mode=TwoWay}"
+								   Margin="0,0,8,0" />
+
+					<ComboBox Width="100"
+							  SelectedIndex="{Binding LivePreviewSharpenModeIndex}"
+							  Margin="0,0,12,0">
+						<ComboBoxItem Content="Gaussian" />
+						<ComboBoxItem Content="Pixel" />
+					</ComboBox>
+
+					<CheckBox Content="Contrast"
+							  IsChecked="{Binding LivePreviewContrastEnabled}"
+							  VerticalAlignment="Center"
+							  Margin="0,0,6,0" />
+
+					<NumericUpDown Width="70"
+								   Minimum="0"
+								   Maximum="2"
+								   Increment="0.05"
+								   FormatString="0.00"
+								   ShowButtonSpinner="False"
+								   Value="{Binding LivePreviewContrastAmountValue, Mode=TwoWay}"
+								   Margin="0,0,12,0" />
+
+					<CheckBox Content="Outline"
+							  IsChecked="{Binding LivePreviewOutlineEnabled}"
+							  VerticalAlignment="Center"
+							  Margin="0,0,6,0" />
+
+					<NumericUpDown Width="70"
+								   Minimum="0"
+								   Maximum="1"
+								   Increment="0.05"
+								   FormatString="0.00"
+								   ShowButtonSpinner="False"
+								   Value="{Binding LivePreviewOutlineStrengthValue, Mode=TwoWay}"
+								   Margin="0,0,18,0" />
+
+					<TextBlock Text="Mode"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<ComboBox Width="150"
+							  ItemsSource="{Binding CompareOverlaySyncModeOptions}"
+							  SelectedItem="{Binding CompareOverlaySyncMode}"
+							  Margin="0,0,6,0" />
+
+					<TextBlock Text="F"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4"
+							   IsVisible="{Binding IsCompareOverlayManualFrameMode}" />
+
+					<NumericUpDown Width="70"
+								   Minimum="0"
+								   Maximum="999"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding CompareOverlayFrameIndex, Mode=TwoWay}"
+								   Margin="0,0,6,0"
+								   IsVisible="{Binding IsCompareOverlayManualFrameMode}" />
+
+					<TextBlock Text="X"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="70"
+								   Minimum="-500"
+								   Maximum="500"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding CompareOverlayOffsetX, Mode=TwoWay}"
+								   Margin="0,0,6,0" />
+
+					<TextBlock Text="Y"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="70"
+								   Minimum="-500"
+								   Maximum="500"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding CompareOverlayOffsetY, Mode=TwoWay}"
+								   Margin="0,0,6,0" />
+
+					<TextBlock Text="Opacity"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="78"
+								   Minimum="0"
+								   Maximum="100"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding CompareOverlayOpacityPercent, Mode=TwoWay}"
+								   Margin="0,0,8,0" />
+
+					<Menu Background="Transparent">
+						<MenuItem Header="Compare ▼"
+								  Classes="topAction">
+							<MenuItem Header="Mount Rider Align"
+									  Command="{Binding SetupMountRiderAlignmentCommand}" />
+							<Separator />
+							<MenuItem Header="Compare On"
+									  ToggleType="CheckBox"
+									  IsChecked="{Binding CompareOverlayEnabled, Mode=TwoWay}" />
+							<MenuItem Header="Side-by-Side Preview"
+									  ToggleType="CheckBox"
+									  IsChecked="{Binding CompareSideBySideEnabled, Mode=TwoWay}" />
+							<MenuItem Header="Clear Compare"
+									  Command="{Binding ClearCompareOverlayCommand}" />
+							<MenuItem Header="Apply Compare To Frame"
+									  Command="{Binding ApplyCompareOverlayToCurrentFrameCommand}" />
+							<MenuItem Header="Apply Compare To Direction"
+									  Command="{Binding ApplyCompareOverlayToCurrentDirectionCommand}" />
+							<Separator />
+							<MenuItem Header="Save Compare Pose For Frame"
+									  Command="{Binding SaveComparePoseForCurrentFrameCommand}" />
+							<MenuItem Header="Copy Compare Pose From Previous"
+									  Command="{Binding CopyComparePoseFromPreviousFrameCommand}" />
+							<MenuItem Header="Clear Compare Pose For Frame"
+									  Command="{Binding ClearComparePoseForCurrentFrameCommand}" />
+							<Separator />
+							<MenuItem Header="{Binding CompareOverlayDragModeButtonText}"
+									  Command="{Binding ToggleCompareOverlayDragModeCommand}" />
+						</MenuItem>
+					</Menu>
+
+					<TextBlock Text="X"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="70"
+								   Minimum="-500"
+								   Maximum="500"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding PropOverlayOffsetXValue, Mode=TwoWay}"
+								   Margin="0,0,6,0" />
+
+					<TextBlock Text="Y"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="70"
+								   Minimum="-500"
+								   Maximum="500"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding PropOverlayOffsetYValue, Mode=TwoWay}"
+								   Margin="0,0,6,0" />
+
+					<TextBlock Text="Scale"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="78"
+								   Minimum="1"
+								   Maximum="800"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding PropOverlayScalePercentValue, Mode=TwoWay}"
+								   Margin="0,0,6,0" />
+
+					<TextBlock Text="Rot"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="78"
+								   Minimum="-180"
+								   Maximum="180"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding PropOverlayRotationDegreesValue, Mode=TwoWay}"
+								   Margin="0,0,6,0" />
+
+					<TextBlock Text="Pivot X"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="78"
+								   Minimum="-500"
+								   Maximum="500"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding PropOverlayPivotXValue, Mode=TwoWay}"
+								   Margin="0,0,6,0" />
+
+					<TextBlock Text="Pivot Y"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"
+							   Foreground="#D5DCE4" />
+
+					<NumericUpDown Width="78"
+								   Minimum="-500"
+								   Maximum="500"
+								   Increment="1"
+								   FormatString="0"
+								   ShowButtonSpinner="False"
+								   Value="{Binding PropOverlayPivotYValue, Mode=TwoWay}"
+								   Margin="0,0,8,0" />
+
+					<CheckBox Content="Flip H"
+							  IsChecked="{Binding PropOverlayFlipHorizontal}"
+							  VerticalAlignment="Center"
+							  Margin="0,0,6,0" />
+
+					<CheckBox Content="Flip V"
+							  IsChecked="{Binding PropOverlayFlipVertical}"
+							  VerticalAlignment="Center"
+							  Margin="0,0,8,0" />
+
+					<ComboBox Width="88"
+							  SelectedIndex="{Binding PropOverlayDrawOrderIndex}"
+							  Margin="0,0,8,0">
+						<ComboBoxItem Content="Behind" />
+						<ComboBoxItem Content="Front" />
+					</ComboBox>
+
+					<Menu Background="Transparent">
+						<MenuItem Header="Preview ▼"
+								  Classes="topAction">
+							<MenuItem Header="Apply To Direction"
+									  Command="{Binding ApplyLivePreviewToCurrentDirectionCommand}" />
+							<MenuItem Header="Apply To Full Animation"
+									  Command="{Binding ApplyLivePreviewToFullAnimationCommand}" />
+							<Separator />
+							<MenuItem Header="Reset Preview Effects"
+									  Command="{Binding ResetLivePreviewCommand}" />
+						</MenuItem>
+					</Menu>
+
+					<Button Content="Hue..."
+							Command="{Binding ConfigureLivePreviewHueCommand}"
+							Margin="0,0,6,0" />
+
+					<TextBlock Text="{Binding LivePreviewHueText}"
+							   VerticalAlignment="Center"
+							   Margin="0,0,12,0"
+							   Foreground="#D5DCE4" />
+
+					<Button Content="Scale..."
+							Command="{Binding ConfigureLivePreviewScaleCommand}"
+							Margin="0,0,6,0" />
+
+					<TextBlock Text="{Binding LivePreviewScaleText}"
+							   VerticalAlignment="Center"
+							   Margin="0,0,12,0"
+							   Foreground="#D5DCE4" />
+
+					<Menu Background="Transparent">
+						<MenuItem Header="Props ▼"
+								  Classes="topAction">
+							<MenuItem Header="Prop On"
+									  ToggleType="CheckBox"
+									  IsChecked="{Binding PropOverlayEnabled, Mode=TwoWay}" />
+							<MenuItem Header="Load Prop..."
+									  Command="{Binding LoadPropOverlayCommand}" />
+							<MenuItem Header="Clear Prop"
+									  Command="{Binding ClearPropOverlayCommand}" />
+							<Separator />
+							<MenuItem Header="Apply Prop"
+									  Command="{Binding ApplyPropOverlayToCurrentFrameCommand}" />
+							<MenuItem Header="Apply Prop To Direction"
+									  Command="{Binding ApplyPropOverlayToCurrentDirectionCommand}" />
+							<Separator />
+							<MenuItem Header="{Binding PreviewDragModeButtonText}"
+									  Command="{Binding ToggleCompareOverlayDragModeCommand}" />
+							<Separator />
+							<MenuItem Header="Set Pose"
+									  Command="{Binding SavePropPoseForCurrentFrameCommand}" />
+							<MenuItem Header="Copy Previous Pose"
+									  Command="{Binding CopyPropPoseFromPreviousFrameCommand}" />
+							<MenuItem Header="Clear Pose"
+									  Command="{Binding ClearPropPoseForCurrentFrameCommand}" />
+						</MenuItem>
+					</Menu>
+				</WrapPanel>
+			</StackPanel>
+		</Border>
+
+		<!-- main content -->
+		<Grid Grid.Row="5"
+			  ColumnDefinitions="280,*,310">
+
+			<!-- left -->
+			<Border Grid.Column="0"
+					Background="#1E232A"
+					BorderBrush="#343B46"
+					BorderThickness="0,0,1,0"
+					Padding="10">
+				<Grid RowDefinitions="Auto,Auto,*">
+					<TextBlock Grid.Row="0"
+							   Text="Animations"
+							   FontSize="16"
+							   FontWeight="Bold"
+							   Margin="0,0,0,10"
+							   IsVisible="{Binding ShowAnimationView}" />
+
+					<TextBlock Grid.Row="0"
+							   Text="{Binding SlotPaneTitle}"
+							   FontSize="16"
+							   FontWeight="Bold"
+							   Margin="0,0,0,10"
+							   IsVisible="{Binding ShowSlotView}" />
+					
+					<TextBox Grid.Row="1"
+							  Watermark="Search animations or MUL slots..."
+							  Text="{Binding SearchText}"
+							   Margin="0,0,0,10" />
+
+					<Grid Grid.Row="2">
+						<ListBox ItemsSource="{Binding AnimationEntries}"
+								 SelectedItem="{Binding SelectedAnimation}"
+								 IsVisible="{Binding ShowAnimationView}">
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<Border Classes="card">
+										<Grid ColumnDefinitions="6,*">
+											<Border Classes="selectionBar"
+													Grid.Column="0"
+													CornerRadius="8,0,0,8" />
+
+											<StackPanel Grid.Column="1"
+														Spacing="2"
+														Margin="10,8,10,8">
+												<TextBlock Text="{Binding DisplayName}"
+														   FontSize="15"
+														   FontWeight="Bold"
+														   Foreground="White" />
+												<TextBlock Classes="subtleText"
+														   Text="{Binding SecondaryText}"
+														   FontSize="12"
+														   TextWrapping="Wrap" />
+											</StackPanel>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+
+						<ListBox ItemsSource="{Binding MulSlotEntries}"
+								 SelectedItem="{Binding SelectedMulSlot}"
+								 IsVisible="{Binding ShowMulSlotList}">
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<Border Classes="card">
+										<Grid ColumnDefinitions="6,*">
+											<Border Classes="selectionBar"
+													Grid.Column="0"
+													CornerRadius="8,0,0,8" />
+
+											<StackPanel Grid.Column="1"
+														Spacing="2"
+														Margin="10,8,10,8">
+												<TextBlock Text="{Binding DisplayText}"
+														   FontSize="15"
+														   FontWeight="Bold"
+														   Foreground="White" />
+												<TextBlock Classes="subtleText"
+														   Text="{Binding FileName}"
+														   FontSize="12" />
+											</StackPanel>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+
+						<ListBox ItemsSource="{Binding UopBodyEntries}"
+								 SelectedItem="{Binding SelectedUopBodySlot}"
+								 IsVisible="{Binding ShowUopSlotList}">
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<Border Classes="card">
+										<Grid ColumnDefinitions="6,*">
+											<Border Classes="selectionBar"
+													Grid.Column="0"
+													CornerRadius="8,0,0,8" />
+
+											<StackPanel Grid.Column="1"
+														Spacing="2"
+														Margin="10,8,10,8">
+												<TextBlock Text="{Binding DisplayText}"
+														   FontSize="15"
+														   FontWeight="Bold"
+														   Foreground="White" />
+												<TextBlock Classes="subtleText"
+														   Text="{Binding SecondaryText}"
+														   FontSize="12"
+														   TextWrapping="Wrap" />
+											</StackPanel>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+					</Grid>
+				</Grid>
+			</Border>
+
+			<!-- center -->
+			<Grid Grid.Column="1"
+				  RowDefinitions="Auto,*"
+				  Margin="14">
+				<TextBlock Grid.Row="0"
+						   Text="Preview"
+						   FontSize="16"
+						   FontWeight="Bold"
+						   Margin="0,0,0,10" />
+
+				<Border Grid.Row="1"
+						Background="Transparent"
+						BorderThickness="0">
+					<Grid RowDefinitions="*,Auto,Auto">
+
+						<Grid Grid.Row="0">
+
+							<!-- Single full-width preview -->
+							<Border x:Name="PreviewDropBorder"
+									Background="{Binding PreviewBackgroundBrush}"
+									BorderBrush="#343B46"
+									BorderThickness="1"
+									CornerRadius="10"
+									Padding="12"
+									PointerPressed="PreviewDragSurface_PointerPressed"
+									PointerMoved="PreviewDragSurface_PointerMoved"
+									PointerReleased="PreviewDragSurface_PointerReleased"
+									PointerCaptureLost="PreviewDragSurface_PointerCaptureLost"
+									DragDrop.AllowDrop="True"
+									IsVisible="{Binding ShowSinglePreviewOnly}">
+								<ScrollViewer HorizontalScrollBarVisibility="Auto"
+											  VerticalScrollBarVisibility="Auto">
+									<Grid HorizontalAlignment="Center"
+										  VerticalAlignment="Center"
+										  MinHeight="420">
+										<Image Source="{Binding PreviewBitmap}"
+											   Width="{Binding PreviewImageWidth}"
+											   Height="{Binding PreviewImageHeight}"
+											   Stretch="Fill" />
+									</Grid>
+								</ScrollViewer>
+							</Border>
+
+							<!-- Split preview -->
+							<Grid ColumnDefinitions="*,*"
+								  ColumnSpacing="12"
+								  IsVisible="{Binding ShowSplitPreview}">
+
+								<Border Grid.Column="0"
+										Background="{Binding PreviewBackgroundBrush}"
+										BorderBrush="#343B46"
+										BorderThickness="1"
+										CornerRadius="10"
+										Padding="12"
+										PointerPressed="PreviewDragSurface_PointerPressed"
+										PointerMoved="PreviewDragSurface_PointerMoved"
+										PointerReleased="PreviewDragSurface_PointerReleased"
+										PointerCaptureLost="PreviewDragSurface_PointerCaptureLost"
+										DragDrop.AllowDrop="True">
+									<ScrollViewer HorizontalScrollBarVisibility="Auto"
+												  VerticalScrollBarVisibility="Auto">
+										<Grid HorizontalAlignment="Center"
+											  VerticalAlignment="Center"
+											  MinHeight="420">
+											<Image Source="{Binding PreviewBitmap}"
+												   Width="{Binding PreviewImageWidth}"
+												   Height="{Binding PreviewImageHeight}"
+												   Stretch="Fill" />
+										</Grid>
+									</ScrollViewer>
+								</Border>
+
+								<Border Grid.Column="1"
+										Background="{Binding PreviewBackgroundBrush}"
+										BorderBrush="#343B46"
+										BorderThickness="1"
+										CornerRadius="10"
+										Padding="12">
+									<ScrollViewer HorizontalScrollBarVisibility="Auto"
+												  VerticalScrollBarVisibility="Auto">
+										<Grid HorizontalAlignment="Center"
+											  VerticalAlignment="Center"
+											  MinHeight="420">
+											<Image Source="{Binding CompareSidePreviewBitmap}"
+												   Width="{Binding ComparePreviewImageWidth}"
+												   Height="{Binding ComparePreviewImageHeight}"
+												   Stretch="Fill" />
+										</Grid>
+									</ScrollViewer>
+								</Border>
+							</Grid>
+						</Grid>
+
+						<Border Grid.Row="1"
+								Margin="0,10,0,8"
+								Background="#171C22"
+								BorderBrush="#2D3641"
+								BorderThickness="1"
+								CornerRadius="8"
+								Padding="10,8">
+
+							<Grid>
+								<!-- Single info -->
+								<StackPanel Spacing="4"
+											HorizontalAlignment="Center"
+											IsVisible="{Binding ShowSinglePreviewOnly}">
+									<TextBlock Text="{Binding CurrentFrameDisplayText}"
+											   HorizontalAlignment="Center"
+											   Foreground="#E3E8EE"
+											   FontWeight="SemiBold" />
+									<TextBlock Text="{Binding PreviewInfoText}"
+											   HorizontalAlignment="Center"
+											   Foreground="#C7D1DB"
+											   TextAlignment="Center"
+											   TextWrapping="Wrap"
+											   MaxWidth="780" />
+								</StackPanel>
+
+								<!-- Split info -->
+								<Grid ColumnDefinitions="*,*"
+									  ColumnSpacing="12"
+									  IsVisible="{Binding ShowSplitPreview}">
+									<StackPanel Grid.Column="0"
+												Spacing="4"
+												HorizontalAlignment="Center">
+										<TextBlock Text="{Binding CurrentFrameDisplayText}"
+												   HorizontalAlignment="Center"
+												   Foreground="#E3E8EE"
+												   FontWeight="SemiBold" />
+										<TextBlock Text="{Binding PreviewInfoText}"
+												   HorizontalAlignment="Center"
+												   Foreground="#C7D1DB"
+												   TextAlignment="Center"
+												   TextWrapping="Wrap"
+												   MaxWidth="380" />
+									</StackPanel>
+
+									<StackPanel Grid.Column="1"
+												Spacing="4"
+												HorizontalAlignment="Center">
+										<TextBlock Text="Compare Preview"
+												   HorizontalAlignment="Center"
+												   Foreground="#E3E8EE"
+												   FontWeight="SemiBold" />
+										<TextBlock Text="{Binding CompareSidePreviewInfoText}"
+												   HorizontalAlignment="Center"
+												   Foreground="#C7D1DB"
+												   TextAlignment="Center"
+												   TextWrapping="Wrap"
+												   MaxWidth="380" />
+									</StackPanel>
+								</Grid>
+							</Grid>
+						</Border>
+
+						<ListBox Grid.Row="2"
+								 x:Name="ThumbnailList"
+								 Classes="thumbnailList"
+								 ItemsSource="{Binding FrameThumbnails}"
+								 SelectedItem="{Binding SelectedFrameThumbnail, Mode=TwoWay}"
+								 Background="Transparent"
+								 BorderThickness="0"
+								 HorizontalAlignment="Center"
+								 VerticalAlignment="Bottom"
+								 IsVisible="{Binding HasFrameThumbnails}"
+								 MaxHeight="110">
+							<ListBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel Orientation="Horizontal" />
+								</ItemsPanelTemplate>
+							</ListBox.ItemsPanel>
+
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<Border Classes="thumbCard"
+											HorizontalAlignment="Left"
+											VerticalAlignment="Top"
+											Tag="{Binding $parent[ListBox].DataContext}">
+										<Border.ContextMenu>
+											<ContextMenu>
+												<MenuItem Header="Replace"
+														  Click="ReplaceThumbnailMenuItem_Click"
+														  Tag="{Binding}" />
+												<MenuItem Header="Remove"
+														  Click="RemoveThumbnailMenuItem_Click"
+														  Tag="{Binding}" />
+											</ContextMenu>
+										</Border.ContextMenu>
+
+										<StackPanel Spacing="4"
+													HorizontalAlignment="Center"
+													VerticalAlignment="Top">
+											<Border Classes="thumbImageHost">
+												<Image Source="{Binding Bitmap}"
+													   Width="38"
+													   Height="38"
+													   Stretch="Uniform"
+													   HorizontalAlignment="Center"
+													   VerticalAlignment="Center" />
+											</Border>
+
+											<TextBlock Classes="thumbLabel"
+													   Text="{Binding DisplayText}"
+													   FontSize="11"
+													   FontWeight="SemiBold"
+													   HorizontalAlignment="Center"
+													   TextAlignment="Center" />
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+					</Grid>
+				</Border>
+			</Grid>
+
+			<!-- right -->
+			<Border Grid.Column="2"
+					Background="#1E232A"
+					BorderBrush="#343B46"
+					BorderThickness="1,0,0,0"
+					Padding="10">
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+					<StackPanel Spacing="12">
+
+						<TextBlock Text="Details"
+								   FontSize="16"
+								   FontWeight="Bold" />
+
+						<Border Classes="card"
+								Padding="10">
+							<StackPanel Spacing="8">
+								<TextBlock Text="Playback"
+										   FontWeight="Bold" />
+
+								<WrapPanel Orientation="Horizontal"
+										   VerticalAlignment="Center">
+									<Button Command="{Binding PlayCommand}"
+											Width="40"
+											Height="32"
+											Margin="0,0,6,0"
+											ToolTip.Tip="Play">
+										<PathIcon Data="M 3 2 L 3 14 L 13 8 Z"
+												  Width="14"
+												  Height="14" />
+									</Button>
+
+									<Button Command="{Binding PauseCommand}"
+											Width="40"
+											Height="32"
+											Margin="0,0,6,0"
+											ToolTip.Tip="Pause">
+										<PathIcon Data="M 3 2 H 6 V 14 H 3 Z M 10 2 H 13 V 14 H 10 Z"
+												  Width="14"
+												  Height="14" />
+									</Button>
+
+									<Button Command="{Binding PreviousFrameCommand}"
+											Width="40"
+											Height="32"
+											Margin="0,0,6,0"
+											ToolTip.Tip="Previous frame">
+										<PathIcon Data="M 11 2 L 3 8 L 11 14 Z M 12 2 H 14 V 14 H 12 Z"
+												  Width="14"
+												  Height="14" />
+									</Button>
+
+									<Button Command="{Binding NextFrameCommand}"
+											Width="40"
+											Height="32"
+											Margin="0,0,10,0"
+											ToolTip.Tip="Next frame">
+										<PathIcon Data="M 3 2 L 11 8 L 3 14 Z M 12 2 H 14 V 14 H 12 Z"
+												  Width="14"
+												  Height="14" />
+									</Button>
+								</WrapPanel>
+
+								<Grid ColumnDefinitions="Auto,* ,Auto"
+									  ColumnSpacing="8">
+									<TextBlock Grid.Column="0"
+											   Text="Speed"
+											   VerticalAlignment="Center" />
+
+									<Slider Grid.Column="1"
+											Minimum="1"
+											Maximum="20"
+											Value="{Binding PlaybackSpeed}"
+											TickFrequency="1" />
+
+									<TextBlock Grid.Column="2"
+											   Text="{Binding PlaybackSpeedText}"
+											   Width="40"
+											   VerticalAlignment="Center" />
+								</Grid>
+							</StackPanel>
+						</Border>
+
+						<Border Classes="card"
+								Padding="10"
+								IsVisible="{Binding ShowAnimationView}">
+							<StackPanel Spacing="8">
+								<TextBlock Text="Animation Details"
+										   FontWeight="Bold" />
+								<Grid ColumnDefinitions="96,*"
+									  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+									<TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedAnimationName}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="1" Grid.Column="0" Text="Body ID:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedBodyId}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="2" Grid.Column="0" Text="Action ID:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedActionId}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="3" Grid.Column="0" Text="Frames:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedFrameCount}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="4" Grid.Column="0" Text="Size:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedFrameSize}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="5" Grid.Column="0" Text="Source:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedAnimationSource}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="6" Grid.Column="0" Text="Index:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding SelectedIndexNumber}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="7" Grid.Column="0" Text="Offset:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedOffset}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="8" Grid.Column="0" Text="Length:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding SelectedLength}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="9" Grid.Column="0" Text="Extra:" Margin="0,0,10,0" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding SelectedExtra}" TextWrapping="Wrap"/>
+								</Grid>
+							</StackPanel>
+						</Border>
+
+						<Border Classes="card"
+								Padding="10"
+								IsVisible="{Binding ShowMulSlotList}">
+							<StackPanel Spacing="8">
+								<TextBlock Text="MUL Slot Details"
+										   FontWeight="Bold" />
+								<Grid ColumnDefinitions="96,*"
+									  RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+									<TextBlock Grid.Row="0" Grid.Column="0" Text="File:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedMulSlotFile}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="1" Grid.Column="0" Text="Body Index:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedMulSlotIndex}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="2" Grid.Column="0" Text="True Body:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedMulSlotOffset}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="3" Grid.Column="0" Text="Anim Length:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedMulSlotLength}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="4" Grid.Column="0" Text="Type:" Margin="0,0,10,0" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedMulSlotExtra}" TextWrapping="Wrap"/>
+								</Grid>
+							</StackPanel>
+						</Border>
+
+						<Border Classes="card"
+								Padding="10"
+								IsVisible="{Binding ShowUopSlotList}">
+							<StackPanel Spacing="8">
+								<TextBlock Text="UOP Target Details"
+										   FontWeight="Bold" />
+								<Grid ColumnDefinitions="96,*"
+									  RowDefinitions="Auto,Auto,Auto,Auto">
+									<TextBlock Grid.Row="0" Grid.Column="0" Text="File:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedUopBodyFile}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="1" Grid.Column="0" Text="Body ID:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedUopBodyId}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="2" Grid.Column="0" Text="Body Type:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedUopBodyType}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="3" Grid.Column="0" Text="Actions:" Margin="0,0,10,0" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedUopBodyActionCount}" TextWrapping="Wrap"/>
+								</Grid>
+							</StackPanel>
+						</Border>
+
+						<Expander Header="UOP Sequence / Remap"
+								  IsVisible="{Binding ShowUopSequenceDetails}">
+							<Border Classes="card"
+									Padding="10"
+									Margin="0,6,0,0">
+								<Grid ColumnDefinitions="96,*"
+									  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+									<TextBlock Grid.Row="0" Grid.Column="0" Text="Req Action:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSequenceRequestedAction}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="1" Grid.Column="0" Text="Resolved:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSequenceResolvedGroup}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="2" Grid.Column="0" Text="Remap:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSequenceRemap}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="3" Grid.Column="0" Text="Seq Frames:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSequenceFrameCount}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="4" Grid.Column="0" Text="Body Map:" Margin="0,0,10,6" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedSequenceBodyMapping}" TextWrapping="Wrap"/>
+
+									<TextBlock Grid.Row="5" Grid.Column="0" Text="UOP Path:" Margin="0,0,10,0" FontWeight="SemiBold"/>
+									<TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedUopVirtualPathDisplay}" TextWrapping="Wrap"/>
+								</Grid>
+							</Border>
+						</Expander>
+
+						<Border Classes="detailCard"
+								Margin="0,0,0,10">
+							<StackPanel Spacing="8">
+								<TextBlock Text="Compare Overlay"
+										   FontWeight="SemiBold"
+										   Foreground="#D5DCE4" />
+
+								<Grid ColumnDefinitions="Auto,*"
+									  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+									  ColumnSpacing="10"
+									  RowSpacing="4">
+
+									<TextBlock Grid.Row="0" Grid.Column="0"
+											   Text="Enabled:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="0" Grid.Column="1"
+											   Text="{Binding CompareOverlayEnabled}" />
+
+									<TextBlock Grid.Row="1" Grid.Column="0"
+											   Text="Target:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="1" Grid.Column="1"
+											   Text="{Binding CompareOverlayTargetText}" />
+
+									<TextBlock Grid.Row="2" Grid.Column="0"
+											   Text="Action:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="2" Grid.Column="1"
+											   Text="{Binding CompareOverlayActionIndex}" />
+
+									<TextBlock Grid.Row="3" Grid.Column="0"
+											   Text="Direction:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="3" Grid.Column="1"
+											   Text="{Binding CompareOverlayDirectionIndex}" />
+
+									<TextBlock Grid.Row="4" Grid.Column="0"
+											   Text="Frame Mode:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="4" Grid.Column="1"
+											   Text="{Binding CompareOverlayFrameModeText}" />
+
+									<TextBlock Grid.Row="5" Grid.Column="0"
+											   Text="Offset:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="5" Grid.Column="1"
+											   Text="{Binding CompareOverlayOffsetText}" />
+
+									<TextBlock Grid.Row="6" Grid.Column="0"
+											   Text="Opacity:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="6" Grid.Column="1"
+											   Text="{Binding CompareOverlayOpacityText}" />
+
+									<TextBlock Grid.Row="2" Grid.Column="0"
+											   Text="File:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="2" Grid.Column="1"
+											   Text="{Binding CompareOverlayFileText}" />
+									<TextBlock Grid.Row="7" Grid.Column="0"
+											   Text="Pose:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="7" Grid.Column="1"
+											   Text="{Binding CurrentComparePoseText}" />
+								</Grid>
+							</StackPanel>
+						</Border>
+
+						<Border Classes="detailCard"
+								Margin="0,0,0,10">
+							<StackPanel Spacing="8">
+								<TextBlock Text="Prop Overlay"
+										   FontWeight="SemiBold"
+										   Foreground="#D5DCE4" />
+
+								<Grid ColumnDefinitions="Auto,*"
+									  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+									  ColumnSpacing="10"
+									  RowSpacing="4">
+
+									<TextBlock Grid.Row="0" Grid.Column="0"
+											   Text="Enabled:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="0" Grid.Column="1"
+											   Text="{Binding PropOverlayEnabled}" />
+
+									<TextBlock Grid.Row="1" Grid.Column="0"
+											   Text="Source:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="1" Grid.Column="1"
+											   Text="{Binding PropOverlaySourceText}"
+											   TextWrapping="Wrap" />
+
+									<TextBlock Grid.Row="2" Grid.Column="0"
+											   Text="Offset:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="2" Grid.Column="1"
+											   Text="{Binding PropOverlayOffsetText}" />
+
+									<TextBlock Grid.Row="3" Grid.Column="0"
+											   Text="Scale:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="3" Grid.Column="1"
+											   Text="{Binding PropOverlayScaleText}" />
+
+									<TextBlock Grid.Row="4" Grid.Column="0"
+											   Text="Rotation:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="4" Grid.Column="1"
+											   Text="{Binding PropOverlayRotationText}" />
+
+									<TextBlock Grid.Row="5" Grid.Column="0"
+											   Text="Layer:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="5" Grid.Column="1"
+											   Text="{Binding PropOverlayLayerText}" />
+
+									<TextBlock Grid.Row="6" Grid.Column="0"
+											   Text="Pivot:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="6" Grid.Column="1"
+											   Text="{Binding PropOverlayPivotText}" />
+
+									<TextBlock Grid.Row="7" Grid.Column="0"
+											   Text="Pose:"
+											   Foreground="#9FB2C8" />
+									<TextBlock Grid.Row="7" Grid.Column="1"
+											   Text="{Binding CurrentPropPoseText}" />
+								</Grid>
+							</StackPanel>
+						</Border>
+
+						<Border Classes="card"
+								Padding="10">
+							<StackPanel Spacing="8">
+								<TextBlock Text="Debug"
+										   FontWeight="Bold" />
+
+								<WrapPanel Orientation="Horizontal">
+									<Button Content="Open Debug Window"
+											Command="{Binding PopOutDebugCommand}" />
+								</WrapPanel>
+							</StackPanel>
+						</Border>
+
+					</StackPanel>
+				</ScrollViewer>
+			</Border>
+		</Grid>
+
+		<!-- loading overlay -->
+		<Border IsVisible="{Binding IsLoading}"
+				Grid.RowSpan="99"
+				Background="#AA111317"
+				ZIndex="9999">
+			<Grid HorizontalAlignment="Stretch"
+				  VerticalAlignment="Stretch">
+				<Border Width="520"
+						MaxWidth="520"
+						Padding="22"
+						CornerRadius="12"
+						Background="#25282D"
+						BorderBrush="#3A3F46"
+						BorderThickness="1"
+						HorizontalAlignment="Center"
+						VerticalAlignment="Center">
+					<StackPanel Spacing="14">
+						<TextBlock Text="Loading Animation Data"
+								   FontSize="20"
+								   FontWeight="Bold"
+								   HorizontalAlignment="Center"
+								   Foreground="#F2F2F2" />
+
+						<TextBlock Text="{Binding LoadingText}"
+								   TextWrapping="Wrap"
+								   TextAlignment="Center"
+								   HorizontalAlignment="Center"
+								   Foreground="#D8D8D8" />
+
+						<ProgressBar Minimum="0"
+									 Maximum="100"
+									 Value="{Binding LoadingProgress}"
+									 Height="18" />
+
+						<TextBlock Text="{Binding LoadingProgress, StringFormat={}{0:0}%}"
+								   HorizontalAlignment="Center"
+								   Foreground="#9BB7D3"
+								   FontWeight="SemiBold" />
+
+						<Border Background="#1C1F24"
+								BorderBrush="#35393F"
+								BorderThickness="1"
+								CornerRadius="8"
+								Padding="12">
+							<StackPanel Spacing="6">
+								<TextBlock Text="Tip"
+										   FontWeight="Bold"
+										   Foreground="#F2C14E" />
+
+								<TextBlock Text="{Binding LoadingTipText}"
+										   TextWrapping="Wrap"
+										   Foreground="#D8D8D8" />
+							</StackPanel>
+						</Border>
+					</StackPanel>
+				</Border>
+			</Grid>
+		</Border>
+	</Grid>
+</Window>
