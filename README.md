@@ -1,7 +1,7 @@
 # 🛠️ Ultima Animation Forge
 
 <p align="center">
-  <img src="Assets/preview.png" alt="Ultima Animation Forge Preview" width="900"/>
+  <img src="UltimaAnimationForge/Assets/preview.png" alt="Ultima Animation Forge Preview" width="900"/>
 </p>
 
 A full-featured animation editor for **Ultima Online**, built for working with both legacy **MUL** animations and modern **UOP** animation files.
