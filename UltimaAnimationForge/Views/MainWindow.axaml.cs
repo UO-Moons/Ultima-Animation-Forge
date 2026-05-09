@@ -2,10 +2,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using UltimaAnimationForge.Models;
 using UltimaAnimationForge.ViewModels;
 
@@ -292,5 +296,209 @@ public partial class MainWindow : Window
             vm.EndCompareOverlayDrag();
             vm.EndPreviewDrag();
         }
+    }
+
+    private async void CopyAnimationBrowserBodyIdMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is not Avalonia.Controls.MenuItem menuItem)
+        {
+            return;
+        }
+
+        if (menuItem.Tag is not AnimationBrowserTileViewModel tile || tile.SourceEntry == null)
+        {
+            return;
+        }
+
+        if (Clipboard == null)
+        {
+            return;
+        }
+
+        await Clipboard.SetTextAsync(tile.SourceEntry.BodyId.ToString());
+    }
+
+    private async void CopyAnimationBrowserSourceFileMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is not Avalonia.Controls.MenuItem menuItem)
+        {
+            return;
+        }
+
+        if (menuItem.Tag is not AnimationBrowserTileViewModel tile || tile.SourceEntry == null)
+        {
+            return;
+        }
+
+        if (Clipboard == null)
+        {
+            return;
+        }
+
+        await Clipboard.SetTextAsync(tile.SourceEntry.SourceFile ?? string.Empty);
+    }
+
+    private void AnimationBrowserTile_PointerEntered(object? sender, PointerEventArgs e)
+    {
+        if (sender is not Avalonia.Controls.Border border)
+        {
+            return;
+        }
+
+        if (border.DataContext is not AnimationBrowserTileViewModel tile)
+        {
+            return;
+        }
+
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            return;
+        }
+
+        viewModel.StartAnimationBrowserTileHoverPreview(tile);
+    }
+
+    private void AnimationBrowserTile_PointerExited(object? sender, PointerEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            return;
+        }
+
+        viewModel.StopAnimationBrowserTileHoverPreview();
+    }
+
+    private async void EditAnimationBrowserNameMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is not Avalonia.Controls.MenuItem menuItem)
+        {
+            return;
+        }
+
+        if (menuItem.Tag is not AnimationBrowserTileViewModel tile || tile.SourceEntry == null)
+        {
+            return;
+        }
+
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            return;
+        }
+
+        string currentName = tile.DisplayName ?? string.Empty;
+        string prefix = tile.SourceEntry.BodyId + " - ";
+
+        if (currentName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            currentName = currentName.Substring(prefix.Length);
+        }
+
+        string? newName = await ShowEditAnimationNameDialog(tile.SourceEntry.BodyId, currentName);
+
+        if (newName == null)
+        {
+            return;
+        }
+
+        viewModel.SaveAnimationBrowserName(tile, newName);
+
+        await ShowSimpleMessage(
+            "Name Saved",
+            "Saved to animation_names.json.\n\nMake sure this file is included with your tool build/release.");
+    }
+
+    private async Task<string?> ShowEditAnimationNameDialog(int bodyId, string currentName)
+    {
+        TextBox nameBox = new TextBox
+        {
+            Text = currentName,
+            Width = 320,
+            Watermark = "Animation name..."
+        };
+
+        Button cancelButton = new Button
+        {
+            Content = "Cancel"
+        };
+
+        Button saveButton = new Button
+        {
+            Content = "Save"
+        };
+
+        Window dialog = new Window
+        {
+            Title = "Edit Animation Name",
+            Width = 420,
+            Height = 180,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = new StackPanel
+            {
+                Margin = new Thickness(16),
+                Spacing = 12,
+                Children =
+            {
+                new TextBlock
+                {
+                    Text = "Body " + bodyId + " name:",
+                    FontWeight = FontWeight.Bold
+                },
+                nameBox,
+                new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Spacing = 8,
+                    Children =
+                    {
+                        cancelButton,
+                        saveButton
+                    }
+                }
+            }
+            }
+        };
+
+        cancelButton.Click += (_, _) => dialog.Close(null);
+        saveButton.Click += (_, _) => dialog.Close(nameBox.Text ?? string.Empty);
+
+        return await dialog.ShowDialog<string?>(this);
+    }
+
+    private async Task ShowSimpleMessage(string title, string message)
+    {
+        Button okButton = new Button
+        {
+            Content = "OK",
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+
+        Window dialog = new Window
+        {
+            Title = title,
+            Width = 460,
+            Height = 190,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = new StackPanel
+            {
+                Margin = new Thickness(16),
+                Spacing = 14,
+                Children =
+            {
+                new TextBlock
+                {
+                    Text = message,
+                    TextWrapping = TextWrapping.Wrap
+                },
+                okButton
+            }
+            }
+        };
+
+        okButton.Click += (_, _) => dialog.Close();
+
+        await dialog.ShowDialog(this);
     }
 }

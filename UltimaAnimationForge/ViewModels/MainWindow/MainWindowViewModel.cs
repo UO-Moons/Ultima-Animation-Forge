@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using UltimaAnimationForge.Models;
@@ -28,8 +29,97 @@ public partial class MainWindowViewModel : ViewModelBase
     private DetachedPreviewViewModel? detachedPreviewViewModel;
     private readonly Dictionary<string, WriteableBitmap?> animationBrowserThumbnailCache = new();
     private bool syncingAnimationBrowserSelection;
+    private CancellationTokenSource? animationBrowserThumbnailCancellation;
+
+    [ObservableProperty]
+    private string animationBrowserSortMode = "Body ID Asc";
+
+    public ObservableCollection<string> AnimationBrowserSortModeOptions { get; } = new()
+{
+    "Body ID Asc",
+    "Body ID Desc",
+    "Name",
+    "Source File"
+};
+
+    [ObservableProperty]
+    private bool animationBrowserShowMissingSlots = false;
+
+    [ObservableProperty]
+    private string animationBrowserSearchText = string.Empty;
+
+    [ObservableProperty]
+    private string animationBrowserSourceFilter = "All";
+
+    [ObservableProperty]
+    private string animationBrowserTypeFilter = "All";
+
+    public ObservableCollection<string> AnimationBrowserSourceFilters { get; } = new();
+
+    public ObservableCollection<string> AnimationBrowserTypeFilters { get; } = new();
+
+    [ObservableProperty]
+    private string animationBrowserTileSize = "Small";
+
+    [ObservableProperty]
+    private string animationBrowserCountText = "Showing 0";
+
+    public ObservableCollection<string> AnimationBrowserTileSizeOptions { get; } = new()
+    {
+        "Small",
+        "Medium",
+        "Large"
+    };
+
+    private readonly Dictionary<string, List<WriteableBitmap>> animationBrowserHoverFrameCache = new();
+    private CancellationTokenSource? animationBrowserHoverCancellation;
+    private AnimationBrowserTileViewModel? activeHoverTile;
+
+    [ObservableProperty]
+    private bool animationBrowserHoverPreviewEnabled = true;
+
+    [ObservableProperty]
+    private string animationBrowserHoverSpeed = "100 ms";
+
+    public ObservableCollection<string> AnimationBrowserHoverSpeedOptions { get; } = new()
+{
+    "50 ms",
+    "100 ms",
+    "150 ms",
+    "200 ms"
+};
+
+    public int AnimationBrowserHoverFrameDelayMs =>
+        AnimationBrowserHoverSpeed switch
+        {
+            "50 ms" => 50,
+            "150 ms" => 150,
+            "200 ms" => 200,
+            _ => 100
+        };
+
+    public sealed class AnimationNameEntry
+    {
+        public int BodyId { get; set; }
+
+        public string Name { get; set; } = string.Empty;
+    }
+
+    private readonly Dictionary<int, string> animationBrowserNamesByBodyId = new();
+
+    [ObservableProperty]
+    private bool animationBrowserShowNames = true;
+
+    public ICommand RefreshAnimationBrowserThumbnailsCommand { get; }
 
     public IRelayCommand OpenDiscordCommand => new RelayCommand(OpenDiscord);
+
+    public ICommand OpenAnimationBrowserTileCommand { get; }
+    public ICommand RefreshAnimationBrowserTileThumbnailCommand { get; }
+    public ICommand OpenAnimationBrowserTileDetachedPreviewCommand { get; }
+    public ICommand ExportAnimationBrowserTileFramesCommand { get; }
+    public ICommand ExportAnimationBrowserTileVdCommand { get; }
+    public ICommand DeleteAnimationBrowserTileCommand { get; }
 
     private void OpenDiscord()
     {
@@ -707,6 +797,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ApplyCompareOverlayToCurrentDirectionCommand = new RelayCommand(ApplyCompareOverlayToCurrentDirection);
         OpenMythicPackageViewerCommand = new RelayCommand(OpenMythicPackageViewer);
         ApplyCurrentComparePoseToAllFramesCommand = new RelayCommand(ApplyCurrentComparePoseToAllFrames);
+        RefreshAnimationBrowserThumbnailsCommand = new RelayCommand(RefreshAnimationBrowserThumbnails);
+        OpenAnimationBrowserTileCommand = new RelayCommand<AnimationBrowserTileViewModel?>(OpenAnimationBrowserTile);
+        RefreshAnimationBrowserTileThumbnailCommand = new RelayCommand<AnimationBrowserTileViewModel?>(RefreshAnimationBrowserTileThumbnail);
+        OpenAnimationBrowserTileDetachedPreviewCommand = new RelayCommand<AnimationBrowserTileViewModel?>(OpenAnimationBrowserTileDetachedPreview);
+        ExportAnimationBrowserTileFramesCommand = new AsyncRelayCommand<AnimationBrowserTileViewModel?>(ExportAnimationBrowserTileFramesAsync);
+        ExportAnimationBrowserTileVdCommand = new AsyncRelayCommand<AnimationBrowserTileViewModel?>(ExportAnimationBrowserTileVdAsync);
+        DeleteAnimationBrowserTileCommand = new AsyncRelayCommand<AnimationBrowserTileViewModel?>(DeleteAnimationBrowserTileAsync);
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {
@@ -987,6 +1084,22 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         return MulHumanActions;
+    }
+
+    partial void OnAnimationBrowserSortModeChanged(string value)
+    {
+        if (AnimationBrowserVisible)
+        {
+            BuildAnimationBrowserTiles();
+        }
+    }
+
+    partial void OnAnimationBrowserShowMissingSlotsChanged(bool value)
+    {
+        if (AnimationBrowserVisible)
+        {
+            BuildAnimationBrowserTiles();
+        }
     }
 
     private string[] GetDirectionNames()
@@ -1407,31 +1520,717 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private void BuildAnimationBrowserTiles()
+    public void SaveAnimationBrowserName(AnimationBrowserTileViewModel? tile, string newName)
     {
-        AnimationBrowserTiles.Clear();
+        if (tile?.SourceEntry == null)
+        {
+            return;
+        }
+
+        int bodyId = tile.SourceEntry.BodyId;
+        string cleanName = (newName ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(cleanName))
+        {
+            animationBrowserNamesByBodyId.Remove(bodyId);
+        }
+        else
+        {
+            animationBrowserNamesByBodyId[bodyId] = cleanName;
+        }
+
+        string path = Path.Combine(AppContext.BaseDirectory, "animation_names.json");
+
+        Dictionary<string, string> output = animationBrowserNamesByBodyId
+            .OrderBy(x => x.Key)
+            .ToDictionary(
+                x => x.Key.ToString(),
+                x => x.Value);
+
+        string json = System.Text.Json.JsonSerializer.Serialize(
+            output,
+            new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+        File.WriteAllText(path, json);
+
+        ApplyAnimationBrowserNamesToAnimationEntries();
+        OnPropertyChanged(nameof(SelectedAnimationName));
+        OnPropertyChanged(nameof(PreviewInfoText));
+
+        if (AnimationBrowserVisible)
+        {
+            BuildAnimationBrowserTiles();
+        }
+
+        StatusText = "Saved animation name to " + Path.GetFileName(path) + ".";
+    }
+
+    private void LoadAnimationBrowserNames()
+    {
+        animationBrowserNamesByBodyId.Clear();
+
+        try
+        {
+            string toolFolderPath = AppContext.BaseDirectory;
+            string path = Path.Combine(toolFolderPath, "animation_names.json");
+
+            if (!File.Exists(path))
+            {
+                return;
+            }
+
+            string json = File.ReadAllText(path);
+
+            Dictionary<string, string>? rawNames =
+                System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+
+            if (rawNames == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, string> pair in rawNames)
+            {
+                if (!int.TryParse(pair.Key, out int bodyId))
+                {
+                    continue;
+                }
+
+                string name = pair.Value?.Trim() ?? string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    animationBrowserNamesByBodyId[bodyId] = name;
+                }
+            }
+        }
+        catch
+        {
+            // Bad animation_names.json should not break the tool.
+        }
+    }
+
+    private void ApplyAnimationBrowserNamesToAnimationEntries()
+    {
+        if (animationBrowserNamesByBodyId.Count == 0)
+        {
+            return;
+        }
 
         foreach (AnimationEntry entry in AnimationEntries)
         {
-            string key =
-                entry.SourceMode + "|" +
-                entry.SourceFile + "|" +
-                entry.BodyId;
-
-            if (!animationBrowserThumbnailCache.TryGetValue(key, out WriteableBitmap? thumbnail))
+            if (animationBrowserNamesByBodyId.TryGetValue(entry.BodyId, out string? name) &&
+                !string.IsNullOrWhiteSpace(name))
             {
-                thumbnail = GenerateAnimationBrowserThumbnail(entry);
-                animationBrowserThumbnailCache[key] = thumbnail;
+                entry.DisplayName = "Body " + entry.BodyId + " - " + name;
+            }
+        }
+    }
+
+    private string GetAnimationBrowserDisplayName(AnimationEntry entry)
+    {
+        if (entry == null)
+        {
+            return string.Empty;
+        }
+
+        if (AnimationBrowserShowNames &&
+            animationBrowserNamesByBodyId.TryGetValue(entry.BodyId, out string? customName) &&
+            !string.IsNullOrWhiteSpace(customName))
+        {
+            return entry.BodyId + " - " + customName;
+        }
+
+        return entry.BodyId.ToString();
+    }
+
+    partial void OnAnimationBrowserShowNamesChanged(bool value)
+    {
+        if (AnimationBrowserVisible)
+        {
+            BuildAnimationBrowserTiles();
+        }
+    }
+
+    partial void OnAnimationBrowserHoverPreviewEnabledChanged(bool value)
+    {
+        if (!value)
+        {
+            StopAnimationBrowserTileHoverPreview();
+        }
+    }
+
+    public async void StartAnimationBrowserTileHoverPreview(AnimationBrowserTileViewModel? tile)
+    {
+        if (!AnimationBrowserHoverPreviewEnabled)
+        {
+            return;
+        }
+
+        if (tile?.SourceEntry == null)
+        {
+            return;
+        }
+
+        StopAnimationBrowserTileHoverPreview();
+
+        activeHoverTile = tile;
+        animationBrowserHoverCancellation = new CancellationTokenSource();
+        CancellationToken token = animationBrowserHoverCancellation.Token;
+
+        try
+        {
+            await Task.Delay(250, token);
+
+            if (token.IsCancellationRequested || activeHoverTile != tile)
+            {
+                return;
             }
 
-            AnimationBrowserTiles.Add(new AnimationBrowserTileViewModel
+            string key = GetAnimationBrowserThumbnailKey(tile.SourceEntry) + "|hover";
+
+            if (!animationBrowserHoverFrameCache.TryGetValue(key, out List<WriteableBitmap>? frames))
             {
-                SourceEntry = entry,
-                Thumbnail = thumbnail,
-                DisplayName = entry.DisplayName,
-                SecondaryText = entry.SecondaryText,
-                SourceText = entry.SourceMode + " | " + entry.SourceFile
-            });
+                frames = await Task.Run(() =>
+                {
+                    return LoadAnimationBrowserHoverFrames(tile.SourceEntry);
+                }, token);
+
+                animationBrowserHoverFrameCache[key] = frames;
+            }
+
+            if (frames.Count == 0)
+            {
+                return;
+            }
+
+            int frameIndex = 0;
+
+            while (!token.IsCancellationRequested && activeHoverTile == tile)
+            {
+                tile.Thumbnail = frames[frameIndex];
+
+                frameIndex++;
+                if (frameIndex >= frames.Count)
+                {
+                    frameIndex = 0;
+                }
+
+                await Task.Delay(AnimationBrowserHoverFrameDelayMs, token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    public void StopAnimationBrowserTileHoverPreview()
+    {
+        if (animationBrowserHoverCancellation != null)
+        {
+            animationBrowserHoverCancellation.Cancel();
+            animationBrowserHoverCancellation.Dispose();
+            animationBrowserHoverCancellation = null;
+        }
+
+        if (activeHoverTile?.SourceEntry != null)
+        {
+            string key = GetAnimationBrowserThumbnailKey(activeHoverTile.SourceEntry);
+
+            if (animationBrowserThumbnailCache.TryGetValue(key, out WriteableBitmap? thumbnail))
+            {
+                activeHoverTile.Thumbnail = thumbnail;
+            }
+        }
+
+        activeHoverTile = null;
+    }
+
+    private List<WriteableBitmap> LoadAnimationBrowserHoverFrames(AnimationEntry entry)
+    {
+        try
+        {
+            IAnimationDataSource? dataSource = GetDataSourceForEntry(entry);
+            if (dataSource == null)
+            {
+                return new List<WriteableBitmap>();
+            }
+
+            List<int> actions = dataSource.GetAvailableActionIndices(entry.BodyId);
+            if (actions.Count == 0)
+            {
+                actions.Add(0);
+            }
+
+            int[] preferredDirections =
+            {
+            1, // South
+            0,
+            2,
+            3,
+            4
+        };
+
+            foreach (int actionIndex in actions)
+            {
+                foreach (int directionIndex in preferredDirections)
+                {
+                    DetachedPreviewLoadResult result = LoadDetachedPreview(
+                        entry,
+                        actionIndex,
+                        directionIndex);
+
+                    if (result.Success && result.Frames.Count > 0)
+                    {
+                        return result.Frames;
+                    }
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return new List<WriteableBitmap>();
+    }
+
+    private async Task DeleteAnimationBrowserTileAsync(AnimationBrowserTileViewModel? tile)
+    {
+        if (tile?.SourceEntry == null)
+        {
+            return;
+        }
+
+        SelectAnimationFromBrowserTile(tile);
+
+        await DeleteAnimationAsync();
+
+        animationBrowserThumbnailCache.Remove(GetAnimationBrowserThumbnailKey(tile.SourceEntry));
+
+        if (AnimationBrowserVisible)
+        {
+            BuildAnimationBrowserTiles();
+        }
+    }
+
+    private async Task ExportAnimationBrowserTileFramesAsync(AnimationBrowserTileViewModel? tile)
+    {
+        if (tile?.SourceEntry == null)
+        {
+            return;
+        }
+
+        SelectAnimationFromBrowserTile(tile);
+        await ExportFramesAsync();
+    }
+
+    private async Task ExportAnimationBrowserTileVdAsync(AnimationBrowserTileViewModel? tile)
+    {
+        if (tile?.SourceEntry == null)
+        {
+            return;
+        }
+
+        SelectAnimationFromBrowserTile(tile);
+        await ExportVdAsync();
+    }
+
+    private async void OpenAnimationBrowserTileDetachedPreview(AnimationBrowserTileViewModel? tile)
+    {
+        if (tile?.SourceEntry == null)
+        {
+            return;
+        }
+
+        SelectAnimationFromBrowserTile(tile);
+        await ShowDetachedPreviewAsync();
+    }
+
+    private void OpenAnimationBrowserTile(AnimationBrowserTileViewModel? tile)
+    {
+        if (tile?.SourceEntry == null)
+        {
+            return;
+        }
+
+        SelectAnimationFromBrowserTile(tile);
+        AnimationBrowserVisible = false;
+    }
+
+    private void RefreshAnimationBrowserTileThumbnail(AnimationBrowserTileViewModel? tile)
+    {
+        if (tile?.SourceEntry == null)
+        {
+            return;
+        }
+
+        string key = GetAnimationBrowserThumbnailKey(tile.SourceEntry);
+
+        animationBrowserThumbnailCache.Remove(key);
+
+        tile.Thumbnail = null;
+        tile.IsLoadingThumbnail = true;
+
+        try
+        {
+            WriteableBitmap? thumbnail = GenerateAnimationBrowserThumbnail(tile.SourceEntry);
+
+            animationBrowserThumbnailCache[key] = thumbnail;
+            tile.Thumbnail = thumbnail;
+            tile.IsLoadingThumbnail = false;
+
+            StatusText = "Refreshed thumbnail for " + tile.SourceEntry.DisplayName + ".";
+        }
+        catch
+        {
+            tile.IsLoadingThumbnail = false;
+            StatusText = "Failed to refresh thumbnail.";
+        }
+    }
+
+    private void RefreshAnimationBrowserThumbnails()
+    {
+        CancelAnimationBrowserThumbnailLoading();
+
+        animationBrowserThumbnailCache.Clear();
+
+        foreach (AnimationBrowserTileViewModel tile in AnimationBrowserTiles)
+        {
+            tile.Thumbnail = null;
+            tile.IsLoadingThumbnail = true;
+        }
+
+        StartAnimationBrowserThumbnailLoading();
+
+        StatusText = "Animation Browser thumbnails refreshed.";
+    }
+
+    partial void OnAnimationBrowserTileSizeChanged(string value)
+    {
+        OnPropertyChanged(nameof(AnimationBrowserTileWidth));
+        OnPropertyChanged(nameof(AnimationBrowserTileHeight));
+        OnPropertyChanged(nameof(AnimationBrowserImageHostSize));
+        OnPropertyChanged(nameof(AnimationBrowserImageBoxSize));
+    }
+
+    public double AnimationBrowserTileWidth =>
+    AnimationBrowserTileSize switch
+    {
+        "Medium" => 110,
+        "Large" => 145,
+        _ => 82
+    };
+
+    public double AnimationBrowserTileHeight =>
+        AnimationBrowserTileSize switch
+        {
+            "Medium" => 128,
+            "Large" => 165,
+            _ => 98
+        };
+
+    public double AnimationBrowserImageHostSize =>
+        AnimationBrowserTileSize switch
+        {
+            "Medium" => 96,
+            "Large" => 128,
+            _ => 72
+        };
+
+    public double AnimationBrowserImageBoxSize =>
+        AnimationBrowserTileSize switch
+        {
+            "Medium" => 90,
+            "Large" => 120,
+            _ => 68
+        };
+
+    private void RebuildAnimationBrowserFilters()
+    {
+        string oldSource = AnimationBrowserSourceFilter;
+        string oldType = AnimationBrowserTypeFilter;
+
+        AnimationBrowserSourceFilters.Clear();
+        AnimationBrowserSourceFilters.Add("All");
+
+        foreach (string source in AnimationEntries
+            .Select(x => x.SourceFile)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+        {
+            AnimationBrowserSourceFilters.Add(source);
+        }
+
+        AnimationBrowserTypeFilters.Clear();
+        AnimationBrowserTypeFilters.Add("All");
+
+        foreach (string type in AnimationEntries
+            .Select(GetBrowserTypeFromEntry)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+        {
+            AnimationBrowserTypeFilters.Add(type);
+        }
+
+        AnimationBrowserSourceFilter = AnimationBrowserSourceFilters.Contains(oldSource)
+            ? oldSource
+            : "All";
+
+        AnimationBrowserTypeFilter = AnimationBrowserTypeFilters.Contains(oldType)
+            ? oldType
+            : "All";
+    }
+
+    private string GetBrowserTypeFromEntry(AnimationEntry entry)
+    {
+        if (entry == null)
+        {
+            return string.Empty;
+        }
+
+        string text = entry.SecondaryText ?? string.Empty;
+
+        int pipeIndex = text.IndexOf('|');
+        if (pipeIndex > 0)
+        {
+            return text.Substring(0, pipeIndex).Trim();
+        }
+
+        return text.Trim();
+    }
+
+    partial void OnAnimationBrowserSearchTextChanged(string value)
+    {
+        if (AnimationBrowserVisible)
+        {
+            BuildAnimationBrowserTiles();
+        }
+    }
+
+    partial void OnAnimationBrowserSourceFilterChanged(string value)
+    {
+        if (AnimationBrowserVisible)
+        {
+            BuildAnimationBrowserTiles();
+        }
+    }
+
+    partial void OnAnimationBrowserTypeFilterChanged(string value)
+    {
+        if (AnimationBrowserVisible)
+        {
+            BuildAnimationBrowserTiles();
+        }
+    }
+
+    private void AddAnimationBrowserTile(AnimationEntry entry)
+    {
+        string key = GetAnimationBrowserThumbnailKey(entry);
+
+        animationBrowserThumbnailCache.TryGetValue(key, out WriteableBitmap? cachedThumbnail);
+
+        AnimationBrowserTiles.Add(new AnimationBrowserTileViewModel
+        {
+            SourceEntry = entry,
+            BodyId = entry.BodyId,
+            Thumbnail = cachedThumbnail,
+            IsLoadingThumbnail = cachedThumbnail == null,
+            DisplayName = GetAnimationBrowserDisplayName(entry),
+            SecondaryText = entry.SecondaryText,
+            SourceText = entry.SourceMode + " | " + entry.SourceFile
+        });
+    }
+
+    private void BuildAnimationBrowserTiles()
+    {
+        CancelAnimationBrowserThumbnailLoading();
+
+        LoadAnimationBrowserNames();
+        ApplyAnimationBrowserNamesToAnimationEntries();
+        OnPropertyChanged(nameof(SelectedAnimationName));
+        OnPropertyChanged(nameof(PreviewInfoText));
+
+        RebuildAnimationBrowserFilters();
+
+        AnimationBrowserTiles.Clear();
+        int totalCount = AnimationEntries.Count;
+
+        IEnumerable<AnimationEntry> filteredEntries = AnimationEntries;
+
+        if (!string.IsNullOrWhiteSpace(AnimationBrowserSearchText))
+        {
+            string search = AnimationBrowserSearchText.Trim();
+
+            filteredEntries = filteredEntries.Where(entry =>
+                entry.BodyId.ToString().Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                GetAnimationBrowserDisplayName(entry).Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (entry.DisplayName ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (entry.SecondaryText ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (entry.SourceFile ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (entry.SourceMode ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(AnimationBrowserSourceFilter) &&
+            !string.Equals(AnimationBrowserSourceFilter, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            filteredEntries = filteredEntries.Where(entry =>
+                string.Equals(entry.SourceFile, AnimationBrowserSourceFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(AnimationBrowserTypeFilter) &&
+            !string.Equals(AnimationBrowserTypeFilter, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            filteredEntries = filteredEntries.Where(entry =>
+                string.Equals(GetBrowserTypeFromEntry(entry), AnimationBrowserTypeFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filteredEntries = AnimationBrowserSortMode switch
+        {
+            "Body ID Desc" => filteredEntries.OrderByDescending(x => x.BodyId),
+            "Name" => filteredEntries.OrderBy(x => GetAnimationBrowserDisplayName(x), StringComparer.OrdinalIgnoreCase),
+            "Source File" => filteredEntries
+                .OrderBy(x => x.SourceFile, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.BodyId),
+            _ => filteredEntries.OrderBy(x => x.BodyId)
+        };
+
+        List<AnimationEntry> sortedEntries = filteredEntries.ToList();
+
+        if (AnimationBrowserShowMissingSlots && sortedEntries.Count > 1)
+        {
+            int minBodyId = sortedEntries.Min(x => x.BodyId);
+            int maxBodyId = sortedEntries.Max(x => x.BodyId);
+
+            Dictionary<int, AnimationEntry> entriesByBodyId = sortedEntries
+                .GroupBy(x => x.BodyId)
+                .ToDictionary(x => x.Key, x => x.First());
+
+            for (int bodyId = minBodyId; bodyId <= maxBodyId; bodyId++)
+            {
+                if (entriesByBodyId.TryGetValue(bodyId, out AnimationEntry? entry))
+                {
+                    AddAnimationBrowserTile(entry);
+                }
+                else
+                {
+                    AnimationBrowserTiles.Add(new AnimationBrowserTileViewModel
+                    {
+                        BodyId = bodyId,
+                        IsMissingSlot = true,
+                        IsLoadingThumbnail = false,
+                        DisplayName = bodyId + " missing",
+                        SecondaryText = "Missing slot",
+                        SourceText = string.Empty
+                    });
+                }
+            }
+        }
+        else
+        {
+            foreach (AnimationEntry entry in sortedEntries)
+            {
+                AddAnimationBrowserTile(entry);
+            }
+        }
+
+        AnimationBrowserCountText = "Showing " + AnimationBrowserTiles.Count + " / " + totalCount;
+
+        StartAnimationBrowserThumbnailLoading();
+    }
+
+    private string GetAnimationBrowserThumbnailKey(AnimationEntry entry)
+    {
+        return
+            entry.SourceMode + "|" +
+            entry.SourceFile + "|" +
+            entry.BodyId + "|south";
+    }
+
+    private void CancelAnimationBrowserThumbnailLoading()
+    {
+        if (animationBrowserThumbnailCancellation != null)
+        {
+            animationBrowserThumbnailCancellation.Cancel();
+            animationBrowserThumbnailCancellation.Dispose();
+            animationBrowserThumbnailCancellation = null;
+        }
+    }
+
+    private async void StartAnimationBrowserThumbnailLoading()
+    {
+        CancelAnimationBrowserThumbnailLoading();
+
+        animationBrowserThumbnailCancellation = new CancellationTokenSource();
+        CancellationToken token = animationBrowserThumbnailCancellation.Token;
+
+        try
+        {
+            List<AnimationBrowserTileViewModel> tiles = AnimationBrowserTiles.ToList();
+
+            foreach (AnimationBrowserTileViewModel tile in tiles)
+            {
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (tile.IsMissingSlot || tile.SourceEntry == null || tile.Thumbnail != null)
+                {
+                    tile.IsLoadingThumbnail = false;
+                    continue;
+                }
+
+                AnimationEntry entry = tile.SourceEntry;
+                string key = GetAnimationBrowserThumbnailKey(entry);
+
+                try
+                {
+                    WriteableBitmap? thumbnail = await Task.Run(() =>
+                    {
+                        if (token.IsCancellationRequested)
+                        {
+                            return null;
+                        }
+
+                        return GenerateAnimationBrowserThumbnail(entry);
+                    }, token);
+
+                    if (token.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    animationBrowserThumbnailCache[key] = thumbnail;
+                    tile.Thumbnail = thumbnail;
+                    tile.IsLoadingThumbnail = false;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch
+                {
+                    tile.IsLoadingThumbnail = false;
+                }
+
+                try
+                {
+                    await Task.Delay(1, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
     }
 
@@ -1442,6 +2241,10 @@ public partial class MainWindowViewModel : ViewModelBase
         if (value)
         {
             BuildAnimationBrowserTiles();
+        }
+        else
+        {
+            CancelAnimationBrowserThumbnailLoading();
         }
     }
 
@@ -1463,12 +2266,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
             int[] preferredDirections =
             {
-                1, // South
-                0, // East fallback
-                2,
-                3,
-                4
-            };
+            1, // South
+            0, // East fallback
+            2,
+            3,
+            4
+        };
 
             foreach (int actionIndex in actions)
             {
@@ -1488,7 +2291,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch
         {
-            // Ignore bad thumbnail entries.
         }
 
         return null;

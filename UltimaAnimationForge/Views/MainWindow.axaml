@@ -12,7 +12,7 @@
         Background="#1B1F25"
         Foreground="White"
         RequestedThemeVariant="Dark"
-        Title="Ultima Animation Forge Alpha 10"
+        Title="Ultima Animation Forge Alpha 12"
         DragDrop.AllowDrop="True"
         mc:Ignorable="d">
 
@@ -291,8 +291,6 @@
         </Style>
 
         <Style Selector="Border.animationBrowserTile">
-            <Setter Property="Width" Value="82" />
-            <Setter Property="Height" Value="98" />
             <Setter Property="Background" Value="#252A31" />
             <Setter Property="BorderBrush" Value="#3A404A" />
             <Setter Property="BorderThickness" Value="1" />
@@ -1062,11 +1060,103 @@
                 <Grid RowDefinitions="Auto,*"
                       IsVisible="{Binding AnimationBrowserVisible}">
 
-                    <TextBlock Grid.Row="0"
-                               Text="Animation Browser"
-                               FontSize="16"
-                               FontWeight="Bold"
-                               Margin="0,0,0,10" />
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="Auto,220,12,Auto,150,12,Auto,150,*,Auto"
+                              VerticalAlignment="Center">
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Animation Browser"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0" />
+
+                            <TextBox Grid.Column="1"
+                                     Watermark="Search body, name, source..."
+                                     Text="{Binding AnimationBrowserSearchText}"
+                                     VerticalAlignment="Center" />
+
+                            <TextBlock Grid.Column="3"
+                                       Text="Source"
+                                       Foreground="#D5DCE4"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,6,0" />
+
+                            <ComboBox Grid.Column="4"
+                                      ItemsSource="{Binding AnimationBrowserSourceFilters}"
+                                      SelectedItem="{Binding AnimationBrowserSourceFilter}"
+                                      VerticalAlignment="Center" />
+
+                            <TextBlock Grid.Column="6"
+                                       Text="Type"
+                                       Foreground="#D5DCE4"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,6,0" />
+
+                            <ComboBox Grid.Column="7"
+                                      ItemsSource="{Binding AnimationBrowserTypeFilters}"
+                                      SelectedItem="{Binding AnimationBrowserTypeFilter}"
+                                      VerticalAlignment="Center" />
+
+                            <TextBlock Grid.Column="9"
+                                       Text="{Binding AnimationBrowserCountText}"
+                                       Foreground="#A9BED0"
+                                       VerticalAlignment="Center"
+                                       Margin="12,0,0,0" />
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,130,20,Auto,20,Auto,100,20,Auto,Auto,12,115,92,12,Auto,*"
+                              VerticalAlignment="Center">
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Sort"
+                                       Foreground="#D5DCE4"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,6,0" />
+
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding AnimationBrowserSortModeOptions}"
+                                      SelectedItem="{Binding AnimationBrowserSortMode}"
+                                      VerticalAlignment="Center" />
+
+                            <CheckBox Grid.Column="3"
+                                      Content="Show Missing"
+                                      IsChecked="{Binding AnimationBrowserShowMissingSlots}"
+                                      VerticalAlignment="Center" />
+
+                            <TextBlock Grid.Column="5"
+                                       Text="Size"
+                                       Foreground="#D5DCE4"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,6,0" />
+
+                            <ComboBox Grid.Column="6"
+                                      ItemsSource="{Binding AnimationBrowserTileSizeOptions}"
+                                      SelectedItem="{Binding AnimationBrowserTileSize}"
+                                      VerticalAlignment="Center" />
+
+                            <Button Grid.Column="8"
+                                    Content="Refresh Thumbnails"
+                                    Command="{Binding RefreshAnimationBrowserThumbnailsCommand}"
+                                    Padding="10,6"
+                                    VerticalAlignment="Center" />
+
+                            <CheckBox Grid.Column="11"
+                                      Content="Hover Preview"
+                                      IsChecked="{Binding AnimationBrowserHoverPreviewEnabled}"
+                                      VerticalAlignment="Center" />
+
+                            <ComboBox Grid.Column="12"
+                                      Width="90"
+                                      ItemsSource="{Binding AnimationBrowserHoverSpeedOptions}"
+                                      SelectedItem="{Binding AnimationBrowserHoverSpeed}"
+                                      VerticalAlignment="Center" />
+
+                            <CheckBox Grid.Column="14"
+                                      Content="Names"
+                                      IsChecked="{Binding AnimationBrowserShowNames}"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+                    </StackPanel>
 
                     <Border Grid.Row="1"
                             Background="#1E232A"
@@ -1090,32 +1180,92 @@
 
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Classes="animationBrowserTile">
-                                            <Grid RowDefinitions="78,Auto">
+                                        <Border Classes="animationBrowserTile"
+                                                Width="{Binding $parent[Window].DataContext.AnimationBrowserTileWidth}"
+                                                Height="{Binding $parent[Window].DataContext.AnimationBrowserTileHeight}"
+                                                Tag="{Binding $parent[Window].DataContext}"
+                                                PointerEntered="AnimationBrowserTile_PointerEntered"
+                                                PointerExited="AnimationBrowserTile_PointerExited">
+                                            <Border.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Open in Editor"
+                                                              Command="{Binding $parent[Window].DataContext.OpenAnimationBrowserTileCommand}"
+                                                              CommandParameter="{Binding}" />
+
+                                                    <MenuItem Header="Open Detached Preview"
+                                                              Command="{Binding $parent[Window].DataContext.OpenAnimationBrowserTileDetachedPreviewCommand}"
+                                                              CommandParameter="{Binding}" />
+
+                                                    <MenuItem Header="Edit Name"
+                                                              Click="EditAnimationBrowserNameMenuItem_Click"
+                                                              Tag="{Binding}" />
+
+                                                    <MenuItem Header="Refresh This Thumbnail"
+                                                              Command="{Binding $parent[Window].DataContext.RefreshAnimationBrowserTileThumbnailCommand}"
+                                                              CommandParameter="{Binding}" />
+
+                                                    <Separator />
+
+                                                    <MenuItem Header="Export Frames"
+                                                              Command="{Binding $parent[Window].DataContext.ExportAnimationBrowserTileFramesCommand}"
+                                                              CommandParameter="{Binding}" />
+
+                                                    <MenuItem Header="Export VD"
+                                                              Command="{Binding $parent[Window].DataContext.ExportAnimationBrowserTileVdCommand}"
+                                                              CommandParameter="{Binding}" />
+
+                                                    <Separator />
+
+                                                    <MenuItem Header="Delete Animation"
+                                                              Command="{Binding $parent[Window].DataContext.DeleteAnimationBrowserTileCommand}"
+                                                              CommandParameter="{Binding}" />
+
+                                                    <MenuItem Header="Copy Body ID"
+                                                              Click="CopyAnimationBrowserBodyIdMenuItem_Click"
+                                                              Tag="{Binding}" />
+
+                                                    <MenuItem Header="Copy Source File"
+                                                              Click="CopyAnimationBrowserSourceFileMenuItem_Click"
+                                                              Tag="{Binding}" />
+                                                </ContextMenu>
+                                            </Border.ContextMenu>
+                                            <Grid RowDefinitions="*,Auto">
                                                 <Border Grid.Row="0"
                                                         Background="#101419"
                                                         BorderBrush="#343B46"
                                                         BorderThickness="1"
                                                         CornerRadius="3"
                                                         Padding="2">
-                                                    <Grid Width="72"
-                                                          Height="72"
+                                                    <Grid Width="{Binding $parent[Window].DataContext.AnimationBrowserImageHostSize}"
+                                                          Height="{Binding $parent[Window].DataContext.AnimationBrowserImageHostSize}"
                                                           HorizontalAlignment="Center"
                                                           VerticalAlignment="Center">
                                                         <Image Source="{Binding Thumbnail}"
+                                                               Width="{Binding $parent[Window].DataContext.AnimationBrowserImageBoxSize}"
+                                                               Height="{Binding $parent[Window].DataContext.AnimationBrowserImageBoxSize}"
                                                                Stretch="Uniform"
                                                                RenderOptions.BitmapInterpolationMode="None"
                                                                HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center" />
+                                                               VerticalAlignment="Center"
+                                                               IsVisible="{Binding !IsMissingSlot}" />
+
+                                                        <TextBlock Text="MISSING"
+                                                                   IsVisible="{Binding IsMissingSlot}"
+                                                                   Foreground="#7F8790"
+                                                                   FontSize="9"
+                                                                   FontWeight="Bold"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
                                                     </Grid>
                                                 </Border>
 
                                                 <TextBlock Grid.Row="1"
-                                                           Text="{Binding SourceEntry.BodyId}"
+                                                           Text="{Binding DisplayName}"
                                                            Foreground="White"
                                                            FontSize="10"
                                                            HorizontalAlignment="Center"
                                                            TextAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
                                                            Margin="0,1,0,0" />
                                             </Grid>
                                         </Border>

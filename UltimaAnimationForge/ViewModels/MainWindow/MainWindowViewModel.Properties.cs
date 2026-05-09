@@ -713,7 +713,25 @@ public partial class MainWindowViewModel
         }
     }
 
-    public string SelectedAnimationName => SelectedAnimation?.DisplayName ?? "None";
+    public string SelectedAnimationName
+    {
+        get
+        {
+            if (SelectedAnimation == null)
+            {
+                return "None";
+            }
+
+            if (AnimationBrowserShowNames &&
+                animationBrowserNamesByBodyId.TryGetValue(SelectedAnimation.BodyId, out string? name) &&
+                !string.IsNullOrWhiteSpace(name))
+            {
+                return "Body " + SelectedAnimation.BodyId + " - " + name;
+            }
+
+            return SelectedAnimation.DisplayName;
+        }
+    }
     public string SelectedBodyId => SelectedAnimation != null ? SelectedAnimation.BodyId.ToString() : "-";
     public string SelectedActionId => SelectedAnimation != null ? SelectedAnimation.ActionId.ToString() : "-";
     public string SelectedFrameCount => SelectedAnimation != null ? SelectedAnimation.FrameCount.ToString() : "-";

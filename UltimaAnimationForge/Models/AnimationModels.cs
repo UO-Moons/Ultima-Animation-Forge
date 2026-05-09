@@ -1,5 +1,7 @@
 ﻿using Avalonia.Media.Imaging;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace UltimaAnimationForge.Models;
 
@@ -120,15 +122,53 @@ public sealed class AnimationFrameThumbnail
     public string DisplayText => (FrameIndex + 1).ToString("D3");
 }
 
-public sealed class AnimationBrowserTileViewModel
+public sealed class AnimationBrowserTileViewModel : INotifyPropertyChanged
 {
+    private WriteableBitmap? thumbnail;
+    private bool isLoadingThumbnail;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     public AnimationEntry? SourceEntry { get; set; }
 
-    public WriteableBitmap? Thumbnail { get; set; }
+    public WriteableBitmap? Thumbnail
+    {
+        get => thumbnail;
+        set
+        {
+            if (!ReferenceEquals(thumbnail, value))
+            {
+                thumbnail = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool IsLoadingThumbnail
+    {
+        get => isLoadingThumbnail;
+        set
+        {
+            if (isLoadingThumbnail != value)
+            {
+                isLoadingThumbnail = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool IsMissingSlot { get; set; }
+
+    public int BodyId { get; set; }
 
     public string DisplayName { get; set; } = string.Empty;
 
     public string SecondaryText { get; set; } = string.Empty;
 
     public string SourceText { get; set; } = string.Empty;
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }
