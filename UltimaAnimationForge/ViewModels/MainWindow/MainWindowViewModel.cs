@@ -32,15 +32,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private CancellationTokenSource? animationBrowserThumbnailCancellation;
     public ICommand ClearSelectedMulSlotCommand { get; }
 
-    private readonly EquipmentBinderService equipmentBinderService = new();
-
-    public ICommand BuildEquipmentBinderPreviewCommand { get; }
-    public ICommand AutoFillEquipmentBinderDisplayBodyCommand { get; }
-    public ICommand ApplyEquipmentBinderCommand { get; }
-
-    public ICommand LoadEquipmentArtPickerCommand { get; }
-    public ICommand LoadEquipmentGumpPickerCommand { get; }
-
     [ObservableProperty]
     private string animationBrowserSortMode = "Body ID Asc";
 
@@ -130,8 +121,6 @@ public partial class MainWindowViewModel : ViewModelBase
     public ICommand ExportAnimationBrowserTileFramesCommand { get; }
     public ICommand ExportAnimationBrowserTileVdCommand { get; }
     public ICommand DeleteAnimationBrowserTileCommand { get; }
-    public ICommand LoadEquipmentArtGumpPickerCommand { get; }
-    public ICommand CloseEquipmentArtGumpPickerCommand { get; }
 
     private void OpenDiscord()
     {
@@ -826,13 +815,6 @@ public partial class MainWindowViewModel : ViewModelBase
         ExportAnimationBrowserTileVdCommand = new AsyncRelayCommand<AnimationBrowserTileViewModel?>(ExportAnimationBrowserTileVdAsync);
         DeleteAnimationBrowserTileCommand = new AsyncRelayCommand<AnimationBrowserTileViewModel?>(DeleteAnimationBrowserTileAsync);
         ClearSelectedMulSlotCommand = new AsyncRelayCommand(ClearSelectedMulSlotAsync);
-        BuildEquipmentBinderPreviewCommand = new RelayCommand(BuildEquipmentBinderPreview);
-        AutoFillEquipmentBinderDisplayBodyCommand = new RelayCommand(AutoFillEquipmentBinderDisplayBody);
-        ApplyEquipmentBinderCommand = new RelayCommand(ApplyEquipmentBinder);
-        CloseEquipmentArtGumpPickerCommand = new RelayCommand(CloseEquipmentArtGumpPicker);
-
-        LoadEquipmentArtPickerCommand = new RelayCommand(LoadEquipmentArtPicker);
-        LoadEquipmentGumpPickerCommand = new RelayCommand(LoadEquipmentGumpPicker);
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {
@@ -2656,11 +2638,5 @@ public partial class MainWindowViewModel : ViewModelBase
             "Cleared " + clearedFileName +
             " body index " + clearedBodyIndex +
             " / true body " + clearedTrueBodyId + ".";
-    }
-
-    private void CloseEquipmentArtGumpPicker()
-    {
-        ShowEquipmentArtGumpPicker = false;
-        OnPropertyChanged(nameof(ShowNormalPreviewPanel));
     }
 }

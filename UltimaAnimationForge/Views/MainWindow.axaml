@@ -945,7 +945,7 @@
 
         <!-- main content -->
         <Grid Grid.Row="5"
-              ColumnDefinitions="280,*,370">
+              ColumnDefinitions="280,*,310">
 
             <!-- left -->
             <Border Grid.Column="0"
@@ -1090,6 +1090,7 @@
 
             <!-- center -->
             <Grid Grid.Column="1"
+                  Grid.ColumnSpan="2"
                   Margin="14">
 
                 <!-- Animation Browser -->
@@ -1312,151 +1313,11 @@
                     </Border>
                 </Grid>
 
-    <!-- Equipment Art / Gump Picker -->
-    <Grid RowDefinitions="Auto,*"
-          IsVisible="{Binding ShowEquipmentArtGumpPicker}">
-
-        <Grid Grid.Row="0"
-              ColumnDefinitions="*,Auto"
-              Margin="0,0,0,10">
-            <StackPanel>
-                <TextBlock Text="Art / Gump Picker"
-                           FontSize="16"
-                           FontWeight="Bold"/>
-                <TextBlock Text="{Binding EquipmentPickerStatusText}"
-                           TextWrapping="Wrap"
-                           Opacity="0.85"/>
-            </StackPanel>
-
-            <Button Grid.Column="1"
-                    Content="Close Picker"
-                    Command="{Binding CloseEquipmentArtGumpPickerCommand}"/>
-        </Grid>
-
-        <Grid Grid.Row="1"
-              ColumnDefinitions="*,*"
-              ColumnSpacing="12">
-
-            <Border Grid.Column="0"
-                    Classes="card"
-                    Padding="10">
-                <Grid RowDefinitions="Auto,*">
-    <Grid Grid.Row="0"
-          RowDefinitions="Auto,Auto"
-          Margin="0,0,0,8">
-        <TextBlock Grid.Row="0"
-                   Text="Item Art"
-                   FontWeight="Bold"/>
-
-        <TextBox Grid.Row="1"
-                 Watermark="Search art ID, hex, source..."
-                 Text="{Binding EquipmentArtPickerSearchText}"
-                 Margin="0,6,0,0"/>
-</Grid>
-
-                    <ScrollViewer Grid.Row="1"
-                                  VerticalScrollBarVisibility="Auto">
-                        <ListBox ItemsSource="{Binding EquipmentArtPickerEntries}"
-                                 SelectedItem="{Binding SelectedEquipmentArtPickerEntry}">
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Classes="card"
-                                            Width="96"
-                                            Height="116"
-                                            Padding="4"
-                                            Margin="2">
-                                        <StackPanel Spacing="4">
-                                            <Border Background="#101419"
-                                                    BorderBrush="#343B46"
-                                                    BorderThickness="1"
-                                                    Height="72">
-                                                <Image Source="{Binding Thumbnail}"
-                                                       Stretch="Uniform"
-                                                       RenderOptions.BitmapInterpolationMode="None"/>
-                                            </Border>
-
-                                            <TextBlock Text="{Binding DisplayText}"
-                                                       FontSize="10"
-                                                       TextAlignment="Center"
-                                                       TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
-
-            <Border Grid.Column="1"
-                    Classes="card"
-                    Padding="10">
-                <Grid RowDefinitions="Auto,*">
-    <Grid Grid.Row="0"
-          RowDefinitions="Auto,Auto"
-          Margin="0,0,0,8">
-        <TextBlock Grid.Row="0"
-                   Text="Gumps"
-                   FontWeight="Bold"/>
-
-        <TextBox Grid.Row="1"
-                 Watermark="Search gump ID, hex, used..."
-                 Text="{Binding EquipmentGumpPickerSearchText}"
-                 Margin="0,6,0,0"/>
-</Grid>
-
-                    <ScrollViewer Grid.Row="1"
-                                  VerticalScrollBarVisibility="Auto">
-                        <ListBox ItemsSource="{Binding EquipmentGumpPickerEntries}"
-                                 SelectedItem="{Binding SelectedEquipmentGumpPickerEntry}">
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Classes="card"
-                                            Width="96"
-                                            Height="116"
-                                            Padding="4"
-                                            Margin="2">
-                                        <StackPanel Spacing="4">
-                                            <Border Background="#101419"
-                                                    BorderBrush="#343B46"
-                                                    BorderThickness="1"
-                                                    Height="72">
-                                                <Image Source="{Binding Thumbnail}"
-                                                       Stretch="Uniform"
-                                                       RenderOptions.BitmapInterpolationMode="None"/>
-                                            </Border>
-
-                                            <TextBlock Text="{Binding DisplayText}"
-                                                       FontSize="10"
-                                                       TextAlignment="Center"
-                                                       TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
-        </Grid>
-</Grid>
-
+                <!-- Normal Editor Preview -->
                 <!-- Normal Editor Preview -->
                 <Grid Grid.Column="0"
                       RowDefinitions="Auto,*"
-                      IsVisible="{Binding ShowNormalPreviewPanel}">
+                      IsVisible="{Binding ShowAnimationEditorPanel}">
                     <TextBlock Grid.Row="0"
                                Text="Preview"
                                FontSize="16"
@@ -1684,8 +1545,7 @@
                                    FontWeight="Bold" />
 
                         <Border Classes="card"
-                                Padding="10"
-                                IsVisible="{Binding ShowAnimationView}">
+                                Padding="10">
                             <StackPanel Spacing="8">
                                 <TextBlock Text="Playback"
                                            FontWeight="Bold" />
@@ -1817,150 +1677,6 @@
                                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Type:" Margin="0,0,10,0" FontWeight="SemiBold"/>
                                     <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedMulSlotExtra}" TextWrapping="Wrap"/>
                                 </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Classes="card"
-                                Padding="10"
-                                IsVisible="{Binding ShowMulSlotList}">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="Equipment Binder"
-                                           FontSize="16"
-                                           FontWeight="Bold" />
-
-                                <TextBlock Text="{Binding EquipmentBinderTargetSlotText}"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.85" />
-
-                                <Grid ColumnDefinitions="Auto,*"
-                                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
-                                      ColumnSpacing="8"
-                                      RowSpacing="6">
-
-                                    <TextBlock Grid.Row="0"
-                                               Grid.Column="0"
-                                               Text="Item Art ID:"
-                                               VerticalAlignment="Center" />
-                                    <NumericUpDown Grid.Row="0"
-                                                   Grid.Column="1"
-                                                   Minimum="0"
-                                                   Maximum="65535"
-                                                   Value="{Binding EquipmentBinderItemArtId}" />
-
-                                    <TextBlock Grid.Row="1"
-                                               Grid.Column="0"
-                                               Text="Name:"
-                                               VerticalAlignment="Center" />
-                                    <TextBox Grid.Row="1"
-                                             Grid.Column="1"
-                                             Text="{Binding EquipmentBinderName}"
-                                             Watermark="flail" />
-
-                                    <TextBlock Grid.Row="2"
-                                               Grid.Column="0"
-                                               Text="Display/Gump:"
-                                               VerticalAlignment="Center" />
-                                    <DockPanel Grid.Row="2"
-                                               Grid.Column="1">
-                                        <Button DockPanel.Dock="Right"
-                                                Content="Auto"
-                                                Margin="6,0,0,0"
-                                                Command="{Binding AutoFillEquipmentBinderDisplayBodyCommand}" />
-                                        <NumericUpDown Minimum="0"
-                                                       Maximum="65534"
-                                                       Value="{Binding EquipmentBinderDisplayBodyId}" />
-                                    </DockPanel>
-
-                                    <TextBlock Grid.Row="3"
-                                               Grid.Column="0"
-                                               Text="Anim Body:"
-                                               VerticalAlignment="Center" />
-                                    <NumericUpDown Grid.Row="3"
-                                                   Grid.Column="1"
-                                                   Minimum="1"
-                                                   Maximum="65535"
-                                                   Value="{Binding EquipmentBinderAnimationBodyId}" />
-
-                                    <TextBlock Grid.Row="4"
-                                               Grid.Column="0"
-                                               Text="MobType:"
-                                               VerticalAlignment="Center" />
-                                    <TextBlock Grid.Row="4"
-                                               Grid.Column="1"
-                                               Text="EQUIPMENT"
-                                               FontWeight="Bold"
-                                               VerticalAlignment="Center" />
-
-    <StackPanel Grid.Row="5"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Spacing="4">
-        <CheckBox Content="Overwrite body.def redirect"
-                  IsChecked="{Binding EquipmentBinderOverwriteBodyDef}"/>
-
-        <CheckBox Content="Overwrite mobtypes entry"
-                  IsChecked="{Binding EquipmentBinderOverwriteMobType}"/>
-
-        <CheckBox Content="Update tiledata.mul animation"
-                  IsChecked="{Binding EquipmentBinderUpdateTileDataAnimation}"/>
-</StackPanel>
-                                </Grid>
-
-    <Grid ColumnDefinitions="*,*"
-          RowDefinitions="Auto,Auto,Auto"
-          ColumnSpacing="8"
-          RowSpacing="6">
-
-        <Button Grid.Row="0"
-                Grid.Column="0"
-                Content="Load Art"
-                Command="{Binding LoadEquipmentArtPickerCommand}"/>
-
-        <Button Grid.Row="0"
-                Grid.Column="1"
-                Content="Load Gumps"
-                Command="{Binding LoadEquipmentGumpPickerCommand}"/>
-
-        <Button Grid.Row="1"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Content="Build Preview"
-                Command="{Binding BuildEquipmentBinderPreviewCommand}"/>
-
-        <Button Grid.Row="2"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Content="Apply Binder"
-                Command="{Binding ApplyEquipmentBinderCommand}"/>
-</Grid>
-
-    <TextBlock Text="{Binding EquipmentBinderExistsText}"
-               TextWrapping="Wrap"
-               Opacity="0.8"/>
-
-    <TextBlock Text="tiledata.mul:"
-               FontWeight="Bold"/>
-    <TextBox Text="{Binding EquipmentBinderTileDataLine}"
-             IsReadOnly="True"/>
-
-    <TextBlock Text="body.def:"
-               FontWeight="Bold"/>
-    <TextBox Text="{Binding EquipmentBinderBodyDefLine}"
-         IsReadOnly="True"/>
-
-                                <TextBlock Text="bodyconv.def:"
-                                           FontWeight="Bold" />
-                                <TextBox Text="{Binding EquipmentBinderBodyConvLine}"
-                                         IsReadOnly="True" />
-
-                                <TextBlock Text="mobtypes.txt:"
-                                           FontWeight="Bold" />
-                                <TextBox Text="{Binding EquipmentBinderMobTypeLine}"
-                                         IsReadOnly="True" />
-
-                                <TextBlock Text="{Binding EquipmentBinderSummary}"
-                                           TextWrapping="Wrap"
-                                           Opacity="0.85" />
                             </StackPanel>
                         </Border>
 

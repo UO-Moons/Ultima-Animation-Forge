@@ -353,18 +353,6 @@ public partial class MainWindowViewModel
         OnPropertyChanged(nameof(PreviewInfoText));
 
         LoadSelectedMulSlot();
-
-        OnPropertyChanged(nameof(EquipmentBinderTargetSlotText));
-
-        if (EquipmentBinderAnimationBodyId <= 0)
-        {
-            EquipmentBinderAnimationBodyId = value.TrueBodyId > 0 ? value.TrueBodyId : value.BodyIndex;
-        }
-
-        if (!string.IsNullOrWhiteSpace(EquipmentBinderName))
-        {
-            BuildEquipmentBinderPreview();
-        }
     }
 
     partial void OnSelectedUopBodySlotChanged(UopBodySlotEntry? value)

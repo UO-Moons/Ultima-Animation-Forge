@@ -166,19 +166,8 @@ public class AnimationCacheService
             "anim*.mul",
             "anim*.idx",
             "AnimationFrame*.uop",
-            "AnimationSequence.uop",
-
             "bodyconv.def",
-            "mobtypes.txt",
-            "body.def",
-
-            "tiledata.mul",
-            "gumpidx.mul",
-            "gumpart.mul",
-            "gumpartLegacyMUL.uop",
-            "artidx.mul",
-            "art.mul",
-            "artLegacyMUL.uop"
+            "mobtypes.txt"
         };
 
         HashSet<string> seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
