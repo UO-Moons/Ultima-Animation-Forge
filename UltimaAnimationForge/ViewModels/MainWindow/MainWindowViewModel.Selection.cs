@@ -365,6 +365,8 @@ public partial class MainWindowViewModel
         {
             BuildEquipmentBinderPreview();
         }
+
+        equipmentBinderToolViewModel?.RefreshHostSelection();
     }
 
     partial void OnSelectedUopBodySlotChanged(UopBodySlotEntry? value)

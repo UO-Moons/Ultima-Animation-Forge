@@ -27,6 +27,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private Window? detachedPreviewWindow;
     private Window? detachedDebugWindow;
     private DetachedPreviewViewModel? detachedPreviewViewModel;
+    private EquipmentBinderWindow? equipmentBinderToolWindow;
+    private EquipmentBinderToolViewModel? equipmentBinderToolViewModel;
     private readonly Dictionary<string, WriteableBitmap?> animationBrowserThumbnailCache = new();
     private bool syncingAnimationBrowserSelection;
     private CancellationTokenSource? animationBrowserThumbnailCancellation;
@@ -272,6 +274,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public ICommand ApplyCompareOverlayToCurrentDirectionCommand { get; }
     public ICommand SetupMountRiderAlignmentCommand { get; }
     public ICommand OpenMythicPackageViewerCommand { get; }
+    public ICommand OpenEquipmentBinderToolCommand { get; }
     public ICommand ShowAnimationEditorCommand { get; }
     public ICommand ShowAnimationBrowserCommand { get; }
 
@@ -817,6 +820,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ApplyCompareOverlayToCurrentFrameCommand = new RelayCommand(ApplyCompareOverlayToCurrentFrame);
         ApplyCompareOverlayToCurrentDirectionCommand = new RelayCommand(ApplyCompareOverlayToCurrentDirection);
         OpenMythicPackageViewerCommand = new RelayCommand(OpenMythicPackageViewer);
+        OpenEquipmentBinderToolCommand = new RelayCommand(OpenEquipmentBinderTool);
         ApplyCurrentComparePoseToAllFramesCommand = new RelayCommand(ApplyCurrentComparePoseToAllFrames);
         RefreshAnimationBrowserThumbnailsCommand = new RelayCommand(RefreshAnimationBrowserThumbnails);
         OpenAnimationBrowserTileCommand = new RelayCommand<AnimationBrowserTileViewModel?>(OpenAnimationBrowserTile);
@@ -911,6 +915,51 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         StatusText = "Opened EC / KR Mythic Package Viewer.";
+    }
+
+    private void OpenEquipmentBinderTool()
+    {
+        if (equipmentBinderToolWindow != null)
+        {
+            equipmentBinderToolWindow.Activate();
+            return;
+        }
+
+        equipmentBinderToolViewModel = new EquipmentBinderToolViewModel(new EquipmentBinderToolHostContext
+        {
+            CurrentFolderPathProvider = GetCurrentFolderPath,
+            SelectedMulSlotProvider = () => SelectedMulSlot,
+            StatusCallback = message => StatusText = message,
+            ApplySuccessCallback = () => animationCacheService.DeleteAllCaches()
+        });
+
+        EquipmentBinderWindow window = new EquipmentBinderWindow
+        {
+            Width = 760,
+            Height = 820,
+            DataContext = equipmentBinderToolViewModel
+        };
+
+        window.Closed += (_, _) =>
+        {
+            equipmentBinderToolWindow = null;
+            equipmentBinderToolViewModel = null;
+        };
+
+        equipmentBinderToolWindow = window;
+
+        Window? mainWindow = GetMainWindow();
+        if (mainWindow != null)
+        {
+            window.Show(mainWindow);
+        }
+        else
+        {
+            window.Show();
+        }
+
+        equipmentBinderToolViewModel.RefreshHostSelection();
+        StatusText = "Opened Equipment Binder Tool.";
     }
 
     private static readonly string[] MulAnimalActions =

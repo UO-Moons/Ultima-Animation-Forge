@@ -401,6 +401,8 @@
                                   Classes="topAction">
                             <MenuItem Header="Open EC / KR Package Viewer"
                                       Command="{Binding OpenMythicPackageViewerCommand}" />
+                            <MenuItem Header="Open Equipment Binder Tool"
+                                      Command="{Binding OpenEquipmentBinderToolCommand}" />
                             <Separator />
                             <MenuItem Header="Create Empty MUL/IDX"
                                       Command="{Binding CreateEmptyLegacyMulIdxCommand}" />
