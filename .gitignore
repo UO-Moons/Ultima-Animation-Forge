@@ -1,0 +1,8 @@
+*.db
+*.db-shm
+*.db-wal
+*.vsidx
+*.cs
+/UltimaAnimationForge/obj/Debug
+/UltimaAnimationForge/obj
+/.vs/UltimaAnimationForge/v17

@@ -120,7 +120,7 @@ public partial class MainWindowViewModel
             return;
         }
 
-        await ImportVdFromPathAsync(vdPath);
+        await ImportVdFromPathAsync(vdPath, false);
     }
 
     public async Task ImportVdToUopAsync()
@@ -799,11 +799,11 @@ public partial class MainWindowViewModel
         }
         else
         {
-            await ImportVdFromPathAsync(vdPath);
+            await ImportVdFromPathAsync(vdPath, true);
         }
     }
 
-    private async Task ImportVdFromPathAsync(string vdPath)
+    private async Task ImportVdFromPathAsync(string vdPath, bool allowFileNameAutoAssign)
     {
         if (!ShowMulSlotView)
         {
@@ -827,8 +827,7 @@ public partial class MainWindowViewModel
 
         MulSlotEntry importedTargetSlot = SelectedMulSlot;
 
-        VdImportService.ImportPlan plan =
-            vdImportService.BuildMulImportPlan(currentFolderPath, vdPath, importedTargetSlot);
+        VdImportService.ImportPlan plan = vdImportService.BuildMulImportPlan(currentFolderPath, vdPath, importedTargetSlot);
 
         StatusText = plan.Message;
 
@@ -860,8 +859,7 @@ public partial class MainWindowViewModel
         {
             BodyAssignmentDialogResult? assignmentResult = null;
 
-            if (TryParseVdFileNameAssignment(vdPath, out VdFileNameAssignment? parsedAssignment) &&
-                parsedAssignment != null)
+            if (allowFileNameAutoAssign && TryParseVdFileNameAssignment(vdPath, out VdFileNameAssignment? parsedAssignment) && parsedAssignment != null)
             {
                 assignmentResult = new BodyAssignmentDialogResult
                 {
