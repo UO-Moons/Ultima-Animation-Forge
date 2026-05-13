@@ -127,12 +127,12 @@ public sealed class MobTypeAssignmentService
     public string BuildPreviewLine(int bodyId, string mobType, string? comment = null)
     {
         string normalizedMobType = NormalizeMobType(mobType);
-        string line = bodyId + " " + normalizedMobType;
+        string line = bodyId + "\t" + normalizedMobType + "\t0";
 
         string cleanedComment = NormalizeComment(comment);
         if (!string.IsNullOrWhiteSpace(cleanedComment))
         {
-            line += " # " + cleanedComment;
+            line += "\t# " + cleanedComment;
         }
 
         return line;

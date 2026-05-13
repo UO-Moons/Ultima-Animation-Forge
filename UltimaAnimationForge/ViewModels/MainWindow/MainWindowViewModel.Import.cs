@@ -901,13 +901,55 @@ public partial class MainWindowViewModel
                 assignmentResult.MobType,
                 assignmentResult.Comment);
         }
-
+        LoadQueuedVdImportPreview(importedTargetSlot, plan);
         RefreshUnsavedChangesState();
 
         StatusText =
             "Queued VD import for " +
             Path.GetFileName(plan.MulPath) +
             " slot " + importedTargetSlot.BodyIndex +
+            ". Click Save Changes to write to disk.";
+    }
+
+    private void LoadQueuedVdImportPreview(MulSlotEntry targetSlot, VdImportService.ImportPlan plan)
+    {
+        int actionIndex = GetSelectedActionIndex();
+        int directionIndex = GetSelectedDirectionIndex();
+
+        if (actionIndex < 0 || actionIndex >= targetSlot.AnimLength)
+        {
+            actionIndex = 0;
+        }
+
+        if (directionIndex < 0 || directionIndex > 4)
+        {
+            directionIndex = 0;
+        }
+
+        int localIndex = (actionIndex * 5) + directionIndex;
+        int targetIndex = plan.BaseIndex + localIndex;
+
+        VdImportService.PendingImportEntry? pendingEntry =
+            plan.PopulatedEntries.FirstOrDefault(x => x.TargetIndex == targetIndex);
+
+        if (pendingEntry == null || pendingEntry.BlockData.Length == 0)
+        {
+            StatusText = "VD import queued, but selected action/direction has no frame data.";
+            return;
+        }
+
+        ClearDecodedFramesAndThumbnails();
+
+        DecodeMulAnimationFromOffset(
+            pendingEntry.BlockData,
+            512,
+            "Queued VD import preview: " + Path.GetFileName(plan.MulPath) +
+            " slot " + targetSlot.BodyIndex);
+
+        StatusText =
+            "Previewing queued VD import for " +
+            Path.GetFileName(plan.MulPath) +
+            " slot " + targetSlot.BodyIndex +
             ". Click Save Changes to write to disk.";
     }
 
