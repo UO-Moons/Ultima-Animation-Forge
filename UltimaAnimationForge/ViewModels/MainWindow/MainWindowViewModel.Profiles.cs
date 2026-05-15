@@ -52,7 +52,14 @@ public partial class MainWindowViewModel
 
         if (result.ActiveProfileChanged || result.RequiresReload)
         {
+            ResetGumpsForProfileChange();
+
             await LoadCurrentProfileFolderAsync();
+
+            if (ActiveToolTab == MainToolTab.Gumps)
+            {
+                InitializeGumpsForCurrentFolder();
+            }
         }
     }
 
@@ -86,7 +93,14 @@ public partial class MainWindowViewModel
 
         LoadActiveProfileIntoUi();
 
+        ResetGumpsForProfileChange();
+
         _ = LoadCurrentProfileFolderAsync();
+
+        if (ActiveToolTab == MainToolTab.Gumps)
+        {
+            InitializeGumpsForCurrentFolder();
+        }
     }
 
     private AnimationViewerProfile? GetActiveProfile()

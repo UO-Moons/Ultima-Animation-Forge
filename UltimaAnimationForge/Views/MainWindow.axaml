@@ -321,74 +321,127 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
 
-        <!-- top bar -->
+        <!-- profile/action bar -->
         <Border Grid.Row="0"
                 Background="#23282F"
                 BorderBrush="#343B46"
                 BorderThickness="0,0,0,1"
-                Padding="12,10">
-            <Grid ColumnDefinitions="*,360">
-                <WrapPanel Grid.Column="0"
+                Padding="10,8">
+            <Grid ColumnDefinitions="Auto,190,Auto,Auto,Auto,*,360">
+                <TextBlock Grid.Column="0"
+                           Text="Profile"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0"
+                           Foreground="#D5DCE4" />
+
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding ProfileOptions}"
+                          SelectedIndex="{Binding SelectedProfileIndex, Mode=TwoWay}"
+                          VerticalAlignment="Center"
+                          Margin="0,0,8,0" />
+
+                <Button Grid.Column="2"
+                        Content="Manage Profiles"
+                        Command="{Binding ManageProfilesCommand}"
+                        Margin="0,0,8,0" />
+
+                <Button Grid.Column="3"
+                        Content="Open UO Folder"
+                        Command="{Binding OpenFolderCommand}"
+                        Margin="0,0,8,0" />
+
+                <Button Grid.Column="4"
+                        Content="?"
+                        Command="{Binding HelpCommand}"
+                        Width="36"
+                        ToolTip.Tip="Show help and shortcuts" />
+
+                <Border Grid.Column="6"
+                        Background="#1A1F25"
+                        BorderBrush="#39414D"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10,8"
+                        Margin="12,0,0,0">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding HeaderStatusText}"
+                                   Foreground="#EDF1F5"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="2" />
+                        <TextBlock Text="{Binding UnsavedChangesText}"
+                                   Foreground="#F2C14E"
+                                   FontWeight="Bold"
+                                   IsVisible="{Binding HasAnyUnsavedChanges}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- tool tabs -->
+        <Border Grid.Row="1"
+                Background="#1B2027"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="8,0">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            Spacing="2">
+                    <Button Content="Animations"
+                            Command="{Binding ShowAnimationEditorCommand}"
+                            CornerRadius="0"
+                            Padding="14,6"
+                            MinHeight="28" />
+
+                    <Button Content="Animation Browser"
+                            Command="{Binding ShowAnimationBrowserCommand}"
+                            CornerRadius="0"
+                            Padding="14,6"
+                            MinHeight="28" />
+
+                    <Button Content="Gumps"
+                            Command="{Binding ShowGumpEditorCommand}"
+                            CornerRadius="0"
+                            Padding="14,6"
+                            MinHeight="28" />
+                </StackPanel>
+
+                <WrapPanel Grid.Column="2"
                            Orientation="Horizontal"
-                           VerticalAlignment="Center">
-                    <TextBlock Text="Profile"
-                               VerticalAlignment="Center"
-                               Margin="0,0,8,0"
-                               Foreground="#D5DCE4" />
-
-                    <ComboBox Width="180"
-                              ItemsSource="{Binding ProfileOptions}"
-                              SelectedIndex="{Binding SelectedProfileIndex, Mode=TwoWay}"
-                              Margin="0,0,8,0" />
-
-                    <Button Content="Manage Profiles"
-                            Command="{Binding ManageProfilesCommand}"
-                            Margin="0,0,8,0" />
-
-                    <Button Content="Open UO Folder"
-                            Command="{Binding OpenFolderCommand}"
-                            Margin="0,0,8,0" />
-
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding ShowAnimationEditorPanel}">
                     <Button Content="Save Changes"
                             Command="{Binding SaveChangesCommand}"
                             IsEnabled="{Binding CanSaveChanges}"
-                            Margin="0,0,8,0" />
-
-                    <Button Content="?"
-                            Command="{Binding HelpCommand}"
-                            Width="36"
-                            Margin="0,0,8,0"
-                            ToolTip.Tip="Show help and shortcuts" />
+                            MinHeight="28"
+                            Padding="10,5"
+                            Margin="0,0,6,0" />
 
                     <Button Content="Preview Window"
                             Command="{Binding PopOutPreviewCommand}"
-                            Margin="0,0,8,0" />
+                            MinHeight="28"
+                            Padding="10,5"
+                            Margin="0,0,6,0" />
 
                     <Menu Background="Transparent"
-                          IsVisible="{Binding ShowAnimationEditorPanel}">
+                          Margin="0,0,6,0">
                         <MenuItem Header="Edit ▼"
                                   Classes="topAction">
-
                             <MenuItem Header="MUL Slot View"
                                       ToggleType="CheckBox"
                                       IsChecked="{Binding ShowMulSlotView, Mode=TwoWay}" />
-
                             <Separator />
-
                             <MenuItem Header="Replace Frame"
                                       Command="{Binding ReplaceSelectedFrameCommand}"
                                       IsVisible="{Binding ShowAnimationView}" />
-
                             <MenuItem Header="Remove Frame"
                                       Command="{Binding RemoveSelectedFrameCommand}"
                                       IsVisible="{Binding ShowAnimationView}" />
-
                             <MenuItem Header="Import PNG Sequence"
                                       Command="{Binding ImportPngSequenceCommand}"
                                       IsVisible="{Binding ShowAnimationView}" />
-
                             <Separator IsVisible="{Binding ShowAnimationView}" />
-
                             <MenuItem Header="Undo"
                                       Command="{Binding UndoFrameEditCommand}"
                                       IsEnabled="{Binding CanUndoFrameEdit}"
@@ -396,7 +449,8 @@
                         </MenuItem>
                     </Menu>
 
-                    <Menu Background="Transparent">
+                    <Menu Background="Transparent"
+                          Margin="0,0,6,0">
                         <MenuItem Header="Import / Export ▼"
                                   Classes="topAction">
                             <MenuItem Header="Open EC / KR Package Viewer"
@@ -425,47 +479,22 @@
                                       IsVisible="{Binding ShowAnimationView}" />
                         </MenuItem>
                     </Menu>
+
                     <Button Content="Uox3 - Discord"
                             Command="{Binding OpenDiscordCommand}"
-                            Margin="6,0" />
-
-                    <Button Content="Editor"
-                            Command="{Binding ShowAnimationEditorCommand}"
-                            Margin="6,0" />
-
-                    <Button Content="Animation Browser"
-                            Command="{Binding ShowAnimationBrowserCommand}"
-                            Margin="6,0" />
+                            MinHeight="28"
+                            Padding="10,5" />
                 </WrapPanel>
-
-                <Border Grid.Column="1"
-                        Background="#1A1F25"
-                        BorderBrush="#39414D"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="10,8"
-                        Margin="12,0,0,0">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="{Binding StatusText}"
-                                   Foreground="#EDF1F5"
-                                   TextWrapping="Wrap"
-                                   TextTrimming="CharacterEllipsis"
-                                   MaxLines="2" />
-                        <TextBlock Text="{Binding UnsavedChangesText}"
-                                   Foreground="#F2C14E"
-                                   FontWeight="Bold"
-                                   IsVisible="{Binding HasAnyUnsavedChanges}" />
-                    </StackPanel>
-                </Border>
             </Grid>
         </Border>
 
         <!-- filters -->
-        <Border Grid.Row="1"
+        <Border Grid.Row="2"
                 Background="#1E232A"
                 BorderBrush="#343B46"
                 BorderThickness="0,0,0,1"
-                Padding="12,10">
+                Padding="12,10"
+                IsVisible="{Binding ShowAnimationEditorPanel}">
             <Grid ColumnDefinitions="Auto,144,12,Auto,98,12,Auto,100,118,12,Auto,128,18,Auto,8,Auto,132,8,Auto,176,8,Auto,124,8,Auto,108,*"
                   VerticalAlignment="Center">
 
@@ -575,10 +604,6 @@
                             <StackPanel Spacing="0">
                                 <TextBlock Text="{Binding DisplayName}"
                                            FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding SecondaryText}"
-                                           FontSize="11"
-                                           Foreground="#9FB2C8"
-                                           TextWrapping="Wrap" />
                             </StackPanel>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
@@ -952,7 +977,8 @@
                     Background="#1E232A"
                     BorderBrush="#343B46"
                     BorderThickness="0,0,1,0"
-                    Padding="10">
+                    Padding="10"
+                    IsVisible="{Binding ShowAnimationEditorPanel}">
                 <Grid RowDefinitions="Auto,Auto,Auto,*">
                     <TextBlock Grid.Row="0"
                                Text="Animations"
@@ -1091,11 +1117,15 @@
             <!-- center -->
             <Grid Grid.Column="1"
                   Grid.ColumnSpan="2"
+                  ColumnDefinitions="*,310"
                   Margin="14">
 
                 <!-- Animation Browser -->
-                <Grid RowDefinitions="Auto,*"
-                      IsVisible="{Binding AnimationBrowserVisible}">
+                <Grid Grid.Column="0"
+                      Grid.ColumnSpan="2"
+                      RowDefinitions="Auto,*"
+                      Margin="-294,0,0,0"
+                      IsVisible="{Binding ShowAnimationBrowserPanel}">
 
                     <StackPanel Spacing="8">
                         <Grid ColumnDefinitions="Auto,220,12,Auto,150,12,Auto,150,*,Auto"
@@ -1313,7 +1343,444 @@
                     </Border>
                 </Grid>
 
-                <!-- Normal Editor Preview -->
+                <Grid Grid.Column="0"
+                      Grid.ColumnSpan="2"
+                      IsVisible="{Binding ShowGumpEditorPanel}"
+                      Margin="-294,0,0,0"
+                      RowDefinitions="Auto,*">
+
+                    <Border Grid.Row="0"
+                            Background="#1E232A"
+                            BorderBrush="#343B46"
+                            BorderThickness="0,0,0,1"
+                            Padding="12,8">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8"
+                                    VerticalAlignment="Center">
+
+                            <ComboBox Width="145"
+                                      ItemsSource="{Binding GumpSharpenModes}"
+                                      SelectedItem="{Binding SelectedGumpSharpenMode}"/>
+
+                            <Button Content="Sharpen"
+                                    Command="{Binding SharpenSelectedGumpCommand}"/>
+
+                            <Button Content="Contrast +"
+                                    Command="{Binding IncreaseGumpContrastCommand}"/>
+
+                            <Button Content="Contrast -"
+                                    Command="{Binding DecreaseGumpContrastCommand}"/>
+
+                            <Button Content="Brighten"
+                                    Command="{Binding BrightenGumpCommand}"/>
+
+                            <Button Content="Darken"
+                                    Command="{Binding DarkenGumpCommand}"/>
+
+                            <Button Content="Sat +"
+                                    Command="{Binding IncreaseGumpSaturationCommand}"/>
+
+                            <Button Content="Sat -"
+                                    Command="{Binding DecreaseGumpSaturationCommand}"/>
+
+                            <Button Content="Outline"
+                                    Command="{Binding OutlineGumpCommand}"/>
+
+                            <Button Content="Load Overlay Image"
+                                    Command="{Binding LoadGumpOverlayImageCommand}"/>
+
+                            <TextBlock Text="Overlay Opacity %"
+                                       Foreground="#AAB4C0"
+                                       VerticalAlignment="Center"/>
+
+                            <NumericUpDown Minimum="0"
+                                           Maximum="100"
+                                           Increment="5"
+                                           Width="125"
+                                           Value="{Binding GumpOverlayOpacityPercent}"/>
+
+                            <ComboBox Width="120"
+                                      ItemsSource="{Binding GumpOverlayBlendModes}"
+                                      SelectedItem="{Binding SelectedGumpOverlayBlendMode}"/>
+
+                            <Button Content="Apply Overlay To Gump"
+                                    Command="{Binding ApplyOverlayToGumpCommand}"/>
+
+                            <Button Content="Save Edit"
+                                    Command="{Binding SaveGumpEditCommand}"/>
+
+                            <Button Content="Reset Edit"
+                                    Command="{Binding ResetGumpEditPreviewCommand}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="300,*,260"
+                          Background="#111317">
+
+                        <Border Grid.Column="0"
+                                BorderBrush="#343B46"
+                                BorderThickness="0,0,1,0"
+                                Background="#161A20"
+                                Padding="8">
+                            <Grid RowDefinitions="Auto,*">
+
+                                <StackPanel Grid.Row="0"
+                                            Spacing="6"
+                                            Margin="0,0,0,8">
+                                    <TextBlock Text="Search"
+                                               FontWeight="Bold"
+                                               Foreground="#E4EAF2"/>
+
+                                    <TextBox Watermark="Gump ID..."
+                                             Text="{Binding GumpSearchText}"/>
+                                </StackPanel>
+
+                                <ListBox Grid.Row="1"
+                                         ItemsSource="{Binding GumpEntries}"
+                                         SelectedItem="{Binding SelectedGump}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnDefinitions="Auto,*"
+                                                  Margin="6">
+                                                <CheckBox Grid.Column="0"
+                                                          IsChecked="{Binding IsSelectedForExport}"
+                                                          IsVisible="{Binding IsValid}"
+                                                          VerticalAlignment="Center"
+                                                          Margin="0,0,8,0"/>
+
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding DisplayText}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#E4EAF2"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Column="1">
+
+                            <!-- normal centered single preview -->
+                            <ScrollViewer IsVisible="{Binding !ShowGumpParallelView}"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                <Grid HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Margin="16">
+
+                                    <Border Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            BorderThickness="0"
+                                            Padding="20">
+                                        <Canvas Width="300"
+                                                Height="400">
+
+                                            <Image Source="{Binding PaperdollTemplateBitmap}"
+                                                   IsVisible="{Binding ShowPaperdollTemplate}"
+                                                   Opacity="{Binding PaperdollTemplateOpacity}"
+                                                   Canvas.Left="{Binding PaperdollTemplateOffsetX}"
+                                                   Canvas.Top="{Binding PaperdollTemplateOffsetY}"
+                                                   Stretch="None"/>
+
+                                            <Image Source="{Binding SelectedGumpBitmap}"
+                                                   Canvas.Left="{Binding GumpWearableOffsetX}"
+                                                   Canvas.Top="{Binding GumpWearableOffsetY}"
+                                                   Stretch="None"/>
+                                        </Canvas>
+                                    </Border>
+                                </Grid>
+                            </ScrollViewer>
+
+                            <!-- parallel preview -->
+                            <Grid IsVisible="{Binding ShowGumpParallelView}"
+                                  ColumnDefinitions="*,*">
+
+                                <ScrollViewer Grid.Column="0"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Spacing="8">
+                                        <TextBlock Text="Selected"
+                                                   HorizontalAlignment="Center"
+                                                   FontWeight="Bold"
+                                                   Foreground="#E4EAF2"/>
+                                        <Border Margin="16"
+                                                Background="#20242B"
+                                                BorderBrush="#343B46"
+                                                BorderThickness="1"
+                                                Padding="20">
+                                            <Image Source="{Binding SelectedGumpBitmap}"
+                                                   Stretch="None"/>
+                                        </Border>
+                                    </StackPanel>
+                                </ScrollViewer>
+
+                                <ScrollViewer Grid.Column="1"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Spacing="8">
+                                        <TextBlock Text="{Binding GumpParallelPairText}"
+                                                   HorizontalAlignment="Center"
+                                                   FontWeight="Bold"
+                                                   Foreground="#E4EAF2"/>
+                                        <Border Margin="16"
+                                                Background="#20242B"
+                                                BorderBrush="#343B46"
+                                                BorderThickness="1"
+                                                Padding="20">
+                                            <Image Source="{Binding PairedGumpBitmap}"
+                                                   Stretch="None"/>
+                                        </Border>
+                                    </StackPanel>
+                                </ScrollViewer>
+
+                            </Grid>
+                        </Grid>
+
+                        <Border Grid.Column="2"
+                                Background="#1A1F26"
+                                BorderBrush="#343B46"
+                                BorderThickness="1,0,0,0"
+                                Padding="12">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel Spacing="8">
+
+                                    <TextBlock Text="Gump Info"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Foreground="#E4EAF2"/>
+
+                                    <Border Background="#202733"
+                                            BorderBrush="#343B46"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10">
+                                        <StackPanel Spacing="8">
+                                            <CheckBox Content="Show free slots"
+                                                      IsChecked="{Binding ShowFreeGumpSlots}"/>
+
+                                            <ComboBox Width="180"
+                                                      SelectedIndex="{Binding SelectedGumpFreeSlotMode}"
+                                                      IsVisible="{Binding ShowFreeGumpSlots}">
+                                                <ComboBoxItem Content="All Free"/>
+                                                <ComboBoxItem Content="Male Wearables"/>
+                                                <ComboBoxItem Content="Female Wearables"/>
+                                            </ComboBox>
+
+                                            <CheckBox Content="Parallel wearable view"
+                                                      IsChecked="{Binding ShowGumpParallelView}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#202733"
+                                            BorderBrush="#343B46"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10">
+                                        <StackPanel Spacing="8">
+
+                                            <TextBlock Text="Paperdoll Template"
+                                                       FontWeight="Bold"
+                                                       Foreground="#AAB4C0"/>
+
+                                            <CheckBox Content="Show paperdoll template"
+                                                      IsChecked="{Binding ShowPaperdollTemplate}"/>
+
+                                            <StackPanel Spacing="8"
+                                                        IsVisible="{Binding ShowPaperdollTemplate}">
+
+                                                <TextBlock Text="Template Gump ID"
+                                                           FontWeight="Bold"
+                                                           Foreground="#AAB4C0"/>
+
+                                                <NumericUpDown Minimum="0"
+                                                               Maximum="65535"
+                                                               Value="{Binding PaperdollTemplateGumpId}"
+                                                               Width="180"/>
+
+                                                <TextBlock Text="Template Opacity"
+                                                           FontWeight="Bold"
+                                                           Foreground="#AAB4C0"/>
+
+                                                <Slider Minimum="0"
+                                                        Maximum="1"
+                                                        Value="{Binding PaperdollTemplateOpacity}"
+                                                        Width="180"/>
+
+                                                <TextBlock Text="Template Offset"
+                                                           FontWeight="Bold"
+                                                           Foreground="#AAB4C0"/>
+
+                                                <TextBlock Text="{Binding PaperdollTemplateOffsetX, StringFormat='Template X: {0}'}"
+                                                           Foreground="#E4EAF2"/>
+
+                                                <TextBlock Text="{Binding PaperdollTemplateOffsetY, StringFormat='Template Y: {0}'}"
+                                                           Foreground="#E4EAF2"/>
+
+                                                <StackPanel Orientation="Horizontal"
+                                                            Spacing="6">
+                                                    <Button Content="←"
+                                                            Command="{Binding NudgePaperdollTemplateLeftCommand}"/>
+                                                    <Button Content="→"
+                                                            Command="{Binding NudgePaperdollTemplateRightCommand}"/>
+                                                    <Button Content="↑"
+                                                            Command="{Binding NudgePaperdollTemplateUpCommand}"/>
+                                                    <Button Content="↓"
+                                                            Command="{Binding NudgePaperdollTemplateDownCommand}"/>
+                                                </StackPanel>
+
+                                                <Button Content="Reset Template Offset"
+                                                        Command="{Binding ResetPaperdollTemplateOffsetCommand}"/>
+
+                                                <TextBlock Text="Wearable Offset"
+                                                           FontWeight="Bold"
+                                                           Foreground="#AAB4C0"/>
+
+                                                <TextBlock Text="{Binding GumpWearableOffsetX, StringFormat='X: {0}'}"
+                                                           Foreground="#E4EAF2"/>
+
+                                                <TextBlock Text="{Binding GumpWearableOffsetY, StringFormat='Y: {0}'}"
+                                                           Foreground="#E4EAF2"/>
+
+                                                <StackPanel Orientation="Horizontal"
+                                                            Spacing="6">
+                                                    <Button Content="←"
+                                                            Command="{Binding NudgeGumpLeftCommand}"/>
+                                                    <Button Content="→"
+                                                            Command="{Binding NudgeGumpRightCommand}"/>
+                                                    <Button Content="↑"
+                                                            Command="{Binding NudgeGumpUpCommand}"/>
+                                                    <Button Content="↓"
+                                                            Command="{Binding NudgeGumpDownCommand}"/>
+                                                </StackPanel>
+
+                                                <Button Content="Reset Offset"
+                                                        Command="{Binding ResetGumpWearableOffsetCommand}"/>
+
+                                                <TextBlock Text="Wearable Scale"
+                                                           FontWeight="Bold"
+                                                           Foreground="#AAB4C0"/>
+
+                                                <NumericUpDown Minimum="10"
+                                                               Maximum="400"
+                                                               Increment="5"
+                                                               Value="{Binding GumpWearableScalePercent}"
+                                                               Width="180"/>
+
+                                                <Button Content="Apply Scale"
+                                                        Command="{Binding ApplyGumpPreviewScaleCommand}"/>
+
+                                                <Button Content="Save Offset To Gump"
+                                                        Command="{Binding SaveGumpOffsetCommand}"/>
+
+                                                <Button Content="Load Source Image"
+                                                        Command="{Binding LoadSourceImageForGumpCommand}"/>
+
+                                                <Button Content="Remove White BG"
+                                                        Command="{Binding RemoveWhiteBackgroundFromGumpCommand}"/>
+
+                                                <Button Content="Auto Trim"
+                                                        Command="{Binding AutoTrimGumpPreviewCommand}"/>
+
+                                                <Button Content="Save Preview To Gump"
+                                                        Command="{Binding SaveGumpEditCommand}"/>
+
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <TextBlock Text="Slots"
+                                               FontWeight="Bold"
+                                               Foreground="#AAB4C0"/>
+                                    <TextBlock Text="{Binding GumpSlotSummaryText}"
+                                               Foreground="#E4EAF2"/>
+
+                                    <TextBlock Text="Wearable Free Slots"
+                                               FontWeight="Bold"
+                                               Foreground="#AAB4C0"/>
+
+                                    <TextBlock Text="{Binding GumpWearableSlotSummaryText}"
+                                               Foreground="#E4EAF2"/>
+
+                                    <Border Background="#202733"
+                                            BorderBrush="#343B46"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10">
+                                        <StackPanel Spacing="6">
+
+                                            <TextBlock Text="ID"
+                                                       FontWeight="Bold"
+                                                       Foreground="#AAB4C0"/>
+                                            <TextBlock Text="{Binding SelectedGump.GumpId}"
+                                                       Foreground="#E4EAF2"/>
+
+                                            <TextBlock Text="Hex"
+                                                       FontWeight="Bold"
+                                                       Foreground="#AAB4C0"/>
+                                            <TextBlock Text="{Binding SelectedGump.HexId}"
+                                                       Foreground="#E4EAF2"/>
+
+                                            <TextBlock Text="Size"
+                                                       FontWeight="Bold"
+                                                       Foreground="#AAB4C0"/>
+                                            <TextBlock Text="{Binding SelectedGump.SizeText}"
+                                                       Foreground="#E4EAF2"/>
+
+                                            <TextBlock Text="Bytes"
+                                                       FontWeight="Bold"
+                                                       Foreground="#AAB4C0"/>
+                                            <TextBlock Text="{Binding SelectedGump.LengthText}"
+                                                       Foreground="#E4EAF2"/>
+
+                                            <TextBlock Text="Source File"
+                                                       FontWeight="Bold"
+                                                       Foreground="#AAB4C0"/>
+
+                                            <TextBlock Text="{Binding SelectedGump.SourceFile}"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="#E4EAF2"/>
+
+                                            <Button Command="{Binding ExportSelectedGumpCommand}"
+                                                    Margin="0,10,0,0">
+                                                <TextBlock Text="Export PNG"/>
+                                            </Button>
+
+                                            <Button Command="{Binding ExportCheckedGumpsCommand}"
+                                                    Margin="0,6,0,0">
+                                                <TextBlock Text="Export Checked"/>
+                                            </Button>
+
+                                            <Button Command="{Binding ImportCheckedGumpsCommand}"
+                                                    Margin="0,6,0,0">
+                                                <TextBlock Text="Mass Import Checked"/>
+                                            </Button>
+
+                                            <Button Command="{Binding ImportPngToGumpCommand}"
+                                                    Margin="0,6,0,0">
+                                                <TextBlock Text="Import / Replace Image"/>
+                                            </Button>
+
+                                            <Button Command="{Binding RemoveSelectedGumpCommand}"
+                                                    Margin="0,6,0,0">
+                                                <TextBlock Text="Remove / Free Slot"/>
+                                            </Button>
+
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+
                 <!-- Normal Editor Preview -->
                 <Grid Grid.Column="0"
                       RowDefinitions="Auto,*"

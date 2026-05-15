@@ -382,6 +382,7 @@ public class SettingsService
             profile.SelectedBodyType ??= "All";
             profile.SearchText ??= string.Empty;
             profile.SelectedDirection ??= string.Empty;
+            profile.OutputFolderPath ??= string.Empty;
 
             if (profile.PreviewZoomLevel <= 0)
             {

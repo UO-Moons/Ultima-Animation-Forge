@@ -11,6 +11,7 @@ public class AppSettings
 
 public class AnimationViewerProfile
 {
+    public string OutputFolderPath { get; set; } = string.Empty;
     public string ProfileId { get; set; } = Guid.NewGuid().ToString("N");
     public string ProfileName { get; set; } = "Default";
     public string UoFolderPath { get; set; } = string.Empty;

@@ -22,6 +22,44 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    [ObservableProperty]
+    private MainToolTab activeToolTab = MainToolTab.AnimationEditor;
+
+    public bool ShowAnimationEditorPanel => ActiveToolTab == MainToolTab.AnimationEditor;
+    public bool ShowAnimationBrowserPanel => ActiveToolTab == MainToolTab.AnimationBrowser;
+    public bool ShowGumpEditorPanel => ActiveToolTab == MainToolTab.Gumps;
+
+    partial void OnActiveToolTabChanged(MainToolTab value)
+    {
+        OnPropertyChanged(nameof(ShowAnimationEditorPanel));
+        OnPropertyChanged(nameof(ShowAnimationBrowserPanel));
+        OnPropertyChanged(nameof(ShowGumpEditorPanel));
+
+        if (value == MainToolTab.AnimationBrowser)
+        {
+            if (!AnimationBrowserVisible)
+            {
+                AnimationBrowserVisible = true;
+            }
+            else
+            {
+                BuildAnimationBrowserTiles();
+            }
+        }
+        else if (AnimationBrowserVisible)
+        {
+            AnimationBrowserVisible = false;
+        }
+
+        if (value == MainToolTab.Gumps && GumpEntries.Count == 0)
+        {
+            InitializeGumpsForCurrentFolder();
+        }
+    }
+
+    [ObservableProperty]
+    private string outputFolderPath = string.Empty;
+
     private readonly SettingsService settingsService;
     private readonly AppSettings appSettings;
     private Window? detachedPreviewWindow;
@@ -306,7 +344,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool animationBrowserVisible = false;
 
-    public bool ShowAnimationEditorPanel => !AnimationBrowserVisible;
+    //public bool ShowAnimationEditorPanel => !AnimationBrowserVisible;
 
     [ObservableProperty]
     private AnimationBrowserTileViewModel? selectedAnimationBrowserTile;
@@ -810,8 +848,8 @@ public partial class MainWindowViewModel : ViewModelBase
         CopyPropPoseFromPreviousFrameCommand = new RelayCommand(CopyPropPoseFromPreviousFrame);
         ClearPropPoseForCurrentFrameCommand = new RelayCommand(ClearPropPoseForCurrentFrame);
         ClearCompareOverlayCommand = new RelayCommand(ClearCompareOverlay);
-        ShowAnimationEditorCommand = new RelayCommand(() => AnimationBrowserVisible = false);
-        ShowAnimationBrowserCommand = new RelayCommand(() => AnimationBrowserVisible = true);
+        ShowAnimationEditorCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.AnimationEditor);
+        ShowAnimationBrowserCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.AnimationBrowser);
         ToggleCompareOverlayDragModeCommand = new RelayCommand(() =>
         {
             CompareOverlayDragModeEnabled = !CompareOverlayDragModeEnabled;
@@ -1896,7 +1934,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         SelectAnimationFromBrowserTile(tile);
-        AnimationBrowserVisible = false;
+        ActiveToolTab = MainToolTab.AnimationEditor;
     }
 
     private void RefreshAnimationBrowserTileThumbnail(AnimationBrowserTileViewModel? tile)
@@ -2276,6 +2314,7 @@ public partial class MainWindowViewModel : ViewModelBase
     partial void OnAnimationBrowserVisibleChanged(bool value)
     {
         OnPropertyChanged(nameof(ShowAnimationEditorPanel));
+        OnPropertyChanged(nameof(ShowAnimationBrowserPanel));
 
         if (value)
         {

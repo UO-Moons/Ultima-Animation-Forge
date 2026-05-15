@@ -48,6 +48,7 @@ public partial class MainWindowViewModel
                         ProfileId = profile.ProfileId,
                         ProfileName = profile.ProfileName,
                         UoFolderPath = profile.UoFolderPath,
+                        OutputFolderPath = profile.OutputFolderPath,
                         SelectedAnimationFile = profile.SelectedAnimationFile,
                         SelectedBodyType = profile.SelectedBodyType,
                         SearchText = profile.SearchText,
@@ -79,6 +80,20 @@ public partial class MainWindowViewModel
         {
             Watermark = "Folder path",
             IsReadOnly = true,
+            IsEnabled = false
+        };
+
+        TextBox outputFolderPathTextBox = new TextBox
+        {
+            Watermark = "Output folder path",
+            IsReadOnly = true,
+            IsEnabled = false
+        };
+
+        Button browseOutputFolderButton = new Button
+        {
+            Content = "Set Output",
+            Width = 100,
             IsEnabled = false
         };
 
@@ -242,6 +257,8 @@ public partial class MainWindowViewModel
             loadUopCheckBox.IsEnabled = hasSelection;
             checkerBackgroundCheckBox.IsEnabled = hasSelection;
             loopPlaybackCheckBox.IsEnabled = hasSelection;
+            outputFolderPathTextBox.IsEnabled = hasSelection;
+            browseOutputFolderButton.IsEnabled = hasSelection;
 
             if (!hasSelection)
             {
@@ -250,6 +267,7 @@ public partial class MainWindowViewModel
                 loadUopCheckBox.IsChecked = false;
                 checkerBackgroundCheckBox.IsChecked = false;
                 loopPlaybackCheckBox.IsChecked = false;
+                outputFolderPathTextBox.Text = string.Empty;
                 statusTextBlock.Inlines.Clear();
                 statusTextBlock.Text = "Select a profile to edit.";
                 return;
@@ -257,6 +275,7 @@ public partial class MainWindowViewModel
 
             profileNameTextBox.Text = selectedWorkingProfile!.ProfileName;
             folderPathTextBox.Text = selectedWorkingProfile.UoFolderPath ?? string.Empty;
+            outputFolderPathTextBox.Text = selectedWorkingProfile.OutputFolderPath ?? string.Empty;
             loadUopCheckBox.IsChecked = selectedWorkingProfile.LoadUopFiles;
             checkerBackgroundCheckBox.IsChecked = selectedWorkingProfile.ShowCheckerBackground;
             loopPlaybackCheckBox.IsChecked = selectedWorkingProfile.LoopPlayback;
@@ -279,6 +298,12 @@ public partial class MainWindowViewModel
                 string.IsNullOrWhiteSpace(selectedWorkingProfile.UoFolderPath)
                     ? "(not set)" + Environment.NewLine + Environment.NewLine
                     : selectedWorkingProfile.UoFolderPath + Environment.NewLine + Environment.NewLine));
+
+            statusTextBlock.Inlines.Add(new Run("Output Folder:\n") { FontWeight = FontWeight.Bold });
+            statusTextBlock.Inlines.Add(new Run(
+                string.IsNullOrWhiteSpace(selectedWorkingProfile.OutputFolderPath)
+                    ? "(not set)" + Environment.NewLine + Environment.NewLine
+                    : selectedWorkingProfile.OutputFolderPath + Environment.NewLine + Environment.NewLine));
 
             statusTextBlock.Inlines.Add(new Run("Preview Defaults:\n") { FontWeight = FontWeight.Bold });
             statusTextBlock.Inlines.Add(new Run(
@@ -420,6 +445,7 @@ public partial class MainWindowViewModel
                 SelectedDirection = selectedWorkingProfile.SelectedDirection,
                 PreviewZoomLevel = selectedWorkingProfile.PreviewZoomLevel,
                 ShowCheckerBackground = selectedWorkingProfile.ShowCheckerBackground,
+                OutputFolderPath = selectedWorkingProfile.OutputFolderPath,
                 LoopPlayback = selectedWorkingProfile.LoopPlayback,
                 LoadUopFiles = selectedWorkingProfile.LoadUopFiles
             };
@@ -633,6 +659,50 @@ public partial class MainWindowViewModel
             RefreshProfileList();
         };
 
+        browseOutputFolderButton.Click += async (_, _) =>
+        {
+            if (selectedWorkingProfile == null)
+            {
+                return;
+            }
+
+            FolderPickerOpenOptions folderPickerOpenOptions = new FolderPickerOpenOptions
+            {
+                Title = "Select Output Folder",
+                AllowMultiple = false
+            };
+
+            if (!string.IsNullOrWhiteSpace(selectedWorkingProfile.OutputFolderPath) &&
+                Directory.Exists(selectedWorkingProfile.OutputFolderPath))
+            {
+                folderPickerOpenOptions.SuggestedStartLocation =
+                    await dialog.StorageProvider.TryGetFolderFromPathAsync(selectedWorkingProfile.OutputFolderPath);
+            }
+
+            IReadOnlyList<IStorageFolder> selectedFolders =
+                await dialog.StorageProvider.OpenFolderPickerAsync(folderPickerOpenOptions);
+
+            if (selectedFolders.Count == 0)
+            {
+                return;
+            }
+
+            string? localPath = selectedFolders[0].TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(localPath))
+            {
+                statusTextBlock.Inlines.Clear();
+                statusTextBlock.Text = "Selected output folder does not have a local path.";
+                return;
+            }
+
+            selectedWorkingProfile.OutputFolderPath = localPath;
+            outputFolderPathTextBox.Text = localPath;
+            changedProfiles = true;
+
+            RefreshEditor();
+            RefreshProfileList();
+        };
+
         makeActiveButton.Click += (_, _) =>
         {
             if (selectedWorkingProfile == null)
@@ -737,6 +807,7 @@ public partial class MainWindowViewModel
                         PreviewZoomLevel = profile.PreviewZoomLevel,
                         ShowCheckerBackground = profile.ShowCheckerBackground,
                         LoopPlayback = profile.LoopPlayback,
+                        OutputFolderPath = profile.OutputFolderPath,
                         LoadUopFiles = profile.LoadUopFiles
                     }));
 
@@ -760,7 +831,7 @@ public partial class MainWindowViewModel
 
         Grid editorGrid = new Grid
         {
-            RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"),
+            RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"),
             ColumnDefinitions = new ColumnDefinitions("Auto,*"),
             RowSpacing = 10,
             ColumnSpacing = 10
@@ -792,16 +863,38 @@ public partial class MainWindowViewModel
         Grid.SetRow(folderPathTextBox, 1);
         Grid.SetColumn(folderPathTextBox, 1);
 
+        TextBlock outputFolderPathLabel = new TextBlock
+        {
+            Text = "Output Folder",
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+        };
+        editorGrid.Children.Add(outputFolderPathLabel);
+        Grid.SetRow(outputFolderPathLabel, 2);
+        Grid.SetColumn(outputFolderPathLabel, 0);
+
+        StackPanel outputFolderPanel = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Spacing = 8
+        };
+
+        outputFolderPanel.Children.Add(outputFolderPathTextBox);
+        outputFolderPanel.Children.Add(browseOutputFolderButton);
+
+        editorGrid.Children.Add(outputFolderPanel);
+        Grid.SetRow(outputFolderPanel, 2);
+        Grid.SetColumn(outputFolderPanel, 1);
+
         editorGrid.Children.Add(loadUopCheckBox);
-        Grid.SetRow(loadUopCheckBox, 2);
+        Grid.SetRow(loadUopCheckBox, 3);
         Grid.SetColumn(loadUopCheckBox, 1);
 
         editorGrid.Children.Add(checkerBackgroundCheckBox);
-        Grid.SetRow(checkerBackgroundCheckBox, 3);
+        Grid.SetRow(checkerBackgroundCheckBox, 4);
         Grid.SetColumn(checkerBackgroundCheckBox, 1);
 
         editorGrid.Children.Add(loopPlaybackCheckBox);
-        Grid.SetRow(loopPlaybackCheckBox, 4);
+        Grid.SetRow(loopPlaybackCheckBox, 5);
         Grid.SetColumn(loopPlaybackCheckBox, 1);
 
         Border statusBorder = new Border
@@ -819,7 +912,7 @@ public partial class MainWindowViewModel
             }
         };
 
-        Grid.SetRow(statusBorder, 5);
+        Grid.SetRow(statusBorder, 6);
         Grid.SetColumn(statusBorder, 0);
         Grid.SetColumnSpan(statusBorder, 2);
         editorGrid.Children.Add(statusBorder);
@@ -850,12 +943,12 @@ public partial class MainWindowViewModel
         cacheButtons.Children.Add(clearCacheButton);
         cacheButtons.Children.Add(clearAllCachesButton);
 
-        Grid.SetRow(primaryButtons, 6);
+        Grid.SetRow(primaryButtons, 7);
         Grid.SetColumn(primaryButtons, 0);
         Grid.SetColumnSpan(primaryButtons, 2);
         editorGrid.Children.Add(primaryButtons);
 
-        Grid.SetRow(cacheButtons, 7);
+        Grid.SetRow(cacheButtons, 8);
         Grid.SetColumn(cacheButtons, 0);
         Grid.SetColumnSpan(cacheButtons, 2);
         editorGrid.Children.Add(cacheButtons);

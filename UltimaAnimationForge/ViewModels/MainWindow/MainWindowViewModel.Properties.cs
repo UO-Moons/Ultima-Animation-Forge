@@ -11,6 +11,15 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel
 {
+    public enum MainToolTab
+    {
+        AnimationEditor = 0,
+        AnimationBrowser = 1,
+        Gumps = 2
+    }
+
+    public string HeaderStatusText => ShowGumpEditorPanel ? GumpInfoText : StatusText;
+
     public bool ShowMulActionDirectionControls => ShowMulSlotView && !IsSelectedAnimationFileUop();
 
     public bool ShowActionDirectionControls => ShowAnimationOnlyControls || ShowMulActionDirectionControls;
