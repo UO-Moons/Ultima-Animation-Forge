@@ -3882,7 +3882,7 @@ public partial class MainWindowViewModel
 
         for (int i = 0; i < editableFrames.Count; i++)
         {
-            compareFramePoses[i] = new CompareFramePose
+            compareFramePoses[GetComparePoseKey(i)] = new CompareFramePose
             {
                 OffsetX = CompareOverlayOffsetX,
                 OffsetY = CompareOverlayOffsetY
