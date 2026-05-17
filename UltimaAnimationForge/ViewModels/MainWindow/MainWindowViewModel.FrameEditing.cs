@@ -1949,7 +1949,9 @@ public partial class MainWindowViewModel
             return;
         }
 
-        compareFramePoses[currentFrameIndex] = new CompareFramePose
+        string key = GetComparePoseKey(currentFrameIndex);
+
+        compareFramePoses[key] = new CompareFramePose
         {
             OffsetX = CompareOverlayOffsetX,
             OffsetY = CompareOverlayOffsetY
@@ -1959,7 +1961,7 @@ public partial class MainWindowViewModel
         OnPropertyChanged(nameof(HasComparePoseForCurrentFrame));
 
         RefreshLivePreviewImage();
-        StatusText = "Saved compare pose for frame " + (currentFrameIndex + 1) + ".";
+        StatusText = "Saved compare pose for this action/direction frame " + (currentFrameIndex + 1) + ".";
     }
 
     private void CopyComparePoseFromPreviousFrame()
@@ -1970,9 +1972,11 @@ public partial class MainWindowViewModel
             return;
         }
 
-        if (!compareFramePoses.TryGetValue(currentFrameIndex - 1, out CompareFramePose? previousPose))
+        string previousKey = GetComparePoseKey(currentFrameIndex - 1);
+
+        if (!compareFramePoses.TryGetValue(previousKey, out CompareFramePose? previousPose))
         {
-            StatusText = "Previous frame does not have a saved compare pose.";
+            StatusText = "Previous frame in this action/direction does not have a saved compare pose.";
             return;
         }
 
@@ -1980,7 +1984,7 @@ public partial class MainWindowViewModel
         CompareOverlayOffsetY = previousPose.OffsetY;
 
         RefreshLivePreviewImage();
-        StatusText = "Copied compare pose from frame " + currentFrameIndex + ".";
+        StatusText = "Copied compare pose from frame " + currentFrameIndex + " in this action/direction.";
     }
 
     private void ClearComparePoseForCurrentFrame()
@@ -1991,21 +1995,25 @@ public partial class MainWindowViewModel
             return;
         }
 
-        if (compareFramePoses.Remove(currentFrameIndex))
+        string key = GetComparePoseKey(currentFrameIndex);
+
+        if (compareFramePoses.Remove(key))
         {
             OnPropertyChanged(nameof(CurrentComparePoseText));
             OnPropertyChanged(nameof(HasComparePoseForCurrentFrame));
             RefreshLivePreviewImage();
-            StatusText = "Cleared compare pose for frame " + (currentFrameIndex + 1) + ".";
+            StatusText = "Cleared compare pose for this action/direction frame " + (currentFrameIndex + 1) + ".";
             return;
         }
 
-        StatusText = "Current frame does not have a saved compare pose.";
+        StatusText = "Current frame does not have a saved compare pose for this action/direction.";
     }
 
     private CompareFramePose GetEffectiveComparePoseForFrame(int frameIndex)
     {
-        if (compareFramePoses.TryGetValue(frameIndex, out CompareFramePose? pose))
+        string key = GetComparePoseKey(frameIndex);
+
+        if (compareFramePoses.TryGetValue(key, out CompareFramePose? pose))
         {
             return pose;
         }

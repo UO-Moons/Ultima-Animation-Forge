@@ -405,7 +405,19 @@ public partial class MainWindowViewModel : ViewModelBase
         public int OffsetY { get; init; }
     }
 
-    private readonly Dictionary<int, CompareFramePose> compareFramePoses = new();
+    private string GetComparePoseKey(int frameIndex)
+    {
+        int bodyId = SelectedAnimation?.BodyId ?? -1;
+        int actionIndex = GetSelectedActionIndex();
+        int directionIndex = GetSelectedDirectionIndex();
+
+        return bodyId + "|" +
+               actionIndex + "|" +
+               directionIndex + "|" +
+               frameIndex;
+    }
+
+    private readonly Dictionary<string, CompareFramePose> compareFramePoses = new(StringComparer.Ordinal);
 
     public ICommand SaveComparePoseForCurrentFrameCommand { get; }
     public ICommand CopyComparePoseFromPreviousFrameCommand { get; }

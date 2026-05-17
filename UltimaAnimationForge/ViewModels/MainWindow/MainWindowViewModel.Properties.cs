@@ -156,12 +156,12 @@ public partial class MainWindowViewModel
         ShowCompareSideBySidePreview;
 
     public bool HasComparePoseForCurrentFrame =>
-    currentFrameIndex >= 0 && compareFramePoses.ContainsKey(currentFrameIndex);
+        currentFrameIndex >= 0 && compareFramePoses.ContainsKey(GetComparePoseKey(currentFrameIndex));
 
     public string CurrentComparePoseText =>
         currentFrameIndex < 0
             ? "No frame"
-            : compareFramePoses.TryGetValue(currentFrameIndex, out CompareFramePose? pose)
+            : compareFramePoses.TryGetValue(GetComparePoseKey(currentFrameIndex), out CompareFramePose? pose)
                 ? "Frame Pose | X " + pose.OffsetX + " | Y " + pose.OffsetY
                 : "Frame Pose | None";
 
