@@ -1087,7 +1087,8 @@ public partial class MainWindowViewModel
     "Auto",
     "Nearest Neighbor",
     "Lanczos3",
-    "Spline"
+    "Spline",
+    "Bicubic Sharper"
 },
             SelectedIndex = 0,
             IsEnabled = false,
@@ -1300,7 +1301,7 @@ public partial class MainWindowViewModel
 
             if (resizeEnabled)
             {
-                lines.Add("Downscale: Lanczos3 works best.");
+                lines.Add("Downscale: Bicubic Sharper usually gives cleaner UO sprites with less halo than Lanczos3.");
                 lines.Add("Upscale: Nearest Neighbor = crisp pixels, Spline = smoother enlargement.");
             }
             else
@@ -1372,6 +1373,7 @@ public partial class MainWindowViewModel
                 1 => ResizeSamplerMode.NearestNeighbor,
                 2 => ResizeSamplerMode.Lanczos3,
                 3 => ResizeSamplerMode.Spline,
+                4 => ResizeSamplerMode.BicubicSharper,
                 _ => ResizeSamplerMode.Auto
             };
 

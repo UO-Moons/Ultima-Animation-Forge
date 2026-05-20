@@ -22,6 +22,8 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    public bool ShowWearableWizardPanel => ActiveToolTab == MainToolTab.Wearables;
+
     [ObservableProperty]
     private MainToolTab activeToolTab = MainToolTab.AnimationEditor;
 
@@ -40,6 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowTileDataPanel));
         OnPropertyChanged(nameof(ShowArtPanel));
         OnPropertyChanged(nameof(ShowAnimDataPanel));
+        OnPropertyChanged(nameof(ShowWearableWizardPanel));
 
         if (value == MainToolTab.AnimationBrowser)
         {
@@ -82,11 +85,34 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             LoadAnimDataTab();
         }
+
+        if (value == MainToolTab.Wearables)
+        {
+            if (GumpEntries.Count == 0)
+            {
+                InitializeGumpsForCurrentFolder();
+            }
+
+            if (ArtEntries.Count == 0)
+            {
+                LoadArtTab();
+            }
+
+            if (allMulSlotEntries.Count == 0)
+            {
+                EnsureMulSlotEntriesLoaded();
+            }
+
+            RefreshWearableWizardFreeSlots();
+            RefreshWearableWizardSourceAnimations();
+            RebuildWearableWizardPlan();
+        }
     }
 
     public ICommand ShowTileDataCommand { get; }
     public ICommand ShowArtCommand { get; }
     public ICommand ShowAnimDataCommand { get; }
+    public ICommand ShowWearableWizardCommand { get; }
 
     [ObservableProperty]
     private string outputFolderPath = string.Empty;
@@ -909,6 +935,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ExportAnimationBrowserTileVdCommand = new AsyncRelayCommand<AnimationBrowserTileViewModel?>(ExportAnimationBrowserTileVdAsync);
         DeleteAnimationBrowserTileCommand = new AsyncRelayCommand<AnimationBrowserTileViewModel?>(DeleteAnimationBrowserTileAsync);
         ClearSelectedMulSlotCommand = new AsyncRelayCommand(ClearSelectedMulSlotAsync);
+        ShowWearableWizardCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Wearables);
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {

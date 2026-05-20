@@ -929,11 +929,11 @@ public partial class MainWindowViewModel
             return result;
         }
 
-        List<WriteableBitmap> frames;
+        List<VdFrameData> frameData;
 
         if (resolvedBlock.IsUop)
         {
-            frames = DecodeUopFramesToList(blockData, directionIndex);
+            frameData = DecodeUopFrameDataToList(blockData, directionIndex);
         }
         else
         {
@@ -943,8 +943,12 @@ public partial class MainWindowViewModel
                 return result;
             }
 
-            frames = DecodeMulFramesToList(blockData, 512);
+            frameData = DecodeMulFrameDataToList(blockData, 512);
         }
+
+        List<WriteableBitmap> frames = frameData
+            .Select(x => x.Bitmap)
+            .ToList();
 
         if (frames.Count == 0)
         {
@@ -954,6 +958,7 @@ public partial class MainWindowViewModel
 
         result.Success = true;
         result.Frames = frames;
+        result.FrameData = frameData;
         result.FrameCount = frames.Count;
         result.FrameSizeText = frames[0].PixelSize.Width + " x " + frames[0].PixelSize.Height;
         result.PreviewInfoText =
@@ -966,9 +971,39 @@ public partial class MainWindowViewModel
         return result;
     }
 
-    private List<WriteableBitmap> DecodeMulFramesToList(byte[] blockData, int dataStart)
+    private List<VdFrameData> DecodeUopFrameDataToList(byte[] blockData, int directionIndex)
     {
-        List<WriteableBitmap> frames = new();
+        List<WriteableBitmap> bitmaps = DecodeUopFramesToList(blockData, directionIndex);
+        List<VdFrameData> frames = new();
+
+        for (ushort i = 0; i < bitmaps.Count; i++)
+        {
+            WriteableBitmap bitmap = bitmaps[i];
+
+            frames.Add(new VdFrameData
+            {
+                Bitmap = bitmap,
+                Palette565 = null,
+                CenterX = (short)(bitmap.PixelSize.Width / 2),
+                CenterY = 0,
+                Width = (ushort)bitmap.PixelSize.Width,
+                Height = (ushort)bitmap.PixelSize.Height,
+                InitCoordsX = 0,
+                InitCoordsY = 0,
+                EndCoordsX = 0,
+                EndCoordsY = 0,
+                FrameId = i,
+                FrameNumber = i,
+                DataOffset = 0
+            });
+        }
+
+        return frames;
+    }
+
+    private List<VdFrameData> DecodeMulFrameDataToList(byte[] blockData, int dataStart)
+    {
+        List<VdFrameData> frames = new();
 
         uint frameCount = BitConverter.ToUInt32(blockData, dataStart);
         if (frameCount == 0 || frameCount > 1000)
@@ -1003,14 +1038,43 @@ public partial class MainWindowViewModel
                 continue;
             }
 
+            short centerX = BitConverter.ToInt16(blockData, frameStart + 0);
+            short centerY = BitConverter.ToInt16(blockData, frameStart + 2);
+            ushort width = (ushort)BitConverter.ToInt16(blockData, frameStart + 4);
+            ushort height = (ushort)BitConverter.ToInt16(blockData, frameStart + 6);
+
             WriteableBitmap? frameBitmap = DecodeFrameToBitmapDetached(blockData, frameStart);
-            if (frameBitmap != null)
+            if (frameBitmap == null)
             {
-                frames.Add(frameBitmap);
+                continue;
             }
+
+            frames.Add(new VdFrameData
+            {
+                Bitmap = frameBitmap,
+                Palette565 = null,
+                CenterX = centerX,
+                CenterY = centerY,
+                Width = width,
+                Height = height,
+                InitCoordsX = 0,
+                InitCoordsY = 0,
+                EndCoordsX = 0,
+                EndCoordsY = 0,
+                FrameId = frameIndex,
+                FrameNumber = frameIndex,
+                DataOffset = frameOffsets[frameIndex]
+            });
         }
 
         return frames;
+    }
+
+    private List<WriteableBitmap> DecodeMulFramesToList(byte[] blockData, int dataStart)
+    {
+        return DecodeMulFrameDataToList(blockData, dataStart)
+            .Select(x => x.Bitmap)
+            .ToList();
     }
 
     private List<WriteableBitmap> DecodeUopFramesToList(byte[] blockData, int directionIndex)

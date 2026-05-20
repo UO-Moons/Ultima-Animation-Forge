@@ -3895,7 +3895,7 @@ public partial class MainWindowViewModel
         RefreshLivePreviewImage();
 
         StatusText =
-            "Applied current rider overlay offset to all frames for preview alignment only. " +
-            "This does not edit MUL/IDX.";
+    "Applied current compare offset to all frames in this action/direction for preview alignment only. " +
+    "This does not edit MUL/IDX.";
     }
 }

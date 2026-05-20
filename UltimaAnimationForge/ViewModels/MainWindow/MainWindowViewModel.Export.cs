@@ -175,7 +175,8 @@ public partial class MainWindowViewModel
         Auto,
         NearestNeighbor,
         Lanczos3,
-        Spline
+        Spline,
+        BicubicSharper
     }
 
     private sealed class VdScaleDialogResult
@@ -1653,6 +1654,14 @@ public partial class MainWindowViewModel
             });
         });
 
+        if (resizeSampler == ResizeSamplerMode.BicubicSharper && scaleFactor < 1.0)
+        {
+            sourceImage.Mutate(context =>
+            {
+                context.GaussianSharpen(0.35f);
+            });
+        }
+
         return ConvertImageSharpToWriteableBitmap(sourceImage);
     }
 
@@ -1663,8 +1672,10 @@ public partial class MainWindowViewModel
             ResizeSamplerMode.NearestNeighbor => KnownResamplers.NearestNeighbor,
             ResizeSamplerMode.Lanczos3 => KnownResamplers.Lanczos3,
             ResizeSamplerMode.Spline => KnownResamplers.Spline,
+            ResizeSamplerMode.BicubicSharper => KnownResamplers.Bicubic,
+
             _ => scaleFactor < 1.0
-                ? KnownResamplers.Lanczos3
+                ? KnownResamplers.Bicubic
                 : KnownResamplers.Spline
         };
     }

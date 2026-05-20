@@ -11,6 +11,8 @@ public sealed class DetachedPreviewLoadResult
 
     public List<WriteableBitmap> Frames { get; set; } = new();
 
+    public List<VdFrameData> FrameData { get; set; } = new();
+
     public string PreviewInfoText { get; set; } = string.Empty;
 
     public int FrameCount { get; set; }
