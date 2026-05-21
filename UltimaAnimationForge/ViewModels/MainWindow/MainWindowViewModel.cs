@@ -22,6 +22,9 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    public bool ShowLightPanel => ActiveToolTab == MainToolTab.Lights;
+    public ICommand ShowLightCommand { get; }
+
     public bool ShowWearableWizardPanel => ActiveToolTab == MainToolTab.Wearables;
 
     [ObservableProperty]
@@ -43,6 +46,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowArtPanel));
         OnPropertyChanged(nameof(ShowAnimDataPanel));
         OnPropertyChanged(nameof(ShowWearableWizardPanel));
+        OnPropertyChanged(nameof(ShowLightPanel));
 
         if (value == MainToolTab.AnimationBrowser)
         {
@@ -106,6 +110,11 @@ public partial class MainWindowViewModel : ViewModelBase
             RefreshWearableWizardFreeSlots();
             RefreshWearableWizardSourceAnimations();
             RebuildWearableWizardPlan();
+        }
+
+        if (value == MainToolTab.Lights && LightEntries.Count == 0)
+        {
+            LoadLights();
         }
     }
 
@@ -936,6 +945,8 @@ public partial class MainWindowViewModel : ViewModelBase
         DeleteAnimationBrowserTileCommand = new AsyncRelayCommand<AnimationBrowserTileViewModel?>(DeleteAnimationBrowserTileAsync);
         ClearSelectedMulSlotCommand = new AsyncRelayCommand(ClearSelectedMulSlotAsync);
         ShowWearableWizardCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Wearables);
+        ShowLightCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Lights);
+        InitializeLightCommands();
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {
