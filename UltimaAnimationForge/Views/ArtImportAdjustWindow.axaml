@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UltimaAnimationForge.Views.ArtImportAdjustWindow"
+        x:CompileBindings="False"
+        Width="680"
+        Height="720"
+        MinWidth="640"
+        MinHeight="620"
+        Title="Adjust Art Import"
+        Background="#1B2027">
+
+    <Grid RowDefinitions="*,Auto"
+          Margin="12"
+          RowSpacing="10">
+
+        <StackPanel Grid.Row="0"
+                    Spacing="8">
+
+            <TextBlock Text="Art Import Adjust"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="#E4EAF2"/>
+
+            <CheckBox Content="Auto Trim Transparent Border"
+                      IsChecked="{Binding ArtImportAutoTrim}"
+                      Foreground="#C7D1DB"/>
+
+            <CheckBox Content="Center On Canvas"
+                      IsChecked="{Binding ArtImportCenterOnCanvas}"
+                      Foreground="#C7D1DB"/>
+
+            <TextBlock Text="Canvas Width" Foreground="#AAB4C0"/>
+            <NumericUpDown Value="{Binding ArtImportCanvasWidth, Mode=TwoWay}"
+                           Minimum="0"
+                           Maximum="2048"
+                           Increment="1"
+                           FormatString="0"/>
+
+            <TextBlock Text="Canvas Height" Foreground="#AAB4C0"/>
+            <NumericUpDown Value="{Binding ArtImportCanvasHeight, Mode=TwoWay}"
+                           Minimum="0"
+                           Maximum="2048"
+                           Increment="1"
+                           FormatString="0"/>
+
+            <TextBlock Text="Offset X" Foreground="#AAB4C0"/>
+            <NumericUpDown Value="{Binding ArtImportOffsetX, Mode=TwoWay}"
+                           Minimum="-1024"
+                           Maximum="1024"
+                           Increment="1"
+                           FormatString="0"/>
+
+            <TextBlock Text="Offset Y" Foreground="#AAB4C0"/>
+            <NumericUpDown Value="{Binding ArtImportOffsetY, Mode=TwoWay}"
+                           Minimum="-1024"
+                           Maximum="1024"
+                           Increment="1"
+                           FormatString="0"/>
+
+            <Button Content="Preview"
+                    Command="{Binding RefreshArtImportAdjustPreviewCommand}" />
+
+            <Border MinHeight="260"
+                    Background="#151A20"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="8">
+                <Image Source="{Binding ArtImportAdjustPreviewBitmap}"
+                       Stretch="Uniform"
+                       RenderOptions.BitmapInterpolationMode="None"/>
+            </Border>
+
+            <TextBlock Text="{Binding ArtImportAdjustStatusText}"
+                       Foreground="#AAB4C0"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button Content="Queue Import"
+                    Width="110"
+                    Click="QueueImport_Click"/>
+
+            <Button Content="Cancel"
+                    Width="90"
+                    Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -41,3 +41,25 @@ public sealed class ArtEraRange
     public string From { get; set; } = string.Empty;
     public string To { get; set; } = string.Empty;
 }
+
+public sealed class ArtImportAdjustOptions
+{
+    public bool AutoTrim { get; set; } = true;
+    public bool CenterOnCanvas { get; set; }
+    public int CanvasWidth { get; set; }
+    public int CanvasHeight { get; set; }
+    public int OffsetX { get; set; }
+    public int OffsetY { get; set; }
+}
+
+public sealed class ArtCutterSliceEntry
+{
+    public int SliceIndex { get; set; }
+    public int TargetArtId { get; set; }
+    public bool IsChecked { get; set; } = true;
+    public WriteableBitmap? PreviewBitmap { get; set; }
+    public string SourceText { get; set; } = string.Empty;
+
+    public string DisplayText =>
+        "0x" + TargetArtId.ToString("X4") + " (" + TargetArtId + ")";
+}

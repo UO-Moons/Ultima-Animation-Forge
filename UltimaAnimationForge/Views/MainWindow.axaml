@@ -12,7 +12,7 @@
         Background="#1B1F25"
         Foreground="White"
         RequestedThemeVariant="Dark"
-        Title="Ultima Animation Forge Alpha 19"
+        Title="Ultima Animation Forge Alpha 20"
         DragDrop.AllowDrop="True"
         mc:Ignorable="d">
 
@@ -2102,6 +2102,9 @@
                                     Spacing="8">
                             <Button Content="Load Art"
                                     Command="{Binding LoadArtTabCommand}" />
+
+                            <Button Content="Art Cutter"
+                                    Command="{Binding OpenArtCutterCommand}" />
 
                             <Button Content="Import Selected"
                                     Command="{Binding ImportSelectedArtCommand}" />

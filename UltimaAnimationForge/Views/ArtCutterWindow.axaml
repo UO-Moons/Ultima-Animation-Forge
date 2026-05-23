@@ -1,0 +1,160 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UltimaAnimationForge.Views.ArtCutterWindow"
+        x:CompileBindings="False"
+        Width="1000"
+        Height="720"
+        Title="Static Art Cutter"
+        Background="#1B2027">
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          Margin="12"
+          RowSpacing="10">
+
+        <Border Grid.Row="0"
+                Background="#20262E"
+                BorderBrush="#343B46"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="10">
+
+            <Grid ColumnDefinitions="Auto,120,Auto,120,Auto,120,*"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="10"
+                  RowSpacing="8">
+
+                <TextBlock Grid.Row="0"
+                           Grid.Column="0"
+                           Text="Start Art ID"
+                           VerticalAlignment="Center"
+                           Foreground="#C7D1DB"/>
+
+                <NumericUpDown Grid.Row="0"
+                               Grid.Column="1"
+                               Value="{Binding ArtCutterStartId, Mode=TwoWay}"
+                               Minimum="0"
+                               Maximum="65535"
+                               Increment="1"
+                               FormatString="0"/>
+
+                <TextBlock Grid.Row="0"
+                           Grid.Column="2"
+                           Text="Slice Width"
+                           VerticalAlignment="Center"
+                           Foreground="#C7D1DB"/>
+
+                <NumericUpDown Grid.Row="0"
+                               Grid.Column="3"
+                               Value="{Binding ArtCutterSliceWidth, Mode=TwoWay}"
+                               Minimum="1"
+                               Maximum="2048"
+                               Increment="1"
+                               FormatString="0"/>
+
+                <TextBlock Grid.Row="0"
+                           Grid.Column="4"
+                           Text="Slice Height"
+                           VerticalAlignment="Center"
+                           Foreground="#C7D1DB"/>
+
+                <NumericUpDown Grid.Row="0"
+                               Grid.Column="5"
+                               Value="{Binding ArtCutterSliceHeight, Mode=TwoWay}"
+                               Minimum="1"
+                               Maximum="2048"
+                               Increment="1"
+                               FormatString="0"/>
+
+                <StackPanel Grid.Row="1"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="6"
+                            Orientation="Horizontal"
+                            Spacing="14">
+
+                    <CheckBox Content="Auto Trim"
+                              IsChecked="{Binding ArtCutterAutoTrim}"
+                              Foreground="#C7D1DB"/>
+
+                    <CheckBox Content="Skip Empty"
+                              IsChecked="{Binding ArtCutterSkipEmpty}"
+                              Foreground="#C7D1DB"/>
+                </StackPanel>
+
+                <Button Grid.Row="0"
+                        Grid.Column="6"
+                        Grid.RowSpan="2"
+                        Content="Build Slices"
+                        Command="{Binding BuildArtCutterSlicesCommand}"
+                        HorizontalAlignment="Right"
+                        Width="140"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1"
+                Background="#20262E"
+                BorderBrush="#343B46"
+                BorderThickness="1"
+                CornerRadius="6">
+
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding ArtCutterSlices}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+
+                            <Border Width="170"
+                                    Margin="6"
+                                    Padding="6"
+                                    Background="#151A20"
+                                    BorderBrush="#343B46"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
+
+                                <StackPanel Spacing="4">
+
+                                    <CheckBox IsChecked="{Binding IsChecked}"
+                                              Content="{Binding DisplayText}"
+                                              Foreground="#E4EAF2"/>
+
+                                    <Border Height="120"
+                                            Background="#0F1318"
+                                            BorderBrush="#343B46"
+                                            BorderThickness="1">
+
+                                        <Image Source="{Binding PreviewBitmap}"
+                                               Stretch="Uniform"
+                                               RenderOptions.BitmapInterpolationMode="None"/>
+                                    </Border>
+
+                                    <TextBlock Text="{Binding SourceText}"
+                                               FontSize="11"
+                                               Foreground="#AAB4C0"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+
+            <Button Content="Queue Checked"
+                    Width="140"
+                    Click="QueueChecked_Click"/>
+
+            <Button Content="Close"
+                    Width="90"
+                    Click="Close_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

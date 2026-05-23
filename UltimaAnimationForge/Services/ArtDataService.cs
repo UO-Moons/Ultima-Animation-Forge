@@ -626,7 +626,11 @@ public sealed class ArtDataService
         };
     }
 
-    public bool ImportBitmapToArt(ArtEntry entry, string imagePath, out string message)
+    public bool ImportBitmapToArt(
+        ArtEntry entry,
+        string imagePath,
+        ArtImportAdjustOptions options,
+        out string message)
     {
         message = string.Empty;
 
@@ -658,6 +662,11 @@ public sealed class ArtDataService
         {
             WriteableBitmap bitmap = LoadBitmapFromFile(imagePath);
 
+            if (entry.FileIndex >= StaticOffset)
+            {
+                bitmap = AdjustStaticImportBitmap(bitmap, options);
+            }
+
             byte[] encodedData = entry.FileIndex < StaticOffset
                 ? EncodeLand(bitmap)
                 : EncodeStatic(bitmap);
@@ -684,6 +693,21 @@ public sealed class ArtDataService
             message = "Import failed: " + exception.Message;
             return false;
         }
+    }
+
+    public bool ImportBitmapToArt(ArtEntry entry, string imagePath, out string message)
+    {
+        return ImportBitmapToArt(
+            entry,
+            imagePath,
+            new ArtImportAdjustOptions
+            {
+                AutoTrim = true,
+                CenterOnCanvas = false,
+                OffsetX = 0,
+                OffsetY = 0
+            },
+            out message);
     }
 
     private static WriteableBitmap LoadBitmapFromFile(string path)
@@ -769,6 +793,137 @@ public sealed class ArtDataService
     {
         int offset = ((y * pixels.Width) + x) * 4;
         return pixels.Pixels[offset + 3] < 16;
+    }
+
+    private static WriteableBitmap AdjustStaticImportBitmap(
+    WriteableBitmap bitmap,
+    ArtImportAdjustOptions? options)
+    {
+        options ??= new ArtImportAdjustOptions();
+
+        WriteableBitmap working = bitmap;
+
+        if (options.AutoTrim)
+        {
+            working = TrimTransparentBorder(working);
+        }
+
+        bool needsCanvas =
+            options.CenterOnCanvas ||
+            options.OffsetX != 0 ||
+            options.OffsetY != 0;
+
+        if (!needsCanvas)
+        {
+            return working;
+        }
+
+        int canvasWidth = options.CanvasWidth > 0 ? options.CanvasWidth : working.PixelSize.Width;
+        int canvasHeight = options.CanvasHeight > 0 ? options.CanvasHeight : working.PixelSize.Height;
+
+        canvasWidth = Math.Max(canvasWidth, working.PixelSize.Width + Math.Abs(options.OffsetX));
+        canvasHeight = Math.Max(canvasHeight, working.PixelSize.Height + Math.Abs(options.OffsetY));
+
+        return PlaceBitmapOnCanvas(
+            working,
+            canvasWidth,
+            canvasHeight,
+            options.CenterOnCanvas,
+            options.OffsetX,
+            options.OffsetY);
+    }
+
+    private static WriteableBitmap TrimTransparentBorder(WriteableBitmap bitmap)
+    {
+        ArtFramePixels pixels = ReadPixels(bitmap);
+
+        int minX = pixels.Width;
+        int minY = pixels.Height;
+        int maxX = -1;
+        int maxY = -1;
+
+        for (int y = 0; y < pixels.Height; y++)
+        {
+            for (int x = 0; x < pixels.Width; x++)
+            {
+                if (IsTransparent(pixels, x, y))
+                {
+                    continue;
+                }
+
+                minX = Math.Min(minX, x);
+                minY = Math.Min(minY, y);
+                maxX = Math.Max(maxX, x);
+                maxY = Math.Max(maxY, y);
+            }
+        }
+
+        if (maxX < minX || maxY < minY)
+        {
+            return bitmap;
+        }
+
+        int width = maxX - minX + 1;
+        int height = maxY - minY + 1;
+
+        byte[] output = new byte[width * height * 4];
+
+        for (int y = 0; y < height; y++)
+        {
+            int srcOffset = (((minY + y) * pixels.Width) + minX) * 4;
+            int dstOffset = (y * width) * 4;
+
+            Buffer.BlockCopy(pixels.Pixels, srcOffset, output, dstOffset, width * 4);
+        }
+
+        return CreateBitmap(width, height, output);
+    }
+
+    private static WriteableBitmap PlaceBitmapOnCanvas(
+        WriteableBitmap bitmap,
+        int canvasWidth,
+        int canvasHeight,
+        bool center,
+        int offsetX,
+        int offsetY)
+    {
+        ArtFramePixels source = ReadPixels(bitmap);
+
+        byte[] output = new byte[canvasWidth * canvasHeight * 4];
+
+        int startX = center ? (canvasWidth - source.Width) / 2 : 0;
+        int startY = center ? (canvasHeight - source.Height) / 2 : 0;
+
+        startX += offsetX;
+        startY += offsetY;
+
+        for (int y = 0; y < source.Height; y++)
+        {
+            int dstY = startY + y;
+            if (dstY < 0 || dstY >= canvasHeight)
+            {
+                continue;
+            }
+
+            for (int x = 0; x < source.Width; x++)
+            {
+                int dstX = startX + x;
+                if (dstX < 0 || dstX >= canvasWidth)
+                {
+                    continue;
+                }
+
+                int srcOffset = ((y * source.Width) + x) * 4;
+                int dstOffset = ((dstY * canvasWidth) + dstX) * 4;
+
+                output[dstOffset + 0] = source.Pixels[srcOffset + 0];
+                output[dstOffset + 1] = source.Pixels[srcOffset + 1];
+                output[dstOffset + 2] = source.Pixels[srcOffset + 2];
+                output[dstOffset + 3] = source.Pixels[srcOffset + 3];
+            }
+        }
+
+        return CreateBitmap(canvasWidth, canvasHeight, output);
     }
 
     private static byte[] EncodeStatic(WriteableBitmap bitmap)
@@ -1102,5 +1257,288 @@ public sealed class ArtDataService
             message = "Art edit failed: " + exception.Message;
             return false;
         }
+    }
+
+    public WriteableBitmap? BuildAdjustedImportPreview(
+    string imagePath,
+    ArtImportAdjustOptions options,
+    out string message)
+    {
+        message = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
+        {
+            message = "Import image was not found.";
+            return null;
+        }
+
+        try
+        {
+            WriteableBitmap bitmap = LoadBitmapFromFile(imagePath);
+            WriteableBitmap adjusted = AdjustStaticImportBitmap(bitmap, options);
+
+            message =
+                "Preview: " +
+                adjusted.PixelSize.Width +
+                "x" +
+                adjusted.PixelSize.Height;
+
+            return adjusted;
+        }
+        catch (Exception exception)
+        {
+            message = "Preview failed: " + exception.Message;
+            return null;
+        }
+    }
+
+    public List<ArtCutterSliceEntry> BuildStaticArtSlices(
+    string imagePath,
+    int startArtId,
+    int sliceWidth,
+    int sliceHeight,
+    bool autoTrim,
+    bool skipEmpty,
+    out string message)
+    {
+        message = string.Empty;
+        List<ArtCutterSliceEntry> slices = new();
+
+        if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
+        {
+            message = "Cutter image was not found.";
+            return slices;
+        }
+
+        if (sliceWidth <= 0 || sliceHeight <= 0)
+        {
+            message = "Slice width and height must be greater than 0.";
+            return slices;
+        }
+
+        try
+        {
+            WriteableBitmap sourceBitmap = LoadBitmapFromFile(imagePath);
+            ArtFramePixels sourcePixels = ReadPixels(sourceBitmap);
+
+            int columns = sourcePixels.Width / sliceWidth;
+            int rows = sourcePixels.Height / sliceHeight;
+
+            if (columns <= 0 || rows <= 0)
+            {
+                message = "Image is smaller than the selected slice size.";
+                return slices;
+            }
+
+            int sliceIndex = 0;
+            int targetArtId = startArtId;
+
+            for (int row = 0; row < rows; row++)
+            {
+                for (int column = 0; column < columns; column++)
+                {
+                    WriteableBitmap sliceBitmap = CopyBitmapRegion(
+                        sourcePixels,
+                        column * sliceWidth,
+                        row * sliceHeight,
+                        sliceWidth,
+                        sliceHeight);
+
+                    if (skipEmpty && IsBitmapFullyTransparent(sliceBitmap))
+                    {
+                        sliceIndex++;
+                        continue;
+                    }
+
+                    if (autoTrim)
+                    {
+                        sliceBitmap = TrimTransparentBorder(sliceBitmap);
+                    }
+
+                    slices.Add(new ArtCutterSliceEntry
+                    {
+                        SliceIndex = sliceIndex,
+                        TargetArtId = targetArtId,
+                        IsChecked = true,
+                        PreviewBitmap = sliceBitmap,
+                        SourceText =
+                            "Row " + row +
+                            ", Col " + column +
+                            " | " + sliceBitmap.PixelSize.Width +
+                            "x" + sliceBitmap.PixelSize.Height
+                    });
+
+                    sliceIndex++;
+                    targetArtId++;
+                }
+            }
+
+            message = "Built " + slices.Count + " static art slices.";
+            return slices;
+        }
+        catch (Exception exception)
+        {
+            message = "Build slices failed: " + exception.Message;
+            return slices;
+        }
+    }
+
+    public bool QueueStaticArtSlices(
+    IEnumerable<ArtCutterSliceEntry> slices,
+    out string message)
+    {
+        message = string.Empty;
+
+        if (!useUop)
+        {
+            message = "Static art cutter currently supports artLegacyMUL.uop only.";
+            return false;
+        }
+
+        if (slices == null)
+        {
+            message = "No slices were selected.";
+            return false;
+        }
+
+        List<ArtCutterSliceEntry> selectedSlices = slices
+            .Where(slice => slice != null && slice.IsChecked && slice.PreviewBitmap != null)
+            .ToList();
+
+        if (selectedSlices.Count == 0)
+        {
+            message = "No checked slices to queue.";
+            return false;
+        }
+
+        PushPendingArtUndoSnapshot();
+
+        int queued = 0;
+
+        foreach (ArtCutterSliceEntry slice in selectedSlices)
+        {
+            int fileIndex = StaticOffset + slice.TargetArtId;
+
+            byte[] encodedData = EncodeStatic(slice.PreviewBitmap!);
+
+            string virtualPath = GetArtUopVirtualPath(fileIndex);
+            ulong targetHash = UopFileReader.CreateHash(virtualPath);
+
+            pendingUopArtEdits[targetHash] = new UopFileData
+            {
+                Hash = targetHash,
+                Data = encodedData,
+                DecompressedSize = (uint)encodedData.Length,
+                IsCompressed = true,
+                IsEmpty = false
+            };
+
+            queued++;
+        }
+
+        message = "Queued " + queued + " static art slices. Click Save Art Changes to write artLegacyMUL.uop.";
+        return queued > 0;
+    }
+
+    private static WriteableBitmap CopyBitmapRegion(
+    ArtFramePixels source,
+    int sourceX,
+    int sourceY,
+    int width,
+    int height)
+    {
+        byte[] output = new byte[width * height * 4];
+
+        for (int y = 0; y < height; y++)
+        {
+            int srcY = sourceY + y;
+            if (srcY < 0 || srcY >= source.Height)
+            {
+                continue;
+            }
+
+            for (int x = 0; x < width; x++)
+            {
+                int srcX = sourceX + x;
+                if (srcX < 0 || srcX >= source.Width)
+                {
+                    continue;
+                }
+
+                int srcOffset = ((srcY * source.Width) + srcX) * 4;
+                int dstOffset = ((y * width) + x) * 4;
+
+                output[dstOffset + 0] = source.Pixels[srcOffset + 0];
+                output[dstOffset + 1] = source.Pixels[srcOffset + 1];
+                output[dstOffset + 2] = source.Pixels[srcOffset + 2];
+                output[dstOffset + 3] = source.Pixels[srcOffset + 3];
+            }
+        }
+
+        return CreateBitmap(width, height, output);
+    }
+
+    private static bool IsBitmapFullyTransparent(WriteableBitmap bitmap)
+    {
+        ArtFramePixels pixels = ReadPixels(bitmap);
+
+        for (int y = 0; y < pixels.Height; y++)
+        {
+            for (int x = 0; x < pixels.Width; x++)
+            {
+                if (!IsTransparent(pixels, x, y))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static WriteableBitmap NormalizeStaticImportBitmap(WriteableBitmap bitmap)
+    {
+        ArtFramePixels pixels = ReadPixels(bitmap);
+
+        int minX = pixels.Width;
+        int minY = pixels.Height;
+        int maxX = -1;
+        int maxY = -1;
+
+        for (int y = 0; y < pixels.Height; y++)
+        {
+            for (int x = 0; x < pixels.Width; x++)
+            {
+                if (IsTransparent(pixels, x, y))
+                {
+                    continue;
+                }
+
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            }
+        }
+
+        if (maxX < minX || maxY < minY)
+        {
+            return bitmap;
+        }
+
+        int width = maxX - minX + 1;
+        int height = maxY - minY + 1;
+
+        byte[] output = new byte[width * height * 4];
+
+        for (int y = 0; y < height; y++)
+        {
+            int srcOffset = (((minY + y) * pixels.Width) + minX) * 4;
+            int dstOffset = (y * width) * 4;
+
+            Buffer.BlockCopy(pixels.Pixels, srcOffset, output, dstOffset, width * 4);
+        }
+
+        return CreateBitmap(width, height, output);
     }
 }

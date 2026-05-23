@@ -22,24 +22,72 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel
 {
+
+    public ObservableCollection<ArtCutterSliceEntry> ArtCutterSlices { get; } = new();
+
+    [ObservableProperty]
+    private string artCutterImagePath = string.Empty;
+
+    [ObservableProperty]
+    private int artCutterStartId;
+
+    [ObservableProperty]
+    private int artCutterSliceWidth = 44;
+
+    [ObservableProperty]
+    private int artCutterSliceHeight = 44;
+
+    [ObservableProperty]
+    private bool artCutterAutoTrim = true;
+
+    [ObservableProperty]
+    private bool artCutterSkipEmpty = true;
+
+    [ObservableProperty]
+    private WriteableBitmap? artImportAdjustPreviewBitmap;
+
+    [ObservableProperty]
+    private string pendingArtImportImagePath = string.Empty;
+
+    [ObservableProperty]
+    private bool artImportAutoTrim = true;
+
+    [ObservableProperty]
+    private bool artImportCenterOnCanvas;
+
+    [ObservableProperty]
+    private int artImportCanvasWidth;
+
+    [ObservableProperty]
+    private int artImportCanvasHeight;
+
+    [ObservableProperty]
+    private int artImportOffsetX;
+
+    [ObservableProperty]
+    private int artImportOffsetY;
+
+    [ObservableProperty]
+    private string artImportAdjustStatusText = string.Empty;
+
     [ObservableProperty]
     private string selectedArtSharpenMode = "Gaussian";
 
     public ObservableCollection<string> ArtSharpenModes { get; } = new()
-{
-    "Gaussian",
-    "Pixel"
-};
+    {
+        "Gaussian",
+        "Pixel"
+    };
 
     [ObservableProperty]
     private bool showArtTileDataEditor;
 
     public ObservableCollection<string> ArtSlotFilterOptions { get; } = new()
-{
-    "All",
-    "Used Only",
-    "Free Slots"
-};
+    {
+        "All",
+        "Used Only",
+        "Free Slots"
+    };
 
     [ObservableProperty]
     private string selectedArtSlotFilter = "Used Only";
@@ -747,18 +795,21 @@ public partial class MainWindowViewModel
             return;
         }
 
-        bool success = artDataService.ImportBitmapToArt(SelectedArtEntry, path, out string message);
-        ArtStatusText = message;
+        PendingArtImportImagePath = path;
+        ArtImportAutoTrim = true;
+        ArtImportCenterOnCanvas = false;
+        ArtImportCanvasWidth = 0;
+        ArtImportCanvasHeight = 0;
+        ArtImportOffsetX = 0;
+        ArtImportOffsetY = 0;
+        ArtImportAdjustStatusText = "Adjust import options, then queue the import.";
 
-        if (!success)
+        ArtImportAdjustWindow window = new()
         {
-            return;
-        }
-
-        SelectedArtBitmap = artDataService.LoadBitmap(SelectedArtEntry);
-        SelectedArtEntry.Thumbnail = artDataService.LoadThumbnail(SelectedArtEntry);
-
-        RebuildArtEntries();
+            DataContext = this
+        };
+        RefreshArtImportAdjustPreview();
+        await window.ShowDialog(mainWindow);
     }
 
     [RelayCommand]
@@ -1600,5 +1651,192 @@ public partial class MainWindowViewModel
         }
 
         return output;
+    }
+
+    public void QueueAdjustedArtImport()
+    {
+        if (SelectedArtEntry == null)
+        {
+            ArtStatusText = "No art entry selected.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(PendingArtImportImagePath))
+        {
+            ArtStatusText = "No import image selected.";
+            return;
+        }
+
+        ArtImportAdjustOptions options = new()
+        {
+            AutoTrim = ArtImportAutoTrim,
+            CenterOnCanvas = ArtImportCenterOnCanvas,
+            CanvasWidth = ArtImportCanvasWidth,
+            CanvasHeight = ArtImportCanvasHeight,
+            OffsetX = ArtImportOffsetX,
+            OffsetY = ArtImportOffsetY
+        };
+
+        bool success = artDataService.ImportBitmapToArt(
+            SelectedArtEntry,
+            PendingArtImportImagePath,
+            options,
+            out string message);
+
+        ArtStatusText = message;
+
+        if (!success)
+        {
+            return;
+        }
+
+        SelectedArtBitmap = artDataService.LoadBitmap(SelectedArtEntry);
+        SelectedArtEntry.Thumbnail = artDataService.LoadThumbnail(SelectedArtEntry);
+
+        RebuildArtEntries();
+    }
+
+    [RelayCommand]
+    private void RefreshArtImportAdjustPreview()
+    {
+        if (string.IsNullOrWhiteSpace(PendingArtImportImagePath))
+        {
+            ArtImportAdjustStatusText = "No import image selected.";
+            return;
+        }
+
+        ArtImportAdjustOptions options = new()
+        {
+            AutoTrim = ArtImportAutoTrim,
+            CenterOnCanvas = ArtImportCenterOnCanvas,
+            CanvasWidth = ArtImportCanvasWidth,
+            CanvasHeight = ArtImportCanvasHeight,
+            OffsetX = ArtImportOffsetX,
+            OffsetY = ArtImportOffsetY
+        };
+
+        ArtImportAdjustPreviewBitmap =
+            artDataService.BuildAdjustedImportPreview(PendingArtImportImagePath, options, out string message);
+
+        ArtImportAdjustStatusText = message;
+    }
+
+    partial void OnArtImportAutoTrimChanged(bool value)
+    {
+        RefreshArtImportAdjustPreview();
+    }
+
+    partial void OnArtImportCenterOnCanvasChanged(bool value)
+    {
+        RefreshArtImportAdjustPreview();
+    }
+
+    partial void OnArtImportCanvasWidthChanged(int value)
+    {
+        RefreshArtImportAdjustPreview();
+    }
+
+    partial void OnArtImportCanvasHeightChanged(int value)
+    {
+        RefreshArtImportAdjustPreview();
+    }
+
+    partial void OnArtImportOffsetXChanged(int value)
+    {
+        RefreshArtImportAdjustPreview();
+    }
+
+    partial void OnArtImportOffsetYChanged(int value)
+    {
+        RefreshArtImportAdjustPreview();
+    }
+
+    [RelayCommand]
+    private async Task OpenArtCutterAsync()
+    {
+        if (SelectedArtEntry != null)
+        {
+            ArtCutterStartId = SelectedArtEntry.ArtId;
+        }
+
+        Window? mainWindow = GetMainWindow();
+        if (mainWindow == null)
+        {
+            ArtStatusText = "Could not locate main window.";
+            return;
+        }
+
+        IReadOnlyList<IStorageFile> files = await mainWindow.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Choose Large Art Image",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                new FilePickerFileType("Image files")
+                {
+                    Patterns = new[] { "*.png", "*.bmp" }
+                }
+                }
+            });
+
+        if (files.Count == 0)
+        {
+            ArtStatusText = "Art cutter cancelled.";
+            return;
+        }
+
+        string? path = files[0].TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            ArtStatusText = "Selected cutter image path is invalid.";
+            return;
+        }
+
+        ArtCutterImagePath = path;
+        ArtCutterSlices.Clear();
+
+        ArtCutterWindow window = new()
+        {
+            DataContext = this
+        };
+
+        await window.ShowDialog(mainWindow);
+    }
+
+    [RelayCommand]
+    private void BuildArtCutterSlices()
+    {
+        ArtCutterSlices.Clear();
+
+        List<ArtCutterSliceEntry> slices = artDataService.BuildStaticArtSlices(
+            ArtCutterImagePath,
+            ArtCutterStartId,
+            ArtCutterSliceWidth,
+            ArtCutterSliceHeight,
+            ArtCutterAutoTrim,
+            ArtCutterSkipEmpty,
+            out string message);
+
+        foreach (ArtCutterSliceEntry slice in slices)
+        {
+            ArtCutterSlices.Add(slice);
+        }
+
+        ArtStatusText = message;
+    }
+
+    public void QueueCheckedArtCutterSlices()
+    {
+        bool success = artDataService.QueueStaticArtSlices(
+            ArtCutterSlices,
+            out string message);
+
+        ArtStatusText = message;
+
+        if (success)
+        {
+            RebuildArtEntries();
+        }
     }
 }
