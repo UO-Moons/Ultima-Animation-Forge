@@ -22,6 +22,7 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    public bool ShowGumpBuilderPanel => ActiveToolTab == MainToolTab.GumpBuilder;
     public bool ShowLightPanel => ActiveToolTab == MainToolTab.Lights;
     public ICommand ShowLightCommand { get; }
 
@@ -47,6 +48,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowAnimDataPanel));
         OnPropertyChanged(nameof(ShowWearableWizardPanel));
         OnPropertyChanged(nameof(ShowLightPanel));
+        OnPropertyChanged(nameof(ShowGumpBuilderPanel));
 
         if (value == MainToolTab.AnimationBrowser)
         {
@@ -122,6 +124,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public ICommand ShowArtCommand { get; }
     public ICommand ShowAnimDataCommand { get; }
     public ICommand ShowWearableWizardCommand { get; }
+    public ICommand ShowGumpBuilderCommand { get; }
 
     [ObservableProperty]
     private string outputFolderPath = string.Empty;
@@ -960,6 +963,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ShowTileDataCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.TileData);
         ShowArtCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Art);
         ShowAnimDataCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.AnimData);
+        ShowGumpBuilderCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.GumpBuilder);
 
         ToggleCheckerCommand = new RelayCommand(() => ShowCheckerBackground = !ShowCheckerBackground);
         ToggleLoopCommand = new RelayCommand(() => LoopPlayback = !LoopPlayback);

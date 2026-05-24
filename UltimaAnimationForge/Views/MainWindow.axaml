@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:UltimaAnimationForge.ViewModels"
+        xmlns:converters="clr-namespace:UltimaAnimationForge.Converters"
         x:Class="UltimaAnimationForge.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Width="1500"
@@ -12,9 +13,14 @@
         Background="#1B1F25"
         Foreground="White"
         RequestedThemeVariant="Dark"
-        Title="Ultima Animation Forge Alpha 20"
+        Title="Ultima Animation Forge Alpha 21"
         DragDrop.AllowDrop="True"
+        KeyDown="Window_KeyDown"
         mc:Ignorable="d">
+
+    <Window.Resources>
+        <converters:BoolToSelectionBrushConverter x:Key="BoolToSelectionBrushConverter"/>
+    </Window.Resources>
 
     <Design.DataContext>
         <vm:MainWindowViewModel />
@@ -322,61 +328,153 @@
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
 
         <!-- profile/action bar -->
-        <Border Grid.Row="0"
-                Background="#23282F"
-                BorderBrush="#343B46"
-                BorderThickness="0,0,0,1"
-                Padding="10,8">
-            <Grid ColumnDefinitions="Auto,190,Auto,Auto,Auto,*,360">
-                <TextBlock Grid.Column="0"
-                           Text="Profile"
-                           VerticalAlignment="Center"
-                           Margin="0,0,8,0"
-                           Foreground="#D5DCE4" />
+        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,360"
+              ColumnSpacing="8">
 
-                <ComboBox Grid.Column="1"
-                          ItemsSource="{Binding ProfileOptions}"
-                          SelectedIndex="{Binding SelectedProfileIndex, Mode=TwoWay}"
-                          VerticalAlignment="Center"
-                          Margin="0,0,8,0" />
+            <TextBlock Grid.Column="0"
+                       Text="Profile"
+                       VerticalAlignment="Center"
+                       Foreground="#D5DCE4" />
 
-                <Button Grid.Column="2"
-                        Content="Manage Profiles"
-                        Command="{Binding ManageProfilesCommand}"
+            <ComboBox Grid.Column="1"
+                      ItemsSource="{Binding ProfileOptions}"
+                      SelectedIndex="{Binding SelectedProfileIndex, Mode=TwoWay}"
+                      VerticalAlignment="Center"
+                      Width="110" />
+
+            <Button Grid.Column="2"
+                    Content="Manage Profiles"
+                    Command="{Binding ManageProfilesCommand}"
+                    MinHeight="32"
+                    Padding="12,6" />
+
+            <Button Grid.Column="3"
+                    Content="Open UO Folder"
+                    Command="{Binding OpenFolderCommand}"
+                    MinHeight="32"
+                    Padding="12,6" />
+
+            <Button Grid.Column="4"
+                    Content="?"
+                    Command="{Binding HelpCommand}"
+                    Width="38"
+                    Height="32"
+                    MinHeight="32"
+                    Padding="0"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    VerticalAlignment="Center"
+                    ToolTip.Tip="Show help and shortcuts" />
+
+            <WrapPanel Grid.Column="5"
+                       Orientation="Horizontal"
+                       VerticalAlignment="Center"
+                       IsVisible="{Binding ShowAnimationEditorPanel}">
+
+                <Button Content="Save Changes"
+                        Command="{Binding SaveChangesCommand}"
+                        IsEnabled="{Binding CanSaveChanges}"
+                        MinHeight="32"
+                        MinWidth="118"
+                        Padding="12,6"
                         Margin="0,0,8,0" />
 
-                <Button Grid.Column="3"
-                        Content="Open UO Folder"
-                        Command="{Binding OpenFolderCommand}"
+                <Button Content="Preview Window"
+                        Command="{Binding PopOutPreviewCommand}"
+                        MinHeight="32"
+                        MinWidth="132"
+                        Padding="12,6"
                         Margin="0,0,8,0" />
 
-                <Button Grid.Column="4"
-                        Content="?"
-                        Command="{Binding HelpCommand}"
-                        Width="36"
-                        ToolTip.Tip="Show help and shortcuts" />
+                <Menu Background="Transparent"
+                      Margin="0,0,8,0">
+                    <MenuItem Header="Edit ▼"
+                              Classes="topAction"
+                              MinHeight="32"
+                              MinWidth="78"
+                              Padding="12,6">
+                        <MenuItem Header="MUL Slot View"
+                                  ToggleType="CheckBox"
+                                  IsChecked="{Binding ShowMulSlotView, Mode=TwoWay}" />
+                        <Separator />
+                        <MenuItem Header="Replace Frame"
+                                  Command="{Binding ReplaceSelectedFrameCommand}"
+                                  IsVisible="{Binding ShowAnimationView}" />
+                        <MenuItem Header="Remove Frame"
+                                  Command="{Binding RemoveSelectedFrameCommand}"
+                                  IsVisible="{Binding ShowAnimationView}" />
+                        <MenuItem Header="Import PNG Sequence"
+                                  Command="{Binding ImportPngSequenceCommand}"
+                                  IsVisible="{Binding ShowAnimationView}" />
+                        <Separator IsVisible="{Binding ShowAnimationView}" />
+                        <MenuItem Header="Undo"
+                                  Command="{Binding UndoFrameEditCommand}"
+                                  IsEnabled="{Binding CanUndoFrameEdit}"
+                                  IsVisible="{Binding ShowAnimationView}" />
+                    </MenuItem>
+                </Menu>
 
-                <Border Grid.Column="6"
-                        Background="#1A1F25"
-                        BorderBrush="#39414D"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="10,8"
-                        Margin="12,0,0,0">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="{Binding HeaderStatusText}"
-                                   Foreground="#EDF1F5"
-                                   TextWrapping="Wrap"
-                                   TextTrimming="CharacterEllipsis"
-                                   MaxLines="2" />
-                        <TextBlock Text="{Binding UnsavedChangesText}"
-                                   Foreground="#F2C14E"
-                                   FontWeight="Bold"
-                                   IsVisible="{Binding HasAnyUnsavedChanges}" />
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </Border>
+                <Menu Background="Transparent">
+                    <MenuItem Header="Import / Export ▼"
+                              Classes="topAction"
+                              MinHeight="32"
+                              MinWidth="150"
+                              Padding="12,6">
+                        <MenuItem Header="Open EC / KR Package Viewer"
+                                  Command="{Binding OpenMythicPackageViewerCommand}" />
+                        <Separator />
+                        <MenuItem Header="Create Empty MUL/IDX"
+                                  Command="{Binding CreateEmptyLegacyMulIdxCommand}" />
+                        <Separator />
+                        <MenuItem Header="Export Frames"
+                                  Command="{Binding ExportFramesCommand}" />
+                        <MenuItem Header="Export VD"
+                                  Command="{Binding ExportVdCommand}"
+                                  IsVisible="{Binding ShowAnimationView}" />
+                        <Separator />
+                        <MenuItem Header="Import VD"
+                                  Command="{Binding ImportVdCommand}"
+                                  IsVisible="{Binding ShowSlotView}" />
+                        <MenuItem Header="Import UOP VD"
+                                  Command="{Binding ImportVdToUopCommand}"
+                                  IsVisible="{Binding ShowSlotView}" />
+                        <MenuItem Header="Import Sprite Sheet"
+                                  Command="{Binding ImportSpriteSheetCommand}" />
+                        <Separator />
+                        <MenuItem Header="Delete Animation"
+                                  Command="{Binding DeleteAnimationCommand}"
+                                  IsVisible="{Binding ShowAnimationView}" />
+                    </MenuItem>
+                </Menu>
+            </WrapPanel>
+
+            <Button Grid.Column="6"
+                    Content="Uox3 - Discord"
+                    Command="{Binding OpenDiscordCommand}"
+                    MinHeight="32"
+                    MinWidth="128"
+                    Padding="12,6" />
+
+            <Border Grid.Column="9"
+                    Background="#1A1F25"
+                    BorderBrush="#39414D"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="10,8"
+                    Margin="8,0,0,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding HeaderStatusText}"
+                               Foreground="#EDF1F5"
+                               TextWrapping="Wrap"
+                               TextTrimming="CharacterEllipsis"
+                               MaxLines="2" />
+                    <TextBlock Text="{Binding UnsavedChangesText}"
+                               Foreground="#F2C14E"
+                               FontWeight="Bold"
+                               IsVisible="{Binding HasAnyUnsavedChanges}" />
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- tool tabs -->
         <Border Grid.Row="1"
@@ -432,86 +530,10 @@
                             CornerRadius="0"
                             Padding="14,6"
                             MinHeight="28" />
+
+                    <Button Content="Gump Builder"
+                            Command="{Binding ShowGumpBuilderCommand}" />
                 </StackPanel>
-
-                <WrapPanel Grid.Column="2"
-                           Orientation="Horizontal"
-                           VerticalAlignment="Center"
-                           IsVisible="{Binding ShowAnimationEditorPanel}">
-                    <Button Content="Save Changes"
-                            Command="{Binding SaveChangesCommand}"
-                            IsEnabled="{Binding CanSaveChanges}"
-                            MinHeight="28"
-                            Padding="10,5"
-                            Margin="0,0,6,0" />
-
-                    <Button Content="Preview Window"
-                            Command="{Binding PopOutPreviewCommand}"
-                            MinHeight="28"
-                            Padding="10,5"
-                            Margin="0,0,6,0" />
-
-                    <Menu Background="Transparent"
-                          Margin="0,0,6,0">
-                        <MenuItem Header="Edit ▼"
-                                  Classes="topAction">
-                            <MenuItem Header="MUL Slot View"
-                                      ToggleType="CheckBox"
-                                      IsChecked="{Binding ShowMulSlotView, Mode=TwoWay}" />
-                            <Separator />
-                            <MenuItem Header="Replace Frame"
-                                      Command="{Binding ReplaceSelectedFrameCommand}"
-                                      IsVisible="{Binding ShowAnimationView}" />
-                            <MenuItem Header="Remove Frame"
-                                      Command="{Binding RemoveSelectedFrameCommand}"
-                                      IsVisible="{Binding ShowAnimationView}" />
-                            <MenuItem Header="Import PNG Sequence"
-                                      Command="{Binding ImportPngSequenceCommand}"
-                                      IsVisible="{Binding ShowAnimationView}" />
-                            <Separator IsVisible="{Binding ShowAnimationView}" />
-                            <MenuItem Header="Undo"
-                                      Command="{Binding UndoFrameEditCommand}"
-                                      IsEnabled="{Binding CanUndoFrameEdit}"
-                                      IsVisible="{Binding ShowAnimationView}" />
-                        </MenuItem>
-                    </Menu>
-
-                    <Menu Background="Transparent"
-                          Margin="0,0,6,0">
-                        <MenuItem Header="Import / Export ▼"
-                                  Classes="topAction">
-                            <MenuItem Header="Open EC / KR Package Viewer"
-                                      Command="{Binding OpenMythicPackageViewerCommand}" />
-                            <Separator />
-                            <MenuItem Header="Create Empty MUL/IDX"
-                                      Command="{Binding CreateEmptyLegacyMulIdxCommand}" />
-                            <Separator />
-                            <MenuItem Header="Export Frames"
-                                      Command="{Binding ExportFramesCommand}" />
-                            <MenuItem Header="Export VD"
-                                      Command="{Binding ExportVdCommand}"
-                                      IsVisible="{Binding ShowAnimationView}" />
-                            <Separator />
-                            <MenuItem Header="Import VD"
-                                      Command="{Binding ImportVdCommand}"
-                                      IsVisible="{Binding ShowSlotView}" />
-                            <MenuItem Header="Import UOP VD"
-                                      Command="{Binding ImportVdToUopCommand}"
-                                      IsVisible="{Binding ShowSlotView}" />
-                            <MenuItem Header="Import Sprite Sheet"
-                                      Command="{Binding ImportSpriteSheetCommand}" />
-                            <Separator />
-                            <MenuItem Header="Delete Animation"
-                                      Command="{Binding DeleteAnimationCommand}"
-                                      IsVisible="{Binding ShowAnimationView}" />
-                        </MenuItem>
-                    </Menu>
-
-                    <Button Content="Uox3 - Discord"
-                            Command="{Binding OpenDiscordCommand}"
-                            MinHeight="28"
-                            Padding="10,5" />
-                </WrapPanel>
             </Grid>
         </Border>
 
@@ -1913,6 +1935,636 @@
                     </Grid>
                 </Grid>
 
+                <!-- Gump Builder Tab -->
+                <Grid Grid.Column="0"
+                      Grid.ColumnSpan="3"
+                      IsVisible="{Binding ShowGumpBuilderPanel}"
+                      RowDefinitions="Auto,*"
+                      RowSpacing="8"
+                      Margin="-294,10,10,10"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch">
+
+                    <Border Grid.Row="0"
+                            Background="#202733"
+                            BorderBrush="#344052"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+                        <WrapPanel>
+                            <Button Content="Add Background" Command="{Binding AddGumpBuilderBackgroundCommand}" />
+                            <Button Content="Add Selected Gump" Command="{Binding LoadSelectedGumpIntoBuilderCommand}" />
+                            <Button Content="Add CheckerTrans" Command="{Binding AddGumpBuilderCheckerTransCommand}" />
+                            <Button Content="Add Gump" Command="{Binding AddGumpBuilderOpenGumpPickerCommand}" />
+                            <Button Content="Add Picture" Command="{Binding AddGumpBuilderImageCommand}" />
+                            <Button Content="Add PicInPic" Command="{Binding AddGumpBuilderPicInPicCommand}" />
+                            <Button Content="Add Button" Command="{Binding AddGumpBuilderButtonCommand}" />
+                            <Button Content="Add Button TileArt" Command="{Binding AddGumpBuilderButtonTileArtCommand}" />
+                            <Button Content="Add Page Button"
+                                    Command="{Binding AddGumpBuilderPageButtonCommand}" />
+                            <Button Content="Add Text" Command="{Binding AddGumpBuilderLabelCommand}" />
+                            <Button Content="Add Cropped Text"
+                                    Command="{Binding AddGumpBuilderCroppedTextCommand}" />
+                            <Button Content="Add HTML" Command="{Binding AddGumpBuilderHtmlCommand}" />
+                            <Button Content="Add XMF HTML"
+                                    Command="{Binding AddGumpBuilderXmfHtmlCommand}" />
+
+                            <Button Content="Add XMF Color"
+                                    Command="{Binding AddGumpBuilderXmfHtmlColorCommand}" />
+
+                            <Button Content="Add XMF Tok"
+                                    Command="{Binding AddGumpBuilderXmfHtmlTokCommand}" />
+                            <Button Content="Add Text Entry" Command="{Binding AddGumpBuilderTextEntryCommand}" />
+                            <Button Content="Add Checkbox" Command="{Binding AddGumpBuilderCheckboxCommand}" />
+                            <Button Content="Add Radio" Command="{Binding AddGumpBuilderRadioCommand}" />
+                            <Button Content="Add Group" Command="{Binding AddGumpBuilderGroupStartCommand}" />
+                            <Button Content="End Group" Command="{Binding AddGumpBuilderGroupEndCommand}" />
+                            <Button Content="Add Page" Command="{Binding AddGumpBuilderPageCommand}" />
+                            <Button Content="Add Item Property" Command="{Binding AddGumpBuilderItemPropertyCommand}" />
+                            <Button Content="Add ToolTip" Command="{Binding AddGumpBuilderClilocToolTipCommand}" />
+                            <Button Content="Add Tiled" Command="{Binding AddGumpBuilderTiledImageCommand}" />
+                            <Button Content="Move Up" Command="{Binding MoveSelectedGumpBuilderElementUpCommand}" />
+                            <Button Content="Move Down" Command="{Binding MoveSelectedGumpBuilderElementDownCommand}" />
+                            <Button Content="Delete" Command="{Binding DeleteSelectedGumpBuilderElementCommand}" />
+
+                            <CheckBox Content="Snap"
+                                      IsChecked="{Binding GumpBuilderSnapToGrid}"
+                                      Foreground="#E4EAF2"
+                                      VerticalAlignment="Center"
+                                      Margin="8,0,0,0"/>
+
+                            <TextBlock Text="Grid"
+                                       Foreground="#AAB4C0"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+
+                            <NumericUpDown Value="{Binding GumpBuilderGridSize, Mode=TwoWay}"
+                                           Minimum="1"
+                                           Maximum="100"
+                                           Width="70"/>
+
+                            <Menu VerticalAlignment="Center"
+                                  Margin="8,0,0,0">
+                                <MenuItem Header="Export">
+                                    <MenuItem Header="UOX3 JavaScript"
+                                              Command="{Binding ShowGumpBuilderUox3ExportCommand}"/>
+                                    <MenuItem Header="C#"
+                                              Command="{Binding ShowGumpBuilderCSharpExportCommand}"/>
+                                    <MenuItem Header="Sphere"
+                                              Command="{Binding ShowGumpBuilderSphereExportCommand}"/>
+                                    <MenuItem Header="POL"
+                                              Command="{Binding ShowGumpBuilderPolExportCommand}"/>
+                                </MenuItem>
+                            </Menu>
+                        </WrapPanel>
+                    </Border>
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="340,*,380"
+                          ColumnSpacing="10"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch">
+
+                        <!-- Left: Elements + Properties -->
+                        <Border Grid.Column="0"
+                                Background="#202733"
+                                BorderBrush="#344052"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="8">
+
+                                    <TextBlock Text="Gump Options"
+                                               FontWeight="Bold"
+                                               Foreground="#E4EAF2"/>
+
+                                    <CheckBox Content="MasterGump"
+                                              IsChecked="{Binding GumpBuilderUseMasterGump}"
+                                              Foreground="#E4EAF2"/>
+
+                                    <NumericUpDown Value="{Binding GumpBuilderMasterGumpId, Mode=TwoWay}"
+                                                   Minimum="0"
+                                                   Maximum="65535"/>
+
+                                    <UniformGrid Columns="2"
+                                                 RowSpacing="4"
+                                                 ColumnSpacing="6">
+                                        <CheckBox Content="NoClose"
+                                                  IsChecked="{Binding GumpBuilderNoClose}"
+                                                  Foreground="#E4EAF2"/>
+
+                                        <CheckBox Content="NoDispose"
+                                                  IsChecked="{Binding GumpBuilderNoDispose}"
+                                                  Foreground="#E4EAF2"/>
+
+                                        <CheckBox Content="NoMove"
+                                                  IsChecked="{Binding GumpBuilderNoMove}"
+                                                  Foreground="#E4EAF2"/>
+
+                                        <CheckBox Content="NoResize"
+                                                  IsChecked="{Binding GumpBuilderNoResize}"
+                                                  Foreground="#E4EAF2"/>
+                                    </UniformGrid>
+
+                                    <Separator/>
+
+                                    <TextBlock Text="Elements"
+                                               FontWeight="Bold"
+                                               Foreground="#E4EAF2"/>
+
+                                    <ListBox ItemsSource="{Binding GumpBuilderElements}"
+                                             SelectedItem="{Binding SelectedGumpBuilderElement}"
+                                             Height="220">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}"
+                                                               Foreground="#E4EAF2"
+                                                               FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding DisplayText}"
+                                                               Foreground="#AAB4C0"
+                                                               FontSize="11"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <Separator/>
+
+                                    <TextBlock Text="Properties"
+                                               FontWeight="Bold"
+                                               Foreground="#E4EAF2"/>
+
+                                    <UniformGrid Columns="2"
+                                                 ColumnSpacing="6"
+                                                 RowSpacing="6">
+
+                                        <TextBlock Text="X" Foreground="#AAB4C0"/>
+                                        <TextBlock Text="Y" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Value="{Binding SelectedGumpBuilderElement.X, Mode=TwoWay}"
+                                                       Minimum="-5000"
+                                                       Maximum="5000"/>
+                                        <NumericUpDown Value="{Binding SelectedGumpBuilderElement.Y, Mode=TwoWay}"
+                                                       Minimum="-5000"
+                                                       Maximum="5000"/>
+
+                                        <TextBlock Text="Width" Foreground="#AAB4C0"/>
+                                        <TextBlock Text="Height" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Value="{Binding SelectedGumpBuilderElement.Width, Mode=TwoWay}"
+                                                       Minimum="1"
+                                                       Maximum="5000"/>
+                                        <NumericUpDown Value="{Binding SelectedGumpBuilderElement.Height, Mode=TwoWay}"
+                                                       Minimum="1"
+                                                       Maximum="5000"/>
+
+                                        <TextBlock Text="Gump ID / Art ID" Foreground="#AAB4C0"/>
+                                        <TextBlock Text="Hue" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Value="{Binding SelectedGumpBuilderElement.GumpId, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="65535"/>
+                                        <NumericUpDown Value="{Binding SelectedGumpBuilderElement.Hue, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="65535"/>
+
+                                        <TextBlock Text="Pressed Gump ID" Foreground="#AAB4C0"/>
+                                        <NumericUpDown Value="{Binding SelectedGumpBuilderElement.PressedGumpId, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="65535"/>
+
+                                        <TextBlock Text="Button ID" Foreground="#AAB4C0"/>
+                                        <NumericUpDown Value="{Binding SelectedGumpBuilderElement.ButtonId, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="9999"/>
+
+                                        <TextBlock Grid.Row="14" Grid.Column="0" Text="Group Number" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Grid.Row="15" Grid.Column="0"
+                                                       Value="{Binding SelectedGumpBuilderElement.GroupNumber, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="9999"/>
+
+                                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Tile ID" Foreground="#AAB4C0"/>
+                                        <TextBlock Grid.Row="10" Grid.Column="1" Text="Tile Hue" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Grid.Row="11" Grid.Column="0"
+                                                       Value="{Binding SelectedGumpBuilderElement.TileId, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="65535"/>
+
+                                        <NumericUpDown Grid.Row="11" Grid.Column="1"
+                                                       Value="{Binding SelectedGumpBuilderElement.Hue, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="65535"/>
+
+                                        <TextBlock Grid.Row="12" Grid.Column="0" Text="Tile X Offset" Foreground="#AAB4C0"/>
+                                        <TextBlock Grid.Row="12" Grid.Column="1" Text="Tile Y Offset" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Grid.Row="13" Grid.Column="0"
+                                                       Value="{Binding SelectedGumpBuilderElement.TileX, Mode=TwoWay}"
+                                                       Minimum="-5000"
+                                                       Maximum="5000"/>
+
+                                        <NumericUpDown Grid.Row="13" Grid.Column="1"
+                                                       Value="{Binding SelectedGumpBuilderElement.TileY, Mode=TwoWay}"
+                                                       Minimum="-5000"
+                                                       Maximum="5000"/>
+
+                                        <TextBlock Grid.Row="16" Grid.Column="0" Text="Page Number" Foreground="#AAB4C0"/>
+                                        <TextBlock Grid.Row="16" Grid.Column="1" Text="Cliloc Number" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Grid.Row="17" Grid.Column="0"
+                                                       Value="{Binding SelectedGumpBuilderElement.PageNumber, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="9999"/>
+
+                                        <NumericUpDown Grid.Row="17" Grid.Column="1"
+                                                       Value="{Binding SelectedGumpBuilderElement.ClilocNumber, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="999999999"/>
+
+                                        <TextBlock Text="Item Property Object"
+                                                   Foreground="#AAB4C0"/>
+
+                                        <TextBox Text="{Binding SelectedGumpBuilderElement.ItemPropertyObject, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Z" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Grid.Row="9" Grid.Column="0"
+                                                       Value="{Binding SelectedGumpBuilderElement.Z, Mode=TwoWay}"
+                                                       Minimum="-1000"
+                                                       Maximum="1000"/>
+
+                                        <TextBlock Grid.Row="18" Grid.Column="0" Text="Sprite X" Foreground="#AAB4C0"/>
+                                        <TextBlock Grid.Row="18" Grid.Column="1" Text="Sprite Y" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Grid.Row="19" Grid.Column="0"
+                                                       Value="{Binding SelectedGumpBuilderElement.SpriteX, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="5000"/>
+
+                                        <NumericUpDown Grid.Row="19" Grid.Column="1"
+                                                       Value="{Binding SelectedGumpBuilderElement.SpriteY, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="5000"/>
+
+                                        <TextBlock Grid.Row="20" Grid.Column="0" Text="Text ID" Foreground="#AAB4C0"/>
+                                        <TextBlock Grid.Row="20" Grid.Column="1" Text="Max Length" Foreground="#AAB4C0"/>
+
+                                        <NumericUpDown Grid.Row="21" Grid.Column="0"
+                                                       Value="{Binding SelectedGumpBuilderElement.TextId, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="9999"/>
+
+                                        <NumericUpDown Grid.Row="21" Grid.Column="1"
+                                                       Value="{Binding SelectedGumpBuilderElement.MaxLength, Mode=TwoWay}"
+                                                       Minimum="0"
+                                                       Maximum="9999"/>
+
+                                    </UniformGrid>
+
+                                    <UniformGrid Columns="2"
+                                                 ColumnSpacing="6"
+                                                 RowSpacing="4">
+                                        <CheckBox Content="Background"
+                                                  IsChecked="{Binding SelectedGumpBuilderElement.HasBackground, Mode=TwoWay}"
+                                                  Foreground="#E4EAF2"/>
+
+                                        <CheckBox Content="Scrollbar"
+                                                  IsChecked="{Binding SelectedGumpBuilderElement.HasScrollbar, Mode=TwoWay}"
+                                                  Foreground="#E4EAF2"/>
+
+                                        <CheckBox Content="Border"
+                                                  IsChecked="{Binding SelectedGumpBuilderElement.HasBorder, Mode=TwoWay}"
+                                                  Foreground="#E4EAF2"/>
+
+                                        <TextBlock Text="RGB Colour"
+                                                   Foreground="#AAB4C0"/>
+                                    </UniformGrid>
+
+                                    <NumericUpDown Value="{Binding SelectedGumpBuilderElement.RgbColour, Mode=TwoWay}"
+                                                   Minimum="0"
+                                                   Maximum="16777215"/>
+
+                                    <TextBlock Text="Cliloc Arg 1" Foreground="#AAB4C0"/>
+                                    <TextBox Text="{Binding SelectedGumpBuilderElement.ClilocArg1, Mode=TwoWay}"/>
+
+                                    <TextBlock Text="Cliloc Arg 2" Foreground="#AAB4C0"/>
+                                    <TextBox Text="{Binding SelectedGumpBuilderElement.ClilocArg2, Mode=TwoWay}"/>
+
+                                    <TextBlock Text="Cliloc Arg 3" Foreground="#AAB4C0"/>
+                                    <TextBox Text="{Binding SelectedGumpBuilderElement.ClilocArg3, Mode=TwoWay}"/>
+
+                                    <CheckBox Content="Limited Text Entry"
+                                              IsChecked="{Binding SelectedGumpBuilderElement.LimitedTextEntry, Mode=TwoWay}"
+                                              Foreground="#E4EAF2"/>
+
+                                    <Button Content="Apply Picker Gump"
+                                            Command="{Binding ApplySelectedPickerGumpToElementCommand}"/>
+
+                                    <CheckBox Content="Default Checked"
+                                              IsChecked="{Binding SelectedGumpBuilderElement.DefaultStatus, Mode=TwoWay}"
+                                              Foreground="#E4EAF2"/>
+
+                                    <TextBlock Text="Text" Foreground="#AAB4C0"/>
+                                    <TextBox Text="{Binding SelectedGumpBuilderElement.Text, Mode=TwoWay}"
+                                             AcceptsReturn="True"
+                                             Height="90"/>
+
+                                    <TextBlock Text="{Binding GumpBuilderStatusText}"
+                                               Foreground="#AAB4C0"
+                                               TextWrapping="Wrap"
+                                               Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+
+                        <!-- Center: Big Canvas -->
+                        <Border Grid.Column="1"
+                                Background="#15191F"
+                                BorderBrush="#344052"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="12">
+
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+
+                                <Canvas Width="{Binding GumpBuilderWidth}"
+                                        Height="{Binding GumpBuilderHeight}"
+                                        Background="#101318"
+                                        ClipToBounds="False">
+
+                                    <ItemsControl x:Name="GumpBuilderItemsControl"
+                                                  ItemsSource="{Binding GumpBuilderElements}"
+                                                  Width="{Binding GumpBuilderWidth}"
+                                                  Height="{Binding GumpBuilderHeight}">
+
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="Transparent"
+                                                        Cursor="SizeAll"
+                                                        ZIndex="{Binding Z}"
+                                                        PointerPressed="GumpBuilderElement_PointerPressed"
+                                                        PointerMoved="GumpBuilderElement_PointerMoved"
+                                                        PointerReleased="GumpBuilderElement_PointerReleased">
+
+                                                    <Border.RenderTransform>
+                                                        <TranslateTransform X="{Binding X}" Y="{Binding Y}"/>
+                                                    </Border.RenderTransform>
+
+
+                                                    <Border Padding="6"
+                                                            Background="Transparent">
+
+                                                        <Grid Width="{Binding Width}"
+                                                              Height="{Binding Height}"
+                                                              ClipToBounds="False">
+                                                            <Image Source="{Binding Bitmap}"
+                                                                   Stretch="None"
+                                                                   UseLayoutRounding="False"
+                                                                   RenderOptions.BitmapInterpolationMode="None"
+                                                                   HorizontalAlignment="Left"
+                                                                   VerticalAlignment="Top"/>
+
+                                                            <Border Margin="-6"
+                                                                    BorderBrush="{Binding IsSelected, Converter={StaticResource BoolToSelectionBrushConverter}}"
+                                                                    BorderThickness="1"
+                                                                    Background="Transparent"
+                                                                    IsVisible="{Binding IsSelected}"/>
+
+                                                            <Border Background="#3366A6FF"
+                                                                    Opacity="0.45"
+                                                                    IsVisible="{Binding !HasBitmap}">
+                                                                <TextBlock Text="{Binding Type}"
+                                                                           Foreground="White"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"/>
+                                                            </Border>
+
+                                                            <Border Width="8" Height="8" Background="White" BorderBrush="Black" BorderThickness="1"
+                                                                    HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-10,-10,0,0" IsVisible="{Binding IsSelected}" Tag="NW"
+                                                                    PointerPressed="GumpBuilderResizeHandle_PointerPressed"
+                                                                    PointerMoved="GumpBuilderResizeHandle_PointerMoved"
+                                                                    PointerReleased="GumpBuilderResizeHandle_PointerReleased"/>
+
+                                                            <Border Width="8" Height="8" Background="White" BorderBrush="Black" BorderThickness="1"
+                                                                    HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-10,0,0" IsVisible="{Binding IsSelected}" Tag="N"
+                                                                    PointerPressed="GumpBuilderResizeHandle_PointerPressed"
+                                                                    PointerMoved="GumpBuilderResizeHandle_PointerMoved"
+                                                                    PointerReleased="GumpBuilderResizeHandle_PointerReleased"/>
+
+                                                            <Border Width="8" Height="8" Background="White" BorderBrush="Black" BorderThickness="1"
+                                                                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-10,-10,0" IsVisible="{Binding IsSelected}" Tag="NE"
+                                                                    PointerPressed="GumpBuilderResizeHandle_PointerPressed"
+                                                                    PointerMoved="GumpBuilderResizeHandle_PointerMoved"
+                                                                    PointerReleased="GumpBuilderResizeHandle_PointerReleased"/>
+
+                                                            <Border Width="8" Height="8" Background="White" BorderBrush="Black" BorderThickness="1"
+                                                                    HorizontalAlignment="Left" VerticalAlignment="Center" Margin="-10,0,0,0" IsVisible="{Binding IsSelected}" Tag="W"
+                                                                    PointerPressed="GumpBuilderResizeHandle_PointerPressed"
+                                                                    PointerMoved="GumpBuilderResizeHandle_PointerMoved"
+                                                                    PointerReleased="GumpBuilderResizeHandle_PointerReleased"/>
+
+                                                            <Border Width="8" Height="8" Background="White" BorderBrush="Black" BorderThickness="1"
+                                                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-10,0" IsVisible="{Binding IsSelected}" Tag="E"
+                                                                    PointerPressed="GumpBuilderResizeHandle_PointerPressed"
+                                                                    PointerMoved="GumpBuilderResizeHandle_PointerMoved"
+                                                                    PointerReleased="GumpBuilderResizeHandle_PointerReleased"/>
+
+                                                            <Border Width="8" Height="8" Background="White" BorderBrush="Black" BorderThickness="1"
+                                                                    HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-10,0,0,-10" IsVisible="{Binding IsSelected}" Tag="SW"
+                                                                    PointerPressed="GumpBuilderResizeHandle_PointerPressed"
+                                                                    PointerMoved="GumpBuilderResizeHandle_PointerMoved"
+                                                                    PointerReleased="GumpBuilderResizeHandle_PointerReleased"/>
+
+                                                            <Border Width="8" Height="8" Background="White" BorderBrush="Black" BorderThickness="1"
+                                                                    HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,-10" IsVisible="{Binding IsSelected}" Tag="S"
+                                                                    PointerPressed="GumpBuilderResizeHandle_PointerPressed"
+                                                                    PointerMoved="GumpBuilderResizeHandle_PointerMoved"
+                                                                    PointerReleased="GumpBuilderResizeHandle_PointerReleased"/>
+
+                                                            <Border Width="8" Height="8" Background="White" BorderBrush="Black" BorderThickness="1"
+                                                                    HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-10,-10" IsVisible="{Binding IsSelected}" Tag="SE"
+                                                                    PointerPressed="GumpBuilderResizeHandle_PointerPressed"
+                                                                    PointerMoved="GumpBuilderResizeHandle_PointerMoved"
+                                                                    PointerReleased="GumpBuilderResizeHandle_PointerReleased"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Canvas>
+                            </ScrollViewer>
+                        </Border>
+
+                        <!-- Right: Pickers + Export -->
+                        <Border Grid.Column="2"
+                                Background="#202733"
+                                BorderBrush="#344052"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10">
+
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="8">
+
+                                    <TextBlock Text="Gump Picker"
+                                               FontWeight="Bold"
+                                               Foreground="#E4EAF2"/>
+
+                                    <DockPanel>
+                                        <TextBox DockPanel.Dock="Left"
+                                                 Width="210"
+                                                 Watermark="Gump ID / Hex"
+                                                 Text="{Binding GumpBuilderPickerSearchText, Mode=TwoWay}"/>
+
+                                        <Button Content="Search"
+                                                Command="{Binding RefreshGumpBuilderPickerCommand}"
+                                                Margin="6,0,0,0"/>
+                                    </DockPanel>
+
+                                    <ListBox ItemsSource="{Binding GumpBuilderPickerEntries}"
+                                             SelectedItem="{Binding SelectedGumpBuilderPickerEntry}"
+                                             Height="160">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Foreground="#E4EAF2"
+                                                           Text="{Binding DisplayText}"/>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <Border Background="#101318"
+                                            BorderBrush="#344052"
+                                            BorderThickness="1"
+                                            CornerRadius="4"
+                                            Padding="6"
+                                            Height="140">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Auto">
+                                            <Image Source="{Binding SelectedGumpBuilderGumpPickerPreview}"
+                                                   Stretch="None"
+                                                   RenderOptions.BitmapInterpolationMode="None"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                        </ScrollViewer>
+                                    </Border>
+
+                                    <Button Content="Add Selected Gump"
+                                            Command="{Binding AddSelectedPickerGumpToBuilderCommand}"/>
+
+                                    <Separator/>
+
+                                    <TextBlock Text="Art Picker"
+                                               FontWeight="Bold"
+                                               Foreground="#E4EAF2"/>
+
+                                    <DockPanel>
+                                        <TextBox DockPanel.Dock="Left"
+                                                 Width="210"
+                                                 Watermark="Art ID / Hex"
+                                                 Text="{Binding GumpBuilderArtPickerSearchText, Mode=TwoWay}"/>
+
+                                        <Button Content="Search"
+                                                Command="{Binding RefreshGumpBuilderArtPickerCommand}"
+                                                Margin="6,0,0,0"/>
+                                    </DockPanel>
+
+                                    <ListBox ItemsSource="{Binding GumpBuilderArtPickerEntries}"
+                                             SelectedItem="{Binding SelectedGumpBuilderArtPickerEntry}"
+                                             Height="160">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Foreground="#E4EAF2"
+                                                           Text="{Binding DisplayText}"/>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <Border Background="#101318"
+                                            BorderBrush="#344052"
+                                            BorderThickness="1"
+                                            CornerRadius="4"
+                                            Padding="6"
+                                            Height="140">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Auto">
+                                            <Image Source="{Binding SelectedGumpBuilderArtPickerPreview}"
+                                                   Stretch="None"
+                                                   RenderOptions.BitmapInterpolationMode="None"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                        </ScrollViewer>
+                                    </Border>
+
+                                    <Button Content="Add Selected Art"
+                                            Command="{Binding AddSelectedArtToGumpBuilderCommand}"/>
+
+                                    <Separator/>
+
+                                    <Border Background="#15191F"
+                                            BorderBrush="#344052"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="8"
+                                            IsVisible="{Binding HasGumpBuilderActiveExport}">
+                                        <StackPanel Spacing="8">
+
+                                            <TextBlock Text="{Binding GumpBuilderActiveExportTitle}"
+                                                       FontWeight="Bold"
+                                                       Foreground="#E4EAF2"/>
+
+                                            <!-- Sphere options only show for Sphere export -->
+                                            <StackPanel Spacing="6"
+                                                        IsVisible="{Binding IsGumpBuilderSphereExportVisible}">
+                                                <TextBox Text="{Binding GumpBuilderSphereName, Mode=TwoWay}"
+                                                         Watermark="Sphere gump name"/>
+
+                                                <CheckBox Content="Sphere 0.56 / Revision"
+                                                          IsChecked="{Binding GumpBuilderSphereRevision, Mode=TwoWay}"
+                                                          Foreground="#E4EAF2"/>
+                                            </StackPanel>
+
+                                            <!-- POL options only show for POL export -->
+                                            <StackPanel Spacing="6"
+                                                        IsVisible="{Binding IsGumpBuilderPolExportVisible}">
+                                                <TextBox Text="{Binding GumpBuilderPolName, Mode=TwoWay}"
+                                                         Watermark="POL gump name"/>
+
+                                                <CheckBox Content="POL Distro Gump Package"
+                                                          IsChecked="{Binding GumpBuilderPolUseDistro, Mode=TwoWay}"
+                                                          Foreground="#E4EAF2"/>
+                                            </StackPanel>
+
+                                            <TextBox Text="{Binding GumpBuilderActiveExportText, Mode=TwoWay}"
+                                                     AcceptsReturn="True"
+                                                     TextWrapping="NoWrap"
+                                                     FontFamily="Consolas"
+                                                     FontSize="12"
+                                                     Height="220"/>
+
+                                            <Button Content="{Binding GumpBuilderActiveCopyButtonText}"
+                                                    Command="{Binding CopyGumpBuilderActiveExportCommand}"
+                                                    HorizontalAlignment="Left"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+
                 <!-- Tiledata Tab -->
                 <Grid Grid.Column="0"
                       Grid.ColumnSpan="2"
@@ -2285,10 +2937,10 @@
                                                         Padding="4">
                                                     <StackPanel>
                                                         <Image Source="{Binding Bitmap}"
-                                                               Width="42"
-                                                               Height="42"
-                                                               Stretch="Uniform"
-                                                               RenderOptions.BitmapInterpolationMode="None"/>
+                                                               Stretch="None"
+                                                               RenderOptions.BitmapInterpolationMode="None"
+                                                               HorizontalAlignment="Left"
+                                                               VerticalAlignment="Top"/>
 
                                                         <TextBlock Text="{Binding FrameIndex}"
                                                                    HorizontalAlignment="Center"

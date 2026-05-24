@@ -20,7 +20,8 @@ public partial class MainWindowViewModel
         Art = 4,
         AnimData = 5,
         Wearables = 6,
-        Lights = 7
+        Lights = 7,
+        GumpBuilder = 8
     }
 
     public string HeaderStatusText => ShowGumpEditorPanel ? GumpInfoText : StatusText;
