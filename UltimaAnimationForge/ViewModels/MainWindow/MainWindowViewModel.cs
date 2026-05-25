@@ -37,6 +37,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool ShowTileDataPanel => ActiveToolTab == MainToolTab.TileData;
     public bool ShowArtPanel => ActiveToolTab == MainToolTab.Art;
     public bool ShowAnimDataPanel => ActiveToolTab == MainToolTab.AnimData;
+    public bool ShowHueEditorPanel => ActiveToolTab == MainToolTab.Hues;
 
     partial void OnActiveToolTabChanged(MainToolTab value)
     {
@@ -49,6 +50,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowWearableWizardPanel));
         OnPropertyChanged(nameof(ShowLightPanel));
         OnPropertyChanged(nameof(ShowGumpBuilderPanel));
+        OnPropertyChanged(nameof(ShowHueEditorPanel));
 
         if (value == MainToolTab.AnimationBrowser)
         {
@@ -950,6 +952,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ShowWearableWizardCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Wearables);
         ShowLightCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Lights);
         InitializeLightCommands();
+        InitializeHueEditorCommands();
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {

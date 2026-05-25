@@ -21,7 +21,8 @@ public partial class MainWindowViewModel
         AnimData = 5,
         Wearables = 6,
         Lights = 7,
-        GumpBuilder = 8
+        GumpBuilder = 8,
+        Hues = 9
     }
 
     public string HeaderStatusText => ShowGumpEditorPanel ? GumpInfoText : StatusText;
