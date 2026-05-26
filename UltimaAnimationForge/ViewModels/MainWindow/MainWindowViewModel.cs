@@ -22,11 +22,19 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public bool ShowGumpBuilderPanel => ActiveToolTab == MainToolTab.GumpBuilder;
-    public bool ShowLightPanel => ActiveToolTab == MainToolTab.Lights;
     public ICommand ShowLightCommand { get; }
-
-    public bool ShowWearableWizardPanel => ActiveToolTab == MainToolTab.Wearables;
+    public ICommand ShowClilocCommand { get; }
+    public ICommand LoadClilocCommand { get; }
+    public ICommand SaveClilocCommand { get; }
+    public ICommand AddClilocEntryCommand { get; }
+    public ICommand DeleteClilocEntryCommand { get; }
+    public ICommand FindFreeClilocNumbersCommand { get; }
+    public ICommand AddClilocEntryFromFreeNumberCommand { get; }
+    public ICommand LoadDictionaryCommand { get; }
+    public ICommand SelectUoxDictionaryFolderCommand { get; }
+    public ICommand ExportClilocCommand { get; }
+    public ICommand ImportClilocCommand { get; }
+    public ICommand JumpToClilocCommand { get; }
 
     [ObservableProperty]
     private MainToolTab activeToolTab = MainToolTab.AnimationEditor;
@@ -38,6 +46,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool ShowArtPanel => ActiveToolTab == MainToolTab.Art;
     public bool ShowAnimDataPanel => ActiveToolTab == MainToolTab.AnimData;
     public bool ShowHueEditorPanel => ActiveToolTab == MainToolTab.Hues;
+    public bool ShowGumpBuilderPanel => ActiveToolTab == MainToolTab.GumpBuilder;
+    public bool ShowLightPanel => ActiveToolTab == MainToolTab.Lights;
+    public bool ShowClilocPanel => ActiveToolTab == MainToolTab.Cliloc;
+    public bool ShowWearableWizardPanel => ActiveToolTab == MainToolTab.Wearables;
 
     partial void OnActiveToolTabChanged(MainToolTab value)
     {
@@ -51,6 +63,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowLightPanel));
         OnPropertyChanged(nameof(ShowGumpBuilderPanel));
         OnPropertyChanged(nameof(ShowHueEditorPanel));
+        OnPropertyChanged(nameof(ShowClilocPanel));
 
         if (value == MainToolTab.AnimationBrowser)
         {
@@ -953,6 +966,18 @@ public partial class MainWindowViewModel : ViewModelBase
         ShowLightCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Lights);
         InitializeLightCommands();
         InitializeHueEditorCommands();
+        ShowClilocCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Cliloc);
+        LoadClilocCommand = new RelayCommand(LoadCliloc);
+        SaveClilocCommand = new RelayCommand(SaveCliloc);
+        AddClilocEntryCommand = new RelayCommand(AddClilocEntry);
+        DeleteClilocEntryCommand = new RelayCommand(DeleteClilocEntry);
+        FindFreeClilocNumbersCommand = new RelayCommand(FindFreeClilocNumbers);
+        AddClilocEntryFromFreeNumberCommand = new RelayCommand(AddClilocEntryFromFreeNumber);
+        LoadDictionaryCommand = new RelayCommand(LoadDictionary);
+        SelectUoxDictionaryFolderCommand = new AsyncRelayCommand(SelectUoxDictionaryFolderAsync);
+        ExportClilocCommand = new AsyncRelayCommand(ExportClilocAsync);
+        ImportClilocCommand = new AsyncRelayCommand(ImportClilocAsync);
+        JumpToClilocCommand = new RelayCommand(JumpToCliloc);
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {
