@@ -458,16 +458,16 @@ public sealed class ArtDataService
             return null;
         }
 
-        if (entry.IsFreeSlot)
-        {
-            return null;
-        }
-
         string virtualPath = GetArtUopVirtualPath(entry.FileIndex);
         ulong hash = UopFileReader.CreateHash(virtualPath);
 
         if (pendingUopArtEdits.TryGetValue(hash, out UopFileData? pendingEdit))
         {
+            if (pendingEdit.IsEmpty)
+            {
+                return null;
+            }
+
             byte[] pendingData = pendingEdit.Data;
 
             if (entry.FileIndex < StaticOffset)
@@ -477,6 +477,11 @@ public sealed class ArtDataService
             }
 
             return DecodeStatic(pendingData);
+        }
+
+        if (entry.IsFreeSlot)
+        {
+            return null;
         }
 
         UopDataHeader? header = artUopReader.GetEntryByHash(hash);
@@ -499,6 +504,15 @@ public sealed class ArtDataService
 
         return DecodeStatic(data);
     }
+
+    public bool HasPendingArtChange(ArtEntry entry)
+    {
+        string virtualPath = GetArtUopVirtualPath(entry.FileIndex);
+        ulong hash = UopFileReader.CreateHash(virtualPath);
+
+        return pendingUopArtEdits.ContainsKey(hash);
+    }
+
     private static string GetArtUopVirtualPath(int fileIndex)
     {
         return "build/artlegacymul/" + fileIndex.ToString("D8") + ".tga";
@@ -1293,13 +1307,16 @@ public sealed class ArtDataService
     }
 
     public List<ArtCutterSliceEntry> BuildStaticArtSlices(
-    string imagePath,
-    int startArtId,
-    int sliceWidth,
-    int sliceHeight,
-    bool autoTrim,
-    bool skipEmpty,
-    out string message)
+        string imagePath,
+        int startArtId,
+        int sliceWidth,
+        int sliceHeight,
+        int sourceOffsetX,
+        int sourceOffsetY,
+        bool autoTrim,
+        bool skipEmpty,
+        bool blackTransparent,
+        out string message)
     {
         message = string.Empty;
         List<ArtCutterSliceEntry> slices = new();
@@ -1321,8 +1338,11 @@ public sealed class ArtDataService
             WriteableBitmap sourceBitmap = LoadBitmapFromFile(imagePath);
             ArtFramePixels sourcePixels = ReadPixels(sourceBitmap);
 
-            int columns = sourcePixels.Width / sliceWidth;
-            int rows = sourcePixels.Height / sliceHeight;
+            sourceOffsetX = Math.Clamp(sourceOffsetX, 0, Math.Max(0, sourcePixels.Width - 1));
+            sourceOffsetY = Math.Clamp(sourceOffsetY, 0, Math.Max(0, sourcePixels.Height - 1));
+
+            int columns = (sourcePixels.Width - sourceOffsetX) / sliceWidth;
+            int rows = (sourcePixels.Height - sourceOffsetY) / sliceHeight;
 
             if (columns <= 0 || rows <= 0)
             {
@@ -1337,12 +1357,20 @@ public sealed class ArtDataService
             {
                 for (int column = 0; column < columns; column++)
                 {
+                    int sourceX = sourceOffsetX + (column * sliceWidth);
+                    int sourceY = sourceOffsetY + (row * sliceHeight);
+
                     WriteableBitmap sliceBitmap = CopyBitmapRegion(
                         sourcePixels,
-                        column * sliceWidth,
-                        row * sliceHeight,
+                        sourceX,
+                        sourceY,
                         sliceWidth,
                         sliceHeight);
+
+                    if (blackTransparent)
+                    {
+                        sliceBitmap = MakeBlackTransparent(sliceBitmap);
+                    }
 
                     if (skipEmpty && IsBitmapFullyTransparent(sliceBitmap))
                     {
@@ -1361,11 +1389,7 @@ public sealed class ArtDataService
                         TargetArtId = targetArtId,
                         IsChecked = true,
                         PreviewBitmap = sliceBitmap,
-                        SourceText =
-                            "Row " + row +
-                            ", Col " + column +
-                            " | " + sliceBitmap.PixelSize.Width +
-                            "x" + sliceBitmap.PixelSize.Height
+                        SourceText = "Row " + row + ", Col " + column + " | X " + sourceX + ", Y " + sourceY + " | " + sliceBitmap.PixelSize.Width + "x" + sliceBitmap.PixelSize.Height
                     });
 
                     sliceIndex++;
@@ -1381,6 +1405,56 @@ public sealed class ArtDataService
             message = "Build slices failed: " + exception.Message;
             return slices;
         }
+    }
+
+    private static WriteableBitmap MakeBlackTransparent(WriteableBitmap bitmap)
+    {
+        ArtFramePixels pixels = ReadPixels(bitmap);
+        byte[] output = new byte[pixels.Pixels.Length];
+        Buffer.BlockCopy(pixels.Pixels, 0, output, 0, pixels.Pixels.Length);
+
+        for (int y = 0; y < pixels.Height; y++)
+        {
+            for (int x = 0; x < pixels.Width; x++)
+            {
+                int offset = ((y * pixels.Width) + x) * 4;
+
+                byte blue = output[offset + 0];
+                byte green = output[offset + 1];
+                byte red = output[offset + 2];
+
+                if (red <= 8 && green <= 8 && blue <= 8)
+                {
+                    output[offset + 0] = 0;
+                    output[offset + 1] = 0;
+                    output[offset + 2] = 0;
+                    output[offset + 3] = 0;
+                }
+            }
+        }
+
+        return CreateBitmap(pixels.Width, pixels.Height, output);
+    }
+
+    private readonly Dictionary<string, WriteableBitmap?> thumbnailCache = new();
+
+    public WriteableBitmap? LoadThumbnailCached(ArtEntry entry)
+    {
+        string key = entry.Type + ":" + entry.FileIndex;
+
+        if (thumbnailCache.TryGetValue(key, out WriteableBitmap? cached))
+        {
+            return cached;
+        }
+
+        WriteableBitmap? bitmap = LoadThumbnail(entry);
+        thumbnailCache[key] = bitmap;
+        return bitmap;
+    }
+
+    public void ClearThumbnailCache()
+    {
+        thumbnailCache.Clear();
     }
 
     public bool QueueStaticArtSlices(

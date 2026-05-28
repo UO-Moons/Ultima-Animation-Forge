@@ -18,59 +18,76 @@
                 CornerRadius="6"
                 Padding="10">
 
-            <Grid ColumnDefinitions="Auto,120,Auto,120,Auto,120,*"
+            <Grid ColumnDefinitions="Auto,110,Auto,110,Auto,110,Auto,110,Auto,110,*"
                   RowDefinitions="Auto,Auto"
                   ColumnSpacing="10"
                   RowSpacing="8">
 
-                <TextBlock Grid.Row="0"
-                           Grid.Column="0"
+                <TextBlock Grid.Row="0" Grid.Column="0"
                            Text="Start Art ID"
                            VerticalAlignment="Center"
                            Foreground="#C7D1DB"/>
 
-                <NumericUpDown Grid.Row="0"
-                               Grid.Column="1"
+                <NumericUpDown Grid.Row="0" Grid.Column="1"
                                Value="{Binding ArtCutterStartId, Mode=TwoWay}"
                                Minimum="0"
                                Maximum="65535"
                                Increment="1"
                                FormatString="0"/>
 
-                <TextBlock Grid.Row="0"
-                           Grid.Column="2"
+                <TextBlock Grid.Row="0" Grid.Column="2"
                            Text="Slice Width"
                            VerticalAlignment="Center"
                            Foreground="#C7D1DB"/>
 
-                <NumericUpDown Grid.Row="0"
-                               Grid.Column="3"
+                <NumericUpDown Grid.Row="0" Grid.Column="3"
                                Value="{Binding ArtCutterSliceWidth, Mode=TwoWay}"
                                Minimum="1"
                                Maximum="2048"
                                Increment="1"
                                FormatString="0"/>
 
-                <TextBlock Grid.Row="0"
-                           Grid.Column="4"
+                <TextBlock Grid.Row="0" Grid.Column="4"
                            Text="Slice Height"
                            VerticalAlignment="Center"
                            Foreground="#C7D1DB"/>
 
-                <NumericUpDown Grid.Row="0"
-                               Grid.Column="5"
+                <NumericUpDown Grid.Row="0" Grid.Column="5"
                                Value="{Binding ArtCutterSliceHeight, Mode=TwoWay}"
                                Minimum="1"
                                Maximum="2048"
                                Increment="1"
                                FormatString="0"/>
 
+                <TextBlock Grid.Row="0" Grid.Column="6"
+                           Text="Source X"
+                           VerticalAlignment="Center"
+                           Foreground="#C7D1DB"/>
+
+                <NumericUpDown Grid.Row="0" Grid.Column="7"
+                               Value="{Binding ArtCutterSourceOffsetX, Mode=TwoWay}"
+                               Minimum="0"
+                               Maximum="4096"
+                               Increment="1"
+                               FormatString="0"/>
+
+                <TextBlock Grid.Row="0" Grid.Column="8"
+                           Text="Source Y"
+                           VerticalAlignment="Center"
+                           Foreground="#C7D1DB"/>
+
+                <NumericUpDown Grid.Row="0" Grid.Column="9"
+                               Value="{Binding ArtCutterSourceOffsetY, Mode=TwoWay}"
+                               Minimum="0"
+                               Maximum="4096"
+                               Increment="1"
+                               FormatString="0"/>
+
                 <StackPanel Grid.Row="1"
                             Grid.Column="0"
-                            Grid.ColumnSpan="6"
+                            Grid.ColumnSpan="10"
                             Orientation="Horizontal"
                             Spacing="14">
-
                     <CheckBox Content="Auto Trim"
                               IsChecked="{Binding ArtCutterAutoTrim}"
                               Foreground="#C7D1DB"/>
@@ -78,10 +95,14 @@
                     <CheckBox Content="Skip Empty"
                               IsChecked="{Binding ArtCutterSkipEmpty}"
                               Foreground="#C7D1DB"/>
+
+                    <CheckBox Content="Black Transparent"
+                              IsChecked="{Binding ArtCutterBlackTransparent}"
+                              Foreground="#C7D1DB"/>
                 </StackPanel>
 
                 <Button Grid.Row="0"
-                        Grid.Column="6"
+                        Grid.Column="10"
                         Grid.RowSpan="2"
                         Content="Build Slices"
                         Command="{Binding BuildArtCutterSlicesCommand}"

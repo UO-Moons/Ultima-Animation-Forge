@@ -32,6 +32,8 @@ public partial class MainWindow : Window
     private int gumpBuilderResizeStartY;
     private int gumpBuilderResizeStartWidth;
     private int gumpBuilderResizeStartHeight;
+    private bool isArtBrowserDragChecking;
+    private bool artBrowserDragCheckValue;
 
     public MainWindow()
     {
@@ -575,11 +577,9 @@ public partial class MainWindow : Window
 
     private void ArtTileDataEditField_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (DataContext is UltimaAnimationForge.ViewModels.MainWindowViewModel vm &&
-            vm.SelectedArtTileDataEntry != null)
+        if (DataContext is UltimaAnimationForge.ViewModels.MainWindowViewModel vm)
         {
-            vm.SelectedArtTileDataEntry.IsEdited = true;
-            vm.RefreshSelectedArtEquipmentGump();
+            vm.CommitArtTileDataFieldEdits();
         }
     }
 
@@ -903,6 +903,91 @@ public partial class MainWindow : Window
 
         resizingGumpBuilderElement = null;
         gumpBuilderResizeHandle = string.Empty;
+
+        e.Handled = true;
+    }
+
+    private void ArtBrowserTile_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is not Border border || border.DataContext is not ArtEntry entry)
+        {
+            return;
+        }
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.SelectedArtEntry = entry;
+        }
+
+        PointerPoint point = e.GetCurrentPoint(border);
+
+        if (!point.Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        if (!e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            return;
+        }
+
+        entry.IsChecked = !entry.IsChecked;
+        artBrowserDragCheckValue = entry.IsChecked;
+        isArtBrowserDragChecking = true;
+
+        e.Handled = true;
+    }
+
+    private void ArtBrowserTile_PointerEntered(object? sender, PointerEventArgs e)
+    {
+        if (!isArtBrowserDragChecking)
+        {
+            return;
+        }
+
+        if (sender is not Border border || border.DataContext is not ArtEntry entry)
+        {
+            return;
+        }
+
+        PointerPoint point = e.GetCurrentPoint(border);
+
+        if (!point.Properties.IsLeftButtonPressed)
+        {
+            isArtBrowserDragChecking = false;
+            return;
+        }
+
+        entry.IsChecked = artBrowserDragCheckValue;
+        e.Handled = true;
+    }
+
+    protected override void OnPointerReleased(PointerReleasedEventArgs e)
+    {
+        base.OnPointerReleased(e);
+        isArtBrowserDragChecking = false;
+    }
+
+    private void ArtBrowserTile_DoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is not Border border || border.DataContext is not ArtEntry entry)
+        {
+            return;
+        }
+
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            return;
+        }
+
+        vm.SelectedArtEntry = entry;
+
+        ArtPreviewWindow window = new()
+        {
+            DataContext = vm
+        };
+
+        window.Show(this);
 
         e.Handled = true;
     }

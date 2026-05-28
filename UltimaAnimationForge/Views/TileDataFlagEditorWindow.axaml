@@ -28,26 +28,38 @@
                 BorderThickness="1"
                 CornerRadius="6"
                 Padding="10">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding SelectedTileDataFlagOptions}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
 
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <CheckBox Width="155"
-                                      Margin="4"
-                                      Content="{Binding Name}"
-                                      IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                      Command="{Binding $parent[ItemsControl].DataContext.ToggleSelectedTileDataFlagCommand}"
-                                      CommandParameter="{Binding}"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="8">
+
+                <CheckBox Grid.Row="0"
+                          Content="Apply flag changes to checked art tiles"
+                          IsChecked="{Binding ApplyTileDataFlagsToCheckedArt}"
+                          Foreground="#C7D1DB"/>
+
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding SelectedTileDataFlagOptions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Width="155"
+                                          Margin="4"
+                                          Content="{Binding Name}"
+                                          IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                          Command="{Binding $parent[ItemsControl].DataContext.ToggleSelectedTileDataFlagCommand}"
+                                          CommandParameter="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+            </Grid>
         </Border>
 
         <StackPanel Grid.Row="2"

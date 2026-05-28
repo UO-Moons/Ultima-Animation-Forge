@@ -30,5 +30,27 @@
         }
       ]
     }
+  ],
+  "categories": [
+    {
+      "name": "Walls",
+      "landRanges": [],
+      "staticRanges": [
+        {
+          "from": "0x0006",
+          "to": "0x00FF"
+        }
+      ]
+    },
+    {
+      "name": "Doors",
+      "landRanges": [],
+      "staticRanges": [
+        {
+          "from": "0x0675",
+          "to": "0x06F6"
+        }
+      ]
+    }
   ]
 }

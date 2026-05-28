@@ -32,6 +32,12 @@ public partial class MainWindowViewModel
     "Unused32"
 };
 
+    [ObservableProperty]
+    private bool applyTileDataFieldsToCheckedArt;
+
+    [ObservableProperty]
+    private bool applyTileDataFlagsToCheckedArt;
+
     private string loadedTileDataFolderPath = string.Empty;
 
     [ObservableProperty]
@@ -175,23 +181,62 @@ public partial class MainWindowViewModel
     [RelayCommand]
     private void ToggleSelectedTileDataFlag(TileDataFlagOption? option)
     {
-        if (SelectedTileDataEntry == null || option == null)
+        if (option == null)
         {
             return;
         }
 
-        if (option.IsChecked)
+        List<(TileDataEntry tileDataEntry, ArtEntry? artEntry)> targets = new();
+
+        if (ApplyTileDataFlagsToCheckedArt)
         {
-            SelectedTileDataEntry.Flags |= option.Mask;
+            Dictionary<string, TileDataEntry> tileDataByKey = TileDataEntries.ToDictionary(
+                tile => (tile.IsLand ? "L:" : "S:") + tile.Id,
+                tile => tile);
+
+            foreach (ArtEntry artEntry in ArtEntries.Where(x => x.IsChecked))
+            {
+                bool isLand = string.Equals(artEntry.Type, "Land", StringComparison.OrdinalIgnoreCase);
+                string key = (isLand ? "L:" : "S:") + artEntry.ArtId;
+
+                if (tileDataByKey.TryGetValue(key, out TileDataEntry? tileDataEntry))
+                {
+                    targets.Add((tileDataEntry, artEntry));
+                }
+            }
         }
-        else
+        else if (SelectedTileDataEntry != null)
         {
-            SelectedTileDataEntry.Flags &= ~option.Mask;
+            targets.Add((SelectedTileDataEntry, SelectedArtEntry));
         }
 
-        SelectedTileDataEntry.IsEdited = true;
+        if (targets.Count == 0)
+        {
+            return;
+        }
+
+        foreach ((TileDataEntry target, ArtEntry? artEntry) in targets)
+        {
+            if (option.IsChecked)
+            {
+                target.Flags |= option.Mask;
+            }
+            else
+            {
+                target.Flags &= ~option.Mask;
+            }
+
+            target.IsEdited = target.Flags != target.OriginalFlags;
+
+            if (artEntry != null)
+            {
+                artEntry.IsPendingTileDataChange = target.IsEdited;
+            }
+        }
 
         OnPropertyChanged(nameof(SelectedTileDataEntry));
+        OnPropertyChanged(nameof(SelectedArtTileDataEntry));
+        OnPropertyChanged(nameof(SelectedArtTileDataFlagNames));
     }
 
     [RelayCommand]
@@ -224,7 +269,98 @@ public partial class MainWindowViewModel
 
         foreach (TileDataEntry entry in editedEntries)
         {
-            entry.IsEdited = false;
+            entry.AcceptChanges();
         }
+    }
+
+    private List<(TileDataEntry tileDataEntry, ArtEntry? artEntry)> GetTileDataEditTargets()
+    {
+        List<(TileDataEntry tileDataEntry, ArtEntry? artEntry)> targets = new();
+
+        if (ApplyTileDataFieldsToCheckedArt)
+        {
+            Dictionary<string, TileDataEntry> tileDataByKey = TileDataEntries.ToDictionary(
+                tile => (tile.IsLand ? "L:" : "S:") + tile.Id,
+                tile => tile);
+
+            foreach (ArtEntry artEntry in ArtEntries.Where(x => x.IsChecked))
+            {
+                bool isLand = string.Equals(artEntry.Type, "Land", StringComparison.OrdinalIgnoreCase);
+                string key = (isLand ? "L:" : "S:") + artEntry.ArtId;
+
+                if (tileDataByKey.TryGetValue(key, out TileDataEntry? tileDataEntry))
+                {
+                    targets.Add((tileDataEntry, artEntry));
+                }
+            }
+        }
+        else if (SelectedArtTileDataEntry != null)
+        {
+            targets.Add((SelectedArtTileDataEntry, SelectedArtEntry));
+        }
+
+        return targets;
+    }
+
+    private void MarkTileDataTargetsDirty(List<(TileDataEntry tileDataEntry, ArtEntry? artEntry)> targets)
+    {
+        foreach ((TileDataEntry tileDataEntry, ArtEntry? artEntry) in targets)
+        {
+            tileDataEntry.IsEdited = tileDataEntry.IsDifferentFromOriginal();
+
+            if (artEntry != null)
+            {
+                artEntry.IsPendingTileDataChange = tileDataEntry.IsEdited;
+            }
+        }
+
+        OnPropertyChanged(nameof(SelectedArtTileDataEntry));
+        OnPropertyChanged(nameof(SelectedArtTileDataFlagNames));
+        OnPropertyChanged(nameof(SelectedArtAnimationGumpText));
+    }
+
+    public void CommitArtTileDataFieldEdits()
+    {
+        TileDataEntry? source = SelectedArtTileDataEntry;
+        if (source == null)
+        {
+            return;
+        }
+
+        List<(TileDataEntry tileDataEntry, ArtEntry? artEntry)> targets = GetTileDataEditTargets();
+
+        bool hasSelectedTarget = targets.Any(target =>
+            ReferenceEquals(target.tileDataEntry, source));
+
+        if (!hasSelectedTarget)
+        {
+            targets.Add((source, SelectedArtEntry));
+        }
+
+        if (targets.Count == 0)
+        {
+            return;
+        }
+
+        foreach ((TileDataEntry target, _) in targets)
+        {
+            target.Name = source.Name;
+            target.Animation = source.Animation;
+            target.Weight = source.Weight;
+            target.Quality = source.Quality;
+            target.Quantity = source.Quantity;
+            target.Hue = source.Hue;
+            target.StackingOffset = source.StackingOffset;
+            target.Value = source.Value;
+            target.Height = source.Height;
+        }
+
+        MarkTileDataTargetsDirty(targets);
+
+        RefreshSelectedArtEquipmentGump();
+
+        OnPropertyChanged(nameof(SelectedArtTileDataEntry));
+        OnPropertyChanged(nameof(SelectedArtTileDataFlagNames));
+        OnPropertyChanged(nameof(SelectedArtAnimationGumpText));
     }
 }

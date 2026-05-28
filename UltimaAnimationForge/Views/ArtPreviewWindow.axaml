@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UltimaAnimationForge.Views.ArtPreviewWindow"
+        x:CompileBindings="False"
+        Width="560"
+        Height="620"
+        MinWidth="420"
+        MinHeight="420"
+        Title="Art Preview"
+        Background="#1B2027">
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          Margin="12"
+          RowSpacing="10">
+
+        <Grid Grid.Row="0"
+              ColumnDefinitions="*,Auto"
+              ColumnSpacing="10">
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding SelectedArtEntry.DisplayText}"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       Foreground="#E4EAF2"
+                       VerticalAlignment="Center"/>
+
+            <Menu Grid.Column="1"
+                  Background="Transparent">
+                <MenuItem Header="Image Tools">
+                    <MenuItem Header="Enhance Image"
+                              Command="{Binding EnhanceSelectedArtCommand}" />
+                    <MenuItem Header="Sharpen"
+                              Command="{Binding SharpenSelectedArtCommand}" />
+                    <MenuItem Header="Outline Boost"
+                              Command="{Binding OutlineBoostSelectedArtCommand}" />
+                    <MenuItem Header="Hue Shift"
+                              Command="{Binding HueShiftSelectedArtCommand}" />
+                    <Separator/>
+                    <MenuItem Header="Load Overlay Image"
+                              Command="{Binding LoadArtOverlayImageCommand}" />
+                    <MenuItem Header="Apply Overlay To Art"
+                              Command="{Binding ApplyArtOverlayCommand}" />
+                    <Separator/>
+                    <MenuItem Header="Reset Edit"
+                              Command="{Binding ResetSelectedArtEditCommand}" />
+                </MenuItem>
+            </Menu>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Background="#11161C"
+                BorderBrush="#343B46"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12">
+
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto"
+                          DragDrop.AllowDrop="True"
+                          DragDrop.DragOver="Preview_DragOver"
+                          DragDrop.Drop="Preview_Drop">
+                <Image Source="{Binding SelectedArtBitmap}"
+                       Stretch="None"
+                       RenderOptions.BitmapInterpolationMode="None"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            </ScrollViewer>
+        </Border>
+
+        <TextBlock Grid.Row="2"
+                   Text="{Binding ArtStatusText}"
+                   Foreground="#AAB4C0"
+                   TextWrapping="Wrap"/>
+    </Grid>
+</Window>

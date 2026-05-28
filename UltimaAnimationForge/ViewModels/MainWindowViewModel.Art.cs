@@ -22,8 +22,22 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel
 {
-
     public ObservableCollection<ArtCutterSliceEntry> ArtCutterSlices { get; } = new();
+
+    [ObservableProperty]
+    private bool showArtBrowserMode;
+
+    public bool ShowArtSinglePreview => !ShowArtBrowserMode;
+    public bool ShowArtBrowserPreview => ShowArtBrowserMode;
+
+    [ObservableProperty]
+    private bool artCutterBlackTransparent = true;
+
+    [ObservableProperty]
+    private int artCutterSourceOffsetX;
+
+    [ObservableProperty]
+    private int artCutterSourceOffsetY;
 
     [ObservableProperty]
     private string artCutterImagePath = string.Empty;
@@ -183,6 +197,12 @@ public partial class MainWindowViewModel
         ? "-"
         : BuildTileDataFlagText(SelectedArtTileDataEntry.Flags);
 
+    partial void OnShowArtBrowserModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowArtSinglePreview));
+        OnPropertyChanged(nameof(ShowArtBrowserPreview));
+    }
+
     private static string BuildTileDataFlagText(ulong flags)
     {
         if (flags == 0)
@@ -312,6 +332,7 @@ public partial class MainWindowViewModel
         }
 
         SelectedTileDataEntry = SelectedArtTileDataEntry;
+        ApplyTileDataFlagsToCheckedArt = false;
         RebuildSelectedTileDataFlags();
 
         Window? mainWindow = GetMainWindow();
@@ -368,10 +389,12 @@ public partial class MainWindowViewModel
     {
         ArtEntries.Clear();
 
-        bool includeFreeSlots = string.Equals(SelectedArtSlotFilter, "All", StringComparison.OrdinalIgnoreCase) ||
-                                string.Equals(SelectedArtSlotFilter, "Free Slots", StringComparison.OrdinalIgnoreCase);
+        bool includeFreeSlots =
+            string.Equals(SelectedArtSlotFilter, "All", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(SelectedArtSlotFilter, "Free Slots", StringComparison.OrdinalIgnoreCase);
 
-        bool freeOnly = string.Equals(SelectedArtSlotFilter, "Free Slots", StringComparison.OrdinalIgnoreCase);
+        bool freeOnly =
+            string.Equals(SelectedArtSlotFilter, "Free Slots", StringComparison.OrdinalIgnoreCase);
 
         foreach (ArtEntry entry in artDataService.BuildEntries(
                      ShowLandArt,
@@ -379,7 +402,31 @@ public partial class MainWindowViewModel
                      includeFreeSlots,
                      ArtSearchText))
         {
-            if (freeOnly && !entry.IsFreeSlot)
+            bool isLand = string.Equals(entry.Type, "Land", StringComparison.OrdinalIgnoreCase);
+
+            TileDataEntry? tileDataEntry = TileDataEntries.FirstOrDefault(tile =>
+                tile.IsLand == isLand &&
+                tile.Id == entry.ArtId);
+
+            entry.IsPendingArtChange = artDataService.HasPendingArtChange(entry);
+            entry.IsPendingTileDataChange = tileDataEntry?.IsEdited == true;
+
+            if (entry.IsPendingArtChange && entry.IsPendingTileDataChange)
+            {
+                entry.IsFreeSlot = false;
+                entry.SecondaryText = "Pending import + TileData edit - not saved yet";
+            }
+            else if (entry.IsPendingArtChange)
+            {
+                entry.IsFreeSlot = false;
+                entry.SecondaryText = "Pending import - not saved yet";
+            }
+            else if (entry.IsPendingTileDataChange)
+            {
+                entry.SecondaryText = "Pending TileData edit - not saved yet";
+            }
+
+            if (freeOnly && !entry.IsFreeSlot && !entry.IsPendingChange)
             {
                 continue;
             }
@@ -391,7 +438,8 @@ public partial class MainWindowViewModel
 
             if (ShowArtThumbnails)
             {
-                entry.Thumbnail = artDataService.LoadThumbnail(entry);
+                //entry.Thumbnail = artDataService.LoadThumbnail(entry);
+                entry.Thumbnail = artDataService.LoadThumbnailCached(entry);
             }
 
             ArtEntries.Add(entry);
@@ -842,42 +890,76 @@ public partial class MainWindowViewModel
             return;
         }
 
-        Dictionary<int, ArtEntry> entriesByStaticId = ArtEntries
-            .Where(entry => string.Equals(entry.Type, "Static", StringComparison.OrdinalIgnoreCase))
-            .ToDictionary(entry => entry.ArtId, entry => entry);
-
-        Dictionary<int, ArtEntry> entriesByLandId = ArtEntries
-            .Where(entry => string.Equals(entry.Type, "Land", StringComparison.OrdinalIgnoreCase))
-            .ToDictionary(entry => entry.ArtId, entry => entry);
-
         string[] imagePaths = Directory.GetFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly)
             .Where(path =>
                 string.Equals(Path.GetExtension(path), ".png", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(Path.GetExtension(path), ".bmp", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
+        if (imagePaths.Length == 0)
+        {
+            ArtStatusText = "No PNG or BMP files found in selected folder.";
+            return;
+        }
+
+        List<ArtEntry> targetSlots = ArtEntries
+            .Where(entry =>
+                entry.IsChecked &&
+                entry.IsFreeSlot &&
+                string.Equals(entry.Type, "Static", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(entry => entry.ArtId)
+            .ToList();
+
+        string modeText = "checked free static slots";
+
+        if (targetSlots.Count == 0)
+        {
+            targetSlots = artDataService
+                .BuildEntries(false, true, true, string.Empty)
+                .Where(entry =>
+                    entry.IsFreeSlot &&
+                    string.Equals(entry.Type, "Static", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(entry => entry.ArtId)
+                .ToList();
+
+            modeText = "next free static slots";
+        }
+
+        if (targetSlots.Count == 0)
+        {
+            ArtStatusText = "No free static art slots found.";
+            return;
+        }
+
         int imported = 0;
-        int skipped = 0;
         int failed = 0;
+        int skipped = 0;
         string lastError = string.Empty;
 
-        foreach (string imagePath in imagePaths)
+        ArtImportAdjustOptions options = new()
         {
-            if (!TryParseArtImportFileName(Path.GetFileNameWithoutExtension(imagePath), out bool isLand, out int artId))
-            {
-                skipped++;
-                continue;
-            }
+            AutoTrim = true,
+            CenterOnCanvas = false,
+            CanvasWidth = 0,
+            CanvasHeight = 0,
+            OffsetX = 0,
+            OffsetY = 0
+        };
 
-            Dictionary<int, ArtEntry> lookup = isLand ? entriesByLandId : entriesByStaticId;
+        int count = Math.Min(imagePaths.Length, targetSlots.Count);
 
-            if (!lookup.TryGetValue(artId, out ArtEntry? entry))
-            {
-                skipped++;
-                continue;
-            }
+        for (int i = 0; i < count; i++)
+        {
+            ArtEntry targetEntry = targetSlots[i];
+            string imagePath = imagePaths[i];
 
-            bool success = artDataService.ImportBitmapToArt(entry, imagePath, out string message);
+            bool success = artDataService.ImportBitmapToArt(
+                targetEntry,
+                imagePath,
+                options,
+                out string message);
+
             if (success)
             {
                 imported++;
@@ -889,10 +971,16 @@ public partial class MainWindowViewModel
             }
         }
 
+        if (imagePaths.Length > targetSlots.Count)
+        {
+            skipped += imagePaths.Length - targetSlots.Count;
+        }
+
         RebuildArtEntries();
 
         ArtStatusText =
-            "Mass import complete. Imported " + imported +
+            "Mass import complete using " + modeText +
+            ". Imported " + imported +
             ", skipped " + skipped +
             ", failed " + failed +
             (string.IsNullOrWhiteSpace(lastError) ? "." : ". Last error: " + lastError);
@@ -947,10 +1035,36 @@ public partial class MainWindowViewModel
     [RelayCommand]
     private void SaveArtChanges()
     {
-        bool success = artDataService.SavePendingArtChanges(out string message);
-        ArtStatusText = message;
+        bool artSuccess = artDataService.SavePendingArtChanges(out string artMessage);
 
-        if (success)
+        List<TileDataEntry> editedTileDataEntries = TileDataEntries
+            .Where(entry => entry.IsEdited)
+            .ToList();
+
+        bool tileDataSuccess = true;
+        string tileDataMessage = string.Empty;
+
+        if (editedTileDataEntries.Count > 0)
+        {
+            tileDataSuccess = tileDataMulService.SaveTileData(
+                GetCurrentFolderPath(),
+                TileDataEntries.ToList(),
+                out tileDataMessage);
+
+            if (tileDataSuccess)
+            {
+                foreach (TileDataEntry entry in editedTileDataEntries)
+                {
+                    entry.IsEdited = false;
+                }
+            }
+        }
+
+        ArtStatusText = string.IsNullOrWhiteSpace(tileDataMessage)
+            ? artMessage
+            : artMessage + " " + tileDataMessage;
+
+        if (artSuccess && tileDataSuccess)
         {
             RebuildArtEntries();
         }
@@ -979,7 +1093,7 @@ public partial class MainWindowViewModel
                     PropertyNameCaseInsensitive = true
                 });
 
-            if (config?.Eras == null)
+            if (config == null)
             {
                 SelectedArtEraFilter = null;
                 return;
@@ -987,7 +1101,14 @@ public partial class MainWindowViewModel
 
             foreach (ArtEraFilter era in config.Eras.Where(x => !string.IsNullOrWhiteSpace(x.Name)))
             {
+                era.FilterType = "Era";
                 ArtEraFilters.Add(era);
+            }
+
+            foreach (ArtEraFilter category in config.Categories.Where(x => !string.IsNullOrWhiteSpace(x.Name)))
+            {
+                category.FilterType = "Category";
+                ArtEraFilters.Add(category);
             }
 
             SelectedArtEraFilter = null;
@@ -1814,8 +1935,11 @@ public partial class MainWindowViewModel
             ArtCutterStartId,
             ArtCutterSliceWidth,
             ArtCutterSliceHeight,
+            ArtCutterSourceOffsetX,
+            ArtCutterSourceOffsetY,
             ArtCutterAutoTrim,
             ArtCutterSkipEmpty,
+            ArtCutterBlackTransparent,
             out string message);
 
         foreach (ArtCutterSliceEntry slice in slices)

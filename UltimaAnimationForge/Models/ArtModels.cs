@@ -7,6 +7,14 @@ namespace UltimaAnimationForge.Models;
 public partial class ArtEntry : ObservableObject
 {
     [ObservableProperty]
+    private bool isPendingArtChange;
+
+    [ObservableProperty]
+    private bool isPendingTileDataChange;
+
+    public bool IsPendingChange => IsPendingArtChange || IsPendingTileDataChange;
+
+    [ObservableProperty]
     private bool isChecked;
     public bool IsFreeSlot { get; set; }
     public int ArtId { get; set; }
@@ -17,22 +25,36 @@ public partial class ArtEntry : ObservableObject
 
     public string DisplayText => Type + " 0x" + ArtId.ToString("X4") + " (" + ArtId + ")";
     public string ExportFileName => Type.ToLowerInvariant() + "_0x" + ArtId.ToString("X4") + ".png";
+
+    partial void OnIsPendingArtChangeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsPendingChange));
+    }
+
+    partial void OnIsPendingTileDataChangeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsPendingChange));
+    }
 }
 
 public sealed class ArtEraFilterConfig
 {
     public List<ArtEraFilter> Eras { get; set; } = new();
+    public List<ArtEraFilter> Categories { get; set; } = new();
 }
 
 public sealed class ArtEraFilter
 {
     public string Name { get; set; } = string.Empty;
+    public string FilterType { get; set; } = "Era";
     public List<ArtEraRange> LandRanges { get; set; } = new();
     public List<ArtEraRange> StaticRanges { get; set; } = new();
 
+    public string DisplayName => FilterType + ": " + Name;
+
     public override string ToString()
     {
-        return Name;
+        return DisplayName;
     }
 }
 

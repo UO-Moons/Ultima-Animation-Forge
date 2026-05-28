@@ -113,14 +113,17 @@ public sealed class TileDataMulService
 
                 string name = ReadName(data, local, 20);
 
-                entries.Add(new TileDataEntry
+                TileDataEntry entry = new()
                 {
                     IsLand = true,
                     Id = tileId + i,
                     Flags = flags,
                     TextureId = textureId,
                     Name = name
-                });
+                };
+
+                entry.AcceptChanges();
+                entries.Add(entry);
 
                 offset += recordSize;
             }
@@ -183,7 +186,7 @@ public sealed class TileDataMulService
 
                 string name = ReadName(data, local, 20);
 
-                entries.Add(new TileDataEntry
+                TileDataEntry entry = new()
                 {
                     IsLand = false,
                     Id = groupStartId + i,
@@ -200,7 +203,10 @@ public sealed class TileDataMulService
                     Value = value,
                     Height = height,
                     Name = name
-                });
+                };
+
+                entry.AcceptChanges();
+                entries.Add(entry);
 
                 offset += recordSize;
             }

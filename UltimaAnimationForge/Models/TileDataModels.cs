@@ -21,6 +21,58 @@ public partial class TileDataEntry : ObservableObject
     public string Name { get; set; } = string.Empty;
     public ulong Flags { get; set; }
 
+    public ulong OriginalFlags { get; set; }
+    public string OriginalName { get; set; } = string.Empty;
+    public ushort OriginalTextureId { get; set; }
+    public short OriginalAnimation { get; set; }
+    public byte OriginalWeight { get; set; }
+    public byte OriginalQuality { get; set; }
+    public byte OriginalQuantity { get; set; }
+    public byte OriginalHue { get; set; }
+    public byte OriginalHeight { get; set; }
+    public byte OriginalStackingOffset { get; set; }
+    public byte OriginalValue { get; set; }
+    public ushort OriginalMiscData { get; set; }
+    public byte OriginalUnknown2 { get; set; }
+    public byte OriginalUnknown3 { get; set; }
+
+    public bool IsDifferentFromOriginal()
+    {
+        return Flags != OriginalFlags ||
+               Name != OriginalName ||
+               TextureId != OriginalTextureId ||
+               Animation != OriginalAnimation ||
+               Weight != OriginalWeight ||
+               Quality != OriginalQuality ||
+               Quantity != OriginalQuantity ||
+               Hue != OriginalHue ||
+               Height != OriginalHeight ||
+               StackingOffset != OriginalStackingOffset ||
+               Value != OriginalValue ||
+               MiscData != OriginalMiscData ||
+               Unknown2 != OriginalUnknown2 ||
+               Unknown3 != OriginalUnknown3;
+    }
+
+    public void AcceptChanges()
+    {
+        OriginalFlags = Flags;
+        OriginalName = Name;
+        OriginalTextureId = TextureId;
+        OriginalAnimation = Animation;
+        OriginalWeight = Weight;
+        OriginalQuality = Quality;
+        OriginalQuantity = Quantity;
+        OriginalHue = Hue;
+        OriginalHeight = Height;
+        OriginalStackingOffset = StackingOffset;
+        OriginalValue = Value;
+        OriginalMiscData = MiscData;
+        OriginalUnknown2 = Unknown2;
+        OriginalUnknown3 = Unknown3;
+        IsEdited = false;
+    }
+
     public ushort TextureId { get; set; }
 
     public short Animation { get; set; }
