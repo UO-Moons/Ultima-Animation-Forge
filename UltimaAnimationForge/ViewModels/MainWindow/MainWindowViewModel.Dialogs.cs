@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UltimaAnimationForge.Models;
 using UltimaAnimationForge.Services;
@@ -2853,6 +2854,34 @@ VdHueDialogResult? hueDialogResult)
         return files[0].TryGetLocalPath() ?? string.Empty;
     }
 
+    private string BuildSystemInfoText()
+    {
+        double ramGb = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1024d / 1024d / 1024d;
+
+        string ramStatus = ramGb >= 8
+            ? "OK"
+            : "LOW";
+
+        string osStatus = Environment.Is64BitOperatingSystem
+            ? "OK"
+            : "WARNING";
+
+        return
+            "System Check" + Environment.NewLine +
+            "- OS: " + RuntimeInformation.OSDescription + " (" + osStatus + ")" + Environment.NewLine +
+            "- 64-bit OS: " + (Environment.Is64BitOperatingSystem ? "Yes" : "No") + Environment.NewLine +
+            "- RAM Available: " + ramGb.ToString("0.0") + " GB (" + ramStatus + ")" + Environment.NewLine +
+            "- Minimum RAM: 8 GB" + Environment.NewLine +
+            "- Recommended RAM: 16 GB+" + Environment.NewLine +
+            "- GPU: Integrated supported, dedicated GPU recommended" + Environment.NewLine +
+            Environment.NewLine +
+            (ramGb < 8
+                ? "WARNING: Less than 8 GB RAM detected. Large UOP files, thumbnails, imports, and previews may run slower."
+                : "Your system meets the recommended minimum requirements.") +
+            Environment.NewLine +
+            Environment.NewLine;
+    }
+
     private async Task ShowHelpAsync()
     {
         Window? owner = GetMainWindow();
@@ -2877,8 +2906,10 @@ VdHueDialogResult? hueDialogResult)
         {
             TextWrapping = TextWrapping.Wrap,
             Text =
-                "Ultima Animation Forge Help" + Environment.NewLine +
-                Environment.NewLine +
+    "Ultima Animation Forge Help" + Environment.NewLine +
+    Environment.NewLine +
+
+    BuildSystemInfoText() +
 
                 "Navigation" + Environment.NewLine +
                 "- Select an animation from the left list." + Environment.NewLine +
@@ -2948,7 +2979,7 @@ Environment.NewLine +
                 "Tips" + Environment.NewLine +
                 "- If a drag operation shows a blocked cursor, make sure you are dropping onto the preview area for PNG files." + Environment.NewLine +
                 "- If imported art looks wrong, check palette limits and frame size alignment." + Environment.NewLine +
-                "- A detachable preview window is planned for multi-monitor workflows."
+                "- Use the detached preview window for multi-monitor workflows and animation comparisons."
         };
 
         Button closeButton = new Button
