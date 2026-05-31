@@ -1,0 +1,19 @@
+{
+  "roofProfiles": [
+    {
+      "name": "Basic Gable Test",
+
+      "eastWestLeftSlope": 1446,
+      "eastWestRightSlope": 1444,
+      "eastWestRidge": 1445,
+      "eastWestNorthCap": 1459,
+      "eastWestSouthCap": 1460,
+
+      "northSouthLeftSlope": 1449,
+      "northSouthRightSlope": 1447,
+      "northSouthRidge": 1448,
+      "northSouthNorthCap": 1453,
+      "northSouthSouthCap": 1454
+    }
+  ]
+}

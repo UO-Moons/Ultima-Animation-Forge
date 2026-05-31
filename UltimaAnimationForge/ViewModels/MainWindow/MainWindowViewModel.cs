@@ -52,6 +52,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool ShowClilocPanel => ActiveToolTab == MainToolTab.Cliloc;
     public bool ShowWearableWizardPanel => ActiveToolTab == MainToolTab.Wearables;
     public bool ShowRadarColPanel => ActiveToolTab == MainToolTab.RadarCol;
+    public bool ShowMultisPanel => ActiveToolTab == MainToolTab.Multis;
 
     partial void OnActiveToolTabChanged(MainToolTab value)
     {
@@ -67,6 +68,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowHueEditorPanel));
         OnPropertyChanged(nameof(ShowClilocPanel));
         OnPropertyChanged(nameof(ShowRadarColPanel));
+        OnPropertyChanged(nameof(ShowMultisPanel));
 
         if (value == MainToolTab.AnimationBrowser)
         {
@@ -141,6 +143,24 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             RebuildRadarColEntries();
         }
+
+        if (value == MainToolTab.Multis)
+        {
+            if (ArtEntries.Count == 0)
+            {
+                LoadArtTab();
+            }
+
+            if (TileDataEntries.Count == 0)
+            {
+                LoadTileData();
+            }
+
+            if (MultiEntries.Count == 0)
+            {
+                LoadMultis();
+            }
+        }
     }
 
     public ICommand ShowTileDataCommand { get; }
@@ -148,6 +168,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public ICommand ShowAnimDataCommand { get; }
     public ICommand ShowWearableWizardCommand { get; }
     public ICommand ShowGumpBuilderCommand { get; }
+    public ICommand ShowMultisCommand { get; }
 
     [ObservableProperty]
     private string outputFolderPath = string.Empty;
@@ -987,6 +1008,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ImportClilocCommand = new AsyncRelayCommand(ImportClilocAsync);
         JumpToClilocCommand = new RelayCommand(JumpToCliloc);
         ShowRadarColCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.RadarCol);
+        ShowMultisCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Multis);
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {

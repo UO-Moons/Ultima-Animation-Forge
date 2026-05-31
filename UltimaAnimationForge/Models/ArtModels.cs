@@ -23,6 +23,7 @@ public partial class ArtEntry : ObservableObject
     public string Type { get; set; } = string.Empty;
     public string SecondaryText { get; set; } = string.Empty;
     public WriteableBitmap? Thumbnail { get; set; }
+    public WriteableBitmap? BrowserThumbnail { get; set; }
 
     public string DisplayText => Type + " 0x" + ArtId.ToString("X4") + " (" + ArtId + ")";
     public string ExportFileName => Type.ToLowerInvariant() + "_0x" + ArtId.ToString("X4") + ".png";

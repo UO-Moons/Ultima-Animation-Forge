@@ -42,6 +42,7 @@ public sealed class ArtDataService
         }
 
         folderPath = newFolderPath;
+        ClearThumbnailCache();
 
         artLegacyUopPath = Path.Combine(folderPath, "artLegacyMUL.uop");
         artMulPath = Path.Combine(folderPath, "art.mul");
@@ -1436,25 +1437,85 @@ public sealed class ArtDataService
         return CreateBitmap(pixels.Width, pixels.Height, output);
     }
 
+    private const int MaxThumbnailCacheCount = 1500;
+
     private readonly Dictionary<string, WriteableBitmap?> thumbnailCache = new();
+    private readonly Dictionary<string, LinkedListNode<string>> thumbnailLruMap = new();
+    private readonly LinkedList<string> thumbnailLruList = new();
 
     public WriteableBitmap? LoadThumbnailCached(ArtEntry entry)
     {
-        string key = entry.Type + ":" + entry.FileIndex;
+        string key = GetThumbnailCacheKey(entry);
 
         if (thumbnailCache.TryGetValue(key, out WriteableBitmap? cached))
         {
+            TouchThumbnailCacheKey(key);
             return cached;
         }
 
         WriteableBitmap? bitmap = LoadThumbnail(entry);
+
         thumbnailCache[key] = bitmap;
+        thumbnailLruMap[key] = thumbnailLruList.AddFirst(key);
+
+        TrimThumbnailCache();
+
         return bitmap;
+    }
+
+    public void RemoveThumbnailCacheEntry(ArtEntry entry)
+    {
+        string key = GetThumbnailCacheKey(entry);
+
+        thumbnailCache.Remove(key);
+
+        if (thumbnailLruMap.TryGetValue(key, out LinkedListNode<string>? node))
+        {
+            thumbnailLruList.Remove(node);
+            thumbnailLruMap.Remove(key);
+        }
     }
 
     public void ClearThumbnailCache()
     {
         thumbnailCache.Clear();
+        thumbnailLruMap.Clear();
+        thumbnailLruList.Clear();
+    }
+
+    private static string GetThumbnailCacheKey(ArtEntry entry)
+    {
+        return entry.Type + ":" + entry.FileIndex;
+    }
+
+    private void TouchThumbnailCacheKey(string key)
+    {
+        if (!thumbnailLruMap.TryGetValue(key, out LinkedListNode<string>? node))
+        {
+            return;
+        }
+
+        thumbnailLruList.Remove(node);
+        thumbnailLruList.AddFirst(node);
+    }
+
+    private void TrimThumbnailCache()
+    {
+        while (thumbnailCache.Count > MaxThumbnailCacheCount)
+        {
+            LinkedListNode<string>? lastNode = thumbnailLruList.Last;
+
+            if (lastNode == null)
+            {
+                break;
+            }
+
+            string key = lastNode.Value;
+
+            thumbnailLruList.RemoveLast();
+            thumbnailLruMap.Remove(key);
+            thumbnailCache.Remove(key);
+        }
     }
 
     public bool QueueStaticArtSlices(

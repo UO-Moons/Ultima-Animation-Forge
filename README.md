@@ -264,3 +264,52 @@ Open UO Folder
 → Save Changes
 → Export
 → Test In-Game
+
+## 💻 System Requirements
+
+Ultima Animation Forge is designed to run on most modern systems.
+
+### Minimum Requirements
+
+- **OS:** Windows 10 / Windows 11 (64-bit)
+- **CPU:** 64-bit dual-core processor
+- **Memory:** 8 GB RAM
+- **GPU:** Integrated GPU supported
+- **Graphics Memory:** 512 MB shared or dedicated memory
+- **Storage:** SSD recommended
+- **Runtime:** .NET Desktop Runtime
+
+Minimum requirements are suitable for:
+
+- Viewing animations
+- Editing smaller MUL/UOP files
+- Importing and exporting animations
+- Basic frame editing
+
+---
+
+### Recommended Requirements
+
+- **OS:** Windows 10 / Windows 11 (64-bit)
+- **CPU:** Quad-core processor or better
+- **Memory:** 16 GB RAM or higher
+- **GPU:** Modern integrated GPU or dedicated graphics card
+- **Graphics Memory:** 2 GB+ recommended
+- **Storage:** SSD
+
+Recommended hardware provides a smoother experience when using:
+
+- Large UOP animation sets
+- Thumbnail browsing
+- Detached preview windows
+- Large batch imports/exports
+- Image enhancement tools
+- Animation effects and overlays
+
+---
+
+### Notes
+
+Ultima Animation Forge relies more on **system memory and CPU performance** than GPU power.
+
+A dedicated graphics card is not required, but can improve responsiveness when working with many previews, large animation sets, and high-resolution assets.

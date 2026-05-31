@@ -552,7 +552,7 @@ public sealed class UopVdImportService
                     ? 0U
                     : (uint)(frameBlockStart - indexEntryPosition);
 
-                // Per-frame palette, exactly what UOFiddler's UOP decode path expects.
+                // Per-frame palette, exactly what UOP decode path expects.
                 WriteFramePalette(writer, frame.Palette, paletteCount);
 
                 // Frame header

@@ -23,6 +23,7 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel
 {
+    private DispatcherTimer? artSearchDebounceTimer;
     public ObservableCollection<ArtCutterSliceEntry> ArtCutterSlices { get; } = new();
 
     private readonly ArtRadarColorService artRadarColorService = new();
@@ -245,6 +246,8 @@ public partial class MainWindowViewModel
     {
         OnPropertyChanged(nameof(ShowArtSinglePreview));
         OnPropertyChanged(nameof(ShowArtBrowserPreview));
+
+        RebuildArtEntries();
     }
 
     partial void OnSelectedArtRadarColorChanged(Color value)
@@ -462,15 +465,33 @@ public partial class MainWindowViewModel
 
         List<ArtEntry> sourceEntries = LoadCachedOrBuildArtEntries(folderPath);
 
-        bool freeOnly =
-            string.Equals(SelectedArtSlotFilter, "Free Slots", StringComparison.OrdinalIgnoreCase);
+        bool freeOnly = string.Equals(
+            SelectedArtSlotFilter,
+            "Free Slots",
+            StringComparison.OrdinalIgnoreCase);
 
-        bool usedOnly =
-            string.Equals(SelectedArtSlotFilter, "Used Only", StringComparison.OrdinalIgnoreCase);
+        bool usedOnly = string.Equals(
+            SelectedArtSlotFilter,
+            "Used Only",
+            StringComparison.OrdinalIgnoreCase);
+
+        Dictionary<string, TileDataEntry> tileDataLookup = TileDataEntries
+            .GroupBy(tile => GetArtTileDataLookupKey(tile.IsLand, tile.Id))
+            .ToDictionary(group => group.Key, group => group.First());
+
+        bool loadSidePanelThumbnail =
+            ShowArtThumbnails &&
+            !ShowArtBrowserMode;
+
+        bool loadBrowserThumbnail =
+            ShowArtBrowserMode;
 
         foreach (ArtEntry entry in sourceEntries)
         {
-            bool isLand = string.Equals(entry.Type, "Land", StringComparison.OrdinalIgnoreCase);
+            bool isLand = string.Equals(
+                entry.Type,
+                "Land",
+                StringComparison.OrdinalIgnoreCase);
 
             if (isLand && !ShowLandArt)
             {
@@ -502,9 +523,9 @@ public partial class MainWindowViewModel
                 continue;
             }
 
-            TileDataEntry? tileDataEntry = TileDataEntries.FirstOrDefault(tile =>
-                tile.IsLand == isLand &&
-                tile.Id == entry.ArtId);
+            tileDataLookup.TryGetValue(
+                GetArtTileDataLookupKey(isLand, entry.ArtId),
+                out TileDataEntry? tileDataEntry);
 
             entry.IsPendingArtChange = artDataService.HasPendingArtChange(entry);
             entry.IsPendingTileDataChange = tileDataEntry?.IsEdited == true;
@@ -524,10 +545,13 @@ public partial class MainWindowViewModel
                 entry.SecondaryText = "Pending TileData edit - not saved yet";
             }
 
-            if (ShowArtThumbnails)
-            {
-                entry.Thumbnail = artDataService.LoadThumbnailCached(entry);
-            }
+            entry.Thumbnail = loadSidePanelThumbnail
+                ? artDataService.LoadThumbnailCached(entry)
+                : null;
+
+            entry.BrowserThumbnail = loadBrowserThumbnail
+                ? artDataService.LoadThumbnailCached(entry)
+                : null;
 
             ArtEntries.Add(entry);
         }
@@ -540,6 +564,11 @@ public partial class MainWindowViewModel
         }
 
         ArtStatusText = "Loaded " + ArtEntries.Count + " art entries.";
+    }
+
+    private static string GetArtTileDataLookupKey(bool isLand, int id)
+    {
+        return (isLand ? "L:" : "S:") + id;
     }
 
     private List<ArtEntry> LoadCachedOrBuildArtEntries(string folderPath)
@@ -635,6 +664,22 @@ public partial class MainWindowViewModel
 
     partial void OnArtSearchTextChanged(string value)
     {
+        artSearchDebounceTimer ??= new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(250)
+        };
+
+        artSearchDebounceTimer.Stop();
+
+        artSearchDebounceTimer.Tick -= ArtSearchDebounceTimer_Tick;
+        artSearchDebounceTimer.Tick += ArtSearchDebounceTimer_Tick;
+
+        artSearchDebounceTimer.Start();
+    }
+
+    private void ArtSearchDebounceTimer_Tick(object? sender, EventArgs e)
+    {
+        artSearchDebounceTimer?.Stop();
         RebuildArtEntries();
     }
 
@@ -1102,6 +1147,7 @@ public partial class MainWindowViewModel
 
             if (success)
             {
+                artDataService.RemoveThumbnailCacheEntry(targetEntry);
                 imported++;
             }
             else
@@ -1515,6 +1561,11 @@ public partial class MainWindowViewModel
 
         if (success)
         {
+            foreach (ArtEntry entry in checkedEntries)
+            {
+                artDataService.RemoveThumbnailCacheEntry(entry);
+            }
+
             RebuildArtEntries();
         }
     }
@@ -1951,8 +2002,10 @@ public partial class MainWindowViewModel
             return;
         }
 
+        artDataService.RemoveThumbnailCacheEntry(SelectedArtEntry);
+
         SelectedArtBitmap = artDataService.LoadBitmap(SelectedArtEntry);
-        SelectedArtEntry.Thumbnail = artDataService.LoadThumbnail(SelectedArtEntry);
+        SelectedArtEntry.Thumbnail = artDataService.LoadThumbnailCached(SelectedArtEntry);
 
         RebuildArtEntries();
     }

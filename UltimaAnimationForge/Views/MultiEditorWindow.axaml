@@ -1,0 +1,372 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:UltimaAnimationForge.ViewModels"
+        x:Class="UltimaAnimationForge.Views.MultiEditorWindow"
+        xmlns:models="using:UltimaAnimationForge.Models"
+        xmlns:converters="using:UltimaAnimationForge.Converters"
+        x:DataType="vm:MultiEditorViewModel"
+        Width="1200"
+        Height="760"
+        MinWidth="1000"
+        MinHeight="650"
+        Title="Multi Editor"
+        Background="#0B0F14"
+        KeyDown="MultiEditorWindow_OnKeyDown">
+
+    <Window.Resources>
+        <converters:BoolToSelectionBrushConverter x:Key="BoolToSelectionBrushConverter"/>
+    </Window.Resources>
+
+    <Grid RowDefinitions="Auto,* ,Auto">
+
+        <Border Grid.Row="0"
+                Background="#1B222B"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="8">
+
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled">
+
+                <StackPanel Orientation="Horizontal"
+                            Spacing="8">
+
+                    <Button Content="Select" Command="{Binding UseSelectToolCommand}"/>
+                    <Button Content="Draw" Command="{Binding UseDrawToolCommand}"/>
+                    <Button Content="Remove" Command="{Binding UseRemoveToolCommand}"/>
+                    <Button Content="Pipette" Command="{Binding UsePipetteToolCommand}"/>
+
+
+                    <Button Content="Undo" Command="{Binding UndoCommand}"/>
+                    <Button Content="Redo" Command="{Binding RedoCommand}"/>
+
+
+                    <CheckBox Content="Virtual Floor"
+                              IsChecked="{Binding DrawVirtualFloor}"
+                              VerticalAlignment="Center"/>
+
+                    <TextBlock Text="Item ID" VerticalAlignment="Center" Foreground="#C7D1DB"/>
+                    <NumericUpDown Width="130"
+                                   Minimum="0"
+                                   Maximum="65535"
+                                   Increment="1"
+                                   FormatString="0"
+                                   Value="{Binding DrawItemId, Mode=TwoWay}"/>
+
+                    <TextBlock Text="Draw Z" VerticalAlignment="Center" Foreground="#C7D1DB"/>
+                    <NumericUpDown Width="90"
+                                   Minimum="-128"
+                                   Maximum="127"
+                                   Increment="1"
+                                   FormatString="0"
+                                   Value="{Binding DrawZ, Mode=TwoWay}"/>
+
+                    <Button Content="Z -" Command="{Binding DrawZDownCommand}"/>
+                    <Button Content="Z +" Command="{Binding DrawZUpCommand}"/>
+                    <Button Content="Floor -5" Command="{Binding FloorZDownCommand}"/>
+                    <Button Content="Floor +5" Command="{Binding FloorZUpCommand}"/>
+
+                    <Button Content="Add Tile" Command="{Binding AddTileCommand}"/>
+                    <Button Content="Rect Fill" Command="{Binding UseRectFillToolCommand}"/>
+                    <Button Content="Remove Selected" Command="{Binding RemoveSelectedCommand}"/>
+
+                    <TextBlock Text="{Binding SelectedTool}"
+                               VerticalAlignment="Center"
+                               Margin="12,0,0,0"
+                               Foreground="#AEB8C2"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="300,*,280">
+
+            <Border Grid.Column="0"
+                    Background="#151A20"
+                    BorderBrush="#343B46"
+                    BorderThickness="0,0,1,0"
+                    Padding="8">
+
+                <TabControl>
+                    <TabItem Header="Tiles">
+                        <Grid RowDefinitions="Auto,Auto,Auto,*"
+                              RowSpacing="8"
+                              Margin="4">
+
+                            <ComboBox Grid.Row="0"
+                                      ItemsSource="{Binding TileGroups}"
+                                      SelectedItem="{Binding SelectedTileGroup}"/>
+
+                            <ComboBox Grid.Row="1"
+                                      ItemsSource="{Binding TileSubgroups}"
+                                      SelectedItem="{Binding SelectedTileSubgroup}"/>
+
+                            <TextBox Grid.Row="2"
+                                     Watermark="Search tile ID / name"
+                                     Text="{Binding TilePickerSearchText, Mode=TwoWay}"/>
+
+                            <ListBox Grid.Row="3"
+                                     ItemsSource="{Binding TilePickerItems}">
+                                <ScrollViewer Grid.Row="2"
+                                              VerticalScrollBarVisibility="Auto">
+
+                                    <ItemsControl ItemsSource="{Binding TilePickerItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="models:ArtEntry">
+                                                <Button Command="{Binding $parent[Window].DataContext.SelectPickerTileCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="4"
+                                                        HorizontalAlignment="Stretch">
+
+                                                    <StackPanel Orientation="Horizontal"
+                                                                Spacing="6">
+                                                        <Image Source="{Binding Thumbnail}"
+                                                               Width="32"
+                                                               Height="32"
+                                                               Stretch="Uniform"/>
+
+                                                        <TextBlock Text="{Binding DisplayText}"
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="12"
+                                                                   Foreground="#E8EDF2"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </ListBox>
+                        </Grid>
+                    </TabItem>
+
+                    <TabItem Header="Components">
+                        <ListBox ItemsSource="{Binding Components}"
+                                 SelectedItem="{Binding SelectedComponent}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:MultiEditorTile">
+                                    <TextBlock Text="{Binding DisplayText}"
+                                               FontFamily="Consolas"
+                                               FontSize="12"
+                                               Foreground="#E8EDF2"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </TabItem>
+                </TabControl>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Background="#080B0F"
+                    Padding="8">
+
+                <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                    <Canvas Width="1200"
+                            Height="900"
+                            Background="Transparent"
+                            PointerPressed="EditorCanvas_OnPointerPressed">
+
+                        <!-- Rendered tiles, including virtual floor -->
+                        <ItemsControl ItemsSource="{Binding RenderedComponents}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas Width="1200"
+                                            Height="900"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+
+                            <ItemsControl.Styles>
+                                <Style Selector="ContentPresenter"
+                                       x:DataType="models:MultiEditorTile">
+                                    <Setter Property="Canvas.Left" Value="{Binding ScreenX}"/>
+                                    <Setter Property="Canvas.Top" Value="{Binding ScreenY}"/>
+                                </Style>
+                            </ItemsControl.Styles>
+
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:MultiEditorTile">
+                                    <Panel>
+                                        <Image Source="{Binding Bitmap}"
+                                               Stretch="None"
+                                               PointerPressed="EditorTile_OnPointerPressed"/>
+
+                                        <Border IsVisible="{Binding IsSelected}"
+                                                BorderBrush="#3399FF"
+                                                BorderThickness="1"/>
+                                    </Panel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Canvas>
+                </ScrollViewer>
+            </Border>
+            <Border Grid.Column="2"
+                    Background="#151A20"
+                    BorderBrush="#343B46"
+                    BorderThickness="1,0,0,0"
+                    Padding="8">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Selected Tile"
+                                   FontWeight="Bold"
+                                   Foreground="#E8EDF2"/>
+
+                        <TextBlock Text="X"
+                                   Foreground="#C7D1DB"/>
+                        <NumericUpDown Minimum="-128"
+                                       Maximum="128"
+                                       Value="{Binding SelectedComponent.X}"/>
+
+                        <TextBlock Text="Y"
+                                   Foreground="#C7D1DB"/>
+                        <NumericUpDown Minimum="-128"
+                                       Maximum="128"
+                                       Value="{Binding SelectedComponent.Y}"/>
+
+                        <TextBlock Text="Z"
+                                   Foreground="#C7D1DB"/>
+                        <NumericUpDown Minimum="-128"
+                                       Maximum="127"
+                                       Value="{Binding SelectedComponent.Z}"/>
+
+                        <Button Content="Apply To Multis Tab"
+                                Command="{Binding ApplyCommand}"/>
+
+                        <TextBlock Text="Move"
+                                   Margin="0,10,0,0"
+                                   FontWeight="Bold"
+                                   Foreground="#E8EDF2"/>
+
+                        <Grid ColumnDefinitions="*,*,*"
+                              RowDefinitions="Auto,Auto,Auto"
+                              ColumnSpacing="4"
+                              RowSpacing="4">
+
+                            <Button Grid.Row="0"
+                                    Grid.Column="1"
+                                    Content="Y -"
+                                    Command="{Binding MoveSelectedUpCommand}"/>
+
+                            <Button Grid.Row="1"
+                                    Grid.Column="0"
+                                    Content="X -"
+                                    Command="{Binding MoveSelectedLeftCommand}"/>
+
+                            <Button Grid.Row="1"
+                                    Grid.Column="1"
+                                    Content="X +"
+                                    Command="{Binding MoveSelectedRightCommand}"/>
+
+                            <Button Grid.Row="1"
+                                    Grid.Column="2"
+                                    Content="Y +"
+                                    Command="{Binding MoveSelectedDownCommand}"/>
+
+                            <Button Grid.Row="2"
+                                    Grid.Column="0"
+                                    Content="Z -"
+                                    Command="{Binding MoveSelectedZDownCommand}"/>
+
+                            <Button Grid.Row="2"
+                                    Grid.Column="2"
+                                    Content="Z +"
+                                    Command="{Binding MoveSelectedZUpCommand}"/>
+                        </Grid>
+
+                        <TextBlock Text="Z Visibility"
+                                   Margin="0,12,0,0"
+                                   FontWeight="Bold"
+                                   Foreground="#E8EDF2"/>
+
+                        <TextBlock Text="Max Z"
+                                   Foreground="#C7D1DB"/>
+
+                        <NumericUpDown Width="120"
+                                       Minimum="-128"
+                                       Maximum="127"
+                                       Increment="1"
+                                       FormatString="0"
+                                       Value="{Binding VisibleMaxZ, Mode=TwoWay}"/>
+
+                        <Button Content="Show All Z"
+                                Command="{Binding ShowAllZCommand}"/>
+
+                        <TextBlock Text="Auto Roof"
+                                   Margin="0,14,0,0"
+                                   FontWeight="Bold"
+                                   Foreground="#E8EDF2"/>
+
+                        <TextBlock Text="Roof Profile"
+                                   Foreground="#C7D1DB"/>
+
+                        <ComboBox ItemsSource="{Binding RoofProfiles}"
+                                  SelectedItem="{Binding SelectedRoofProfile}"/>
+
+                        <Grid ColumnDefinitions="*,*"
+                              ColumnSpacing="6">
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Width"
+                                           Foreground="#C7D1DB"/>
+                                <NumericUpDown Minimum="1"
+                                               Maximum="100"
+                                               Increment="1"
+                                               FormatString="0"
+                                               Value="{Binding RoofWidth, Mode=TwoWay}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Length"
+                                           Foreground="#C7D1DB"/>
+                                <NumericUpDown Minimum="1"
+                                               Maximum="100"
+                                               Increment="1"
+                                               FormatString="0"
+                                               Value="{Binding RoofLength, Mode=TwoWay}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Base Z"
+                                   Foreground="#C7D1DB"/>
+
+                        <NumericUpDown Minimum="-128"
+                                       Maximum="127"
+                                       Increment="1"
+                                       FormatString="0"
+                                       Value="{Binding RoofBaseZ, Mode=TwoWay}"/>
+
+                        <Button Content="Build Roof"
+                                Command="{Binding BuildRoofCommand}"/>
+
+                        <Button Content="Place Roof From Click"
+                                Command="{Binding PlaceRoofFromClickCommand}"/>
+
+                        <TextBlock Text="Direction"
+                                   Foreground="#C7D1DB"/>
+
+                        <ComboBox ItemsSource="{Binding RoofDirections}"
+                                  SelectedItem="{Binding SelectedRoofDirection}"/>
+
+                        <Button Content="Clear Roof Area"
+                                Command="{Binding ClearRoofAreaCommand}"/>
+
+                        <Button Content="Clear Roof From Click"
+                                Command="{Binding ClearRoofFromClickCommand}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Background="#1B222B"
+                BorderBrush="#343B46"
+                BorderThickness="0,1,0,0"
+                Padding="6">
+
+            <TextBlock Text="{Binding StatusText}"
+                       Foreground="#AEB8C2"/>
+        </Border>
+    </Grid>
+</Window>
