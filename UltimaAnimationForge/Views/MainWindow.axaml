@@ -13,7 +13,7 @@
         Background="#1B1F25"
         Foreground="White"
         RequestedThemeVariant="Dark"
-        Title="Ultima Animation Forge Alpha 23"
+        Title="Ultima Animation Forge Alpha 24"
         DragDrop.AllowDrop="True"
         KeyDown="Window_KeyDown"
         mc:Ignorable="d">
@@ -539,6 +539,12 @@
 
                     <Button Content="Cliloc"
                             Command="{Binding ShowClilocCommand}"
+                            CornerRadius="0"
+                            Padding="14,6"
+                            MinHeight="28" />
+
+                    <Button Content="RadarCol"
+                            Command="{Binding ShowRadarColCommand}"
                             CornerRadius="0"
                             Padding="14,6"
                             MinHeight="28" />
@@ -3462,11 +3468,27 @@
                                     <ScrollViewer IsVisible="{Binding ShowArtSinglePreview}"
                                                   HorizontalScrollBarVisibility="Auto"
                                                   VerticalScrollBarVisibility="Auto">
-                                        <Image Source="{Binding SelectedArtBitmap}"
-                                               Stretch="None"
-                                               RenderOptions.BitmapInterpolationMode="None"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center" />
+
+                                        <Grid HorizontalAlignment="Center"
+                                              VerticalAlignment="Center">
+
+                                            <Image Source="{Binding SelectedArtBitmap}"
+                                                   Stretch="None"
+                                                   RenderOptions.BitmapInterpolationMode="None"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+
+                                            <!-- UO 44x44 tile base overlay -->
+                                            <Path IsVisible="{Binding ShowArtTileBaseOverlay}"
+                                                  Data="M 0,22 L 22,0 L 44,22 L 22,44 Z"
+                                                  Stroke="#D14B4B"
+                                                  StrokeThickness="1"
+                                                  Fill="#22D14B4B"
+                                                  Width="44"
+                                                  Height="44"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Bottom"/>
+                                        </Grid>
                                     </ScrollViewer>
 
                                     <!-- UOFiddler-style browser preview -->
@@ -3616,6 +3638,104 @@
                                                    Foreground="#AAB4C0"
                                                    FontSize="12"
                                                    TextWrapping="Wrap" />
+
+                                        <TextBlock Text="{Binding SelectedArtVisibleBounds.FullSizeText, StringFormat='Full size: {0}'}"
+                                                   Foreground="#AAB4C0"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap" />
+
+                                        <TextBlock Text="{Binding SelectedArtVisibleBounds.BoundsText, StringFormat='Visible bounds: {0}'}"
+                                                   Foreground="#AAB4C0"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap" />
+
+                                        <TextBlock Text="{Binding SelectedArtVisibleBounds.VisibleSizeText, StringFormat='Visible size: {0}'}"
+                                                   Foreground="#AAB4C0"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap" />
+
+                                        <TextBlock Text="{Binding SelectedArtVisibleBounds.PaddingText, StringFormat='Transparent padding: {0}'}"
+                                                   Foreground="#AAB4C0"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap" />
+
+                                        <TextBlock Text="Radar Color"
+                                                   Foreground="#E4EAF2"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,8,0,0"/>
+
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="8"
+                                                    VerticalAlignment="Center">
+
+                                            <Border Width="34"
+                                                    Height="20"
+                                                    Background="{Binding SelectedArtRadarBrush}"
+                                                    BorderBrush="#566273"
+                                                    BorderThickness="1"
+                                                    CornerRadius="3"/>
+
+                                            <TextBlock Text="{Binding SelectedArtRadarColorText}"
+                                                       Foreground="#AAB4C0"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <TextBlock Text="Current radarcol.mul Color"
+                                                   Foreground="#E4EAF2"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,8,0,0"/>
+
+                                        <StackPanel Spacing="4">
+
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="8"
+                                                        VerticalAlignment="Center">
+
+                                                <Border Width="34"
+                                                        Height="20"
+                                                        Background="{Binding SelectedArtCurrentRadarBrush}"
+                                                        BorderBrush="#566273"
+                                                        BorderThickness="1"
+                                                        CornerRadius="3"/>
+
+                                                <TextBlock Text="{Binding SelectedArtCurrentRadarColorText}"
+                                                           Foreground="#AAB4C0"
+                                                           FontSize="12"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+
+                                            <TextBlock Text="{Binding SelectedArtRadarMatchText}"
+                                                       Foreground="#E6C86E"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap"
+                                                       Margin="42,2,0,0"/>
+
+                                        </StackPanel>
+
+                                        <WrapPanel Orientation="Horizontal"
+                                                   Margin="0,6,0,0">
+
+                                            <Button Content="Apply Generated"
+                                                    Command="{Binding ApplyGeneratedRadarColorToSelectedArtCommand}"
+                                                    MinWidth="120"
+                                                    Margin="0,0,6,6"/>
+
+                                            <Button Content="Apply Checked"
+                                                    Command="{Binding ApplyGeneratedRadarColorToCheckedArtCommand}"
+                                                    MinWidth="110"
+                                                    Margin="0,0,6,6"/>
+
+                                            <Button Content="Revert"
+                                                    Command="{Binding RevertSelectedRadarColorCommand}"
+                                                    MinWidth="80"
+                                                    Margin="0,0,6,6"/>
+
+                                            <Button Content="Save RadarCol"
+                                                    Command="{Binding SaveRadarColCommand}"
+                                                    MinWidth="110"
+                                                    Margin="0,0,6,6"/>
+                                        </WrapPanel>
                                     </StackPanel>
 
                                     <Border Height="1"
@@ -3792,6 +3912,11 @@
                                         </StackPanel>
                                     </Expander>
 
+                                    <CheckBox Content="Show UO tile base"
+                                              IsChecked="{Binding ShowArtTileBaseOverlay}"
+                                              Foreground="#C7D1DB"
+                                              Margin="0,6,0,0"/>
+
                                     <Border Height="1"
                                             Background="#343B46"
                                             Margin="0,8,0,4"/>
@@ -3821,6 +3946,326 @@
                             </ScrollViewer>
                         </Border>
                     </Grid>
+                </Grid>
+                <!-- RadarCol Tab -->
+                <Grid IsVisible="{Binding ShowRadarColPanel}"
+                      ColumnDefinitions="320,*,320"
+                      ColumnSpacing="8"
+                      Margin="8">
+
+                    <!-- LEFT: list and filters -->
+                    <Border Grid.Column="0"
+                            Background="#20262E"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+
+                        <Grid RowDefinitions="Auto,Auto,*"
+                              RowSpacing="8">
+
+                            <WrapPanel Grid.Row="0">
+                                <Button Content="Load"
+                                        Command="{Binding LoadRadarColCommand}"
+                                        MinWidth="70"
+                                        Margin="0,0,6,6"/>
+
+                                <Button Content="Reload"
+                                        Command="{Binding RebuildRadarColEntriesCommand}"
+                                        MinWidth="70"
+                                        Margin="0,0,6,6"/>
+
+                                <Button Content="Save"
+                                        Command="{Binding SaveRadarColCommand}"
+                                        MinWidth="70"
+                                        Margin="0,0,6,6"/>
+                            </WrapPanel>
+
+                            <StackPanel Grid.Row="1"
+                                        Spacing="8">
+
+                                <TextBox Watermark="Search ID..."
+                                         Text="{Binding RadarColSearchText, Mode=TwoWay}"/>
+
+                                <WrapPanel>
+                                    <CheckBox Content="Land"
+                                              IsChecked="{Binding ShowRadarColLand}"
+                                              Margin="0,0,10,0"/>
+
+                                    <CheckBox Content="Statics"
+                                              IsChecked="{Binding ShowRadarColStatics}"
+                                              Margin="0,0,10,0"/>
+
+                                    <CheckBox Content="Different Only"
+                                              IsChecked="{Binding ShowRadarColDifferentOnly}"/>
+                                </WrapPanel>
+                            </StackPanel>
+
+                            <ListBox Grid.Row="2"
+                                     ItemsSource="{Binding RadarColEntries}"
+                                     SelectedItem="{Binding SelectedRadarColEntry, Mode=TwoWay}"
+                                     Background="Transparent"
+                                     BorderThickness="0">
+
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="28,48,*"
+                                              ColumnSpacing="8"
+                                              Margin="2,4">
+
+                                            <CheckBox Grid.Column="0"
+                                                      IsChecked="{Binding IsChecked}"
+                                                      VerticalAlignment="Center"/>
+
+                                            <Border Grid.Column="1"
+                                                    Width="42"
+                                                    Height="42"
+                                                    Background="#151A20"
+                                                    BorderBrush="#343B46"
+                                                    BorderThickness="1">
+                                                <Image Source="{Binding Thumbnail}"
+                                                       Stretch="Uniform"
+                                                       RenderOptions.BitmapInterpolationMode="None"/>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="2"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding IdText}"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding TypeText}"
+                                                           Foreground="#AAB4C0"
+                                                           FontSize="12"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- MIDDLE: selected preview and color comparison -->
+                    <Border Grid.Column="1"
+                            Background="#20262E"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12">
+
+                        <Grid RowDefinitions="Auto,*,Auto"
+                              RowSpacing="12">
+
+                            <StackPanel Grid.Row="0">
+                                <TextBlock Text="{Binding SelectedRadarColEntry.IdText}"
+                                           Foreground="#E4EAF2"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"/>
+
+                                <TextBlock Text="{Binding SelectedRadarColEntry.TypeText}"
+                                           Foreground="#AAB4C0"/>
+                            </StackPanel>
+
+                            <Border Grid.Row="1"
+                                    Background="#151A20"
+                                    BorderBrush="#343B46"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="20">
+
+                                <Image Source="{Binding SelectedRadarColEntry.Thumbnail}"
+                                       Stretch="None"
+                                       RenderOptions.BitmapInterpolationMode="None"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                            </Border>
+
+                            <Grid Grid.Row="2"
+                                  ColumnDefinitions="*,*,*"
+                                  ColumnSpacing="10">
+
+                                <Border Grid.Column="0"
+                                        Background="#151A20"
+                                        BorderBrush="#343B46"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Current"
+                                                   FontWeight="SemiBold"/>
+                                        <Border Height="34"
+                                                Background="{Binding SelectedRadarColEntry.CurrentColorBrush}"
+                                                BorderBrush="#566273"
+                                                BorderThickness="1"/>
+                                        <TextBlock Text="{Binding SelectedRadarColEntry.CurrentColorText}"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="1"
+                                        Background="#151A20"
+                                        BorderBrush="#343B46"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Generated"
+                                                   FontWeight="SemiBold"/>
+                                        <Border Height="34"
+                                                Background="{Binding SelectedRadarColEntry.GeneratedColorBrush}"
+                                                BorderBrush="#566273"
+                                                BorderThickness="1"/>
+                                        <TextBlock Text="{Binding SelectedRadarColEntry.GeneratedColorText}"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2"
+                                        Background="#151A20"
+                                        BorderBrush="#343B46"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Match"
+                                                   FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding SelectedRadarColEntry.MatchText}"
+                                                   FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- RIGHT: tools -->
+                    <Border Grid.Column="2"
+                            Background="#20262E"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10">
+
+                        <StackPanel Spacing="12">
+
+                            <TextBlock Text="RadarCol Tools"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"/>
+
+                            <Border Background="#151A20"
+                                    BorderBrush="#343B46"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="8">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Generated Color"
+                                               FontWeight="SemiBold"/>
+
+                                    <Border Background="#151A20"
+                                            BorderBrush="#343B46"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="8">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="Average Checked Tiles"
+                                                       FontWeight="SemiBold"/>
+
+                                            <Button Content="Average to Selected"
+                                                    Command="{Binding ApplyCheckedAverageRadarColToSelectedCommand}"/>
+
+                                            <Button Content="Average to Checked"
+                                                    Command="{Binding ApplyCheckedAverageRadarColToCheckedCommand}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Button Content="Apply to Selected"
+                                            Command="{Binding ApplyGeneratedRadarColToSelectedCommand}"/>
+
+                                    <Button Content="Apply to Checked"
+                                            Command="{Binding ApplyGeneratedRadarColToCheckedCommand}"/>
+
+                                    <Button Content="Revert Selected"
+                                            Command="{Binding RevertSelectedRadarColCommand}"/>
+
+                                    <Button Content="Revert All"
+                                            Command="{Binding RevertAllRadarColCommand}"/>
+                                </StackPanel>
+
+                            </Border>
+
+                            <Border Background="#151A20"
+                                    BorderBrush="#343B46"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="8">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Manual RGB"
+                                               FontWeight="SemiBold"/>
+
+                                    <Grid ColumnDefinitions="Auto,*"
+                                          RowDefinitions="Auto,Auto,Auto"
+                                          ColumnSpacing="8"
+                                          RowSpacing="6">
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="R" VerticalAlignment="Center"/>
+                                        <NumericUpDown Grid.Row="0" Grid.Column="1"
+                                                       Minimum="0" Maximum="255"
+                                                       Increment="1" FormatString="0"
+                                                       Value="{Binding RadarColRed, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="G" VerticalAlignment="Center"/>
+                                        <NumericUpDown Grid.Row="1" Grid.Column="1"
+                                                       Minimum="0" Maximum="255"
+                                                       Increment="1" FormatString="0"
+                                                       Value="{Binding RadarColGreen, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="B" VerticalAlignment="Center"/>
+                                        <NumericUpDown Grid.Row="2" Grid.Column="1"
+                                                       Minimum="0" Maximum="255"
+                                                       Increment="1" FormatString="0"
+                                                       Value="{Binding RadarColBlue, Mode=TwoWay}"/>
+                                    </Grid>
+
+                                    <Button Content="Apply RGB to Selected"
+                                            Command="{Binding ApplyManualRadarColToSelectedCommand}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#151A20"
+                                    BorderBrush="#343B46"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="8">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Range Apply"
+                                               FontWeight="SemiBold"/>
+
+                                    <Grid ColumnDefinitions="*,Auto,*"
+                                          ColumnSpacing="6">
+                                        <NumericUpDown Grid.Column="0"
+                                                       Minimum="0"
+                                                       Maximum="16383"
+                                                       Increment="1"
+                                                       FormatString="0"
+                                                       Value="{Binding RadarColRangeFrom, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="to"
+                                                   VerticalAlignment="Center"/>
+
+                                        <NumericUpDown Grid.Column="2"
+                                                       Minimum="0"
+                                                       Maximum="16383"
+                                                       Increment="1"
+                                                       FormatString="0"
+                                                       Value="{Binding RadarColRangeTo, Mode=TwoWay}"/>
+                                    </Grid>
+
+                                    <Button Content="Apply Generated to Range"
+                                            Command="{Binding ApplyGeneratedRadarColToRangeCommand}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
                 </Grid>
 
                 <!-- AnimData Tab -->

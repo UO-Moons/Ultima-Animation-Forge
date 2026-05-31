@@ -23,7 +23,8 @@ public partial class MainWindowViewModel
         Lights = 7,
         GumpBuilder = 8,
         Hues = 9,
-        Cliloc = 10
+        Cliloc = 10,
+        RadarCol = 11
     }
 
     public string HeaderStatusText => ShowGumpEditorPanel ? GumpInfoText : StatusText;

@@ -35,6 +35,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public ICommand ExportClilocCommand { get; }
     public ICommand ImportClilocCommand { get; }
     public ICommand JumpToClilocCommand { get; }
+    public ICommand ShowRadarColCommand { get; }
 
     [ObservableProperty]
     private MainToolTab activeToolTab = MainToolTab.AnimationEditor;
@@ -50,6 +51,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool ShowLightPanel => ActiveToolTab == MainToolTab.Lights;
     public bool ShowClilocPanel => ActiveToolTab == MainToolTab.Cliloc;
     public bool ShowWearableWizardPanel => ActiveToolTab == MainToolTab.Wearables;
+    public bool ShowRadarColPanel => ActiveToolTab == MainToolTab.RadarCol;
 
     partial void OnActiveToolTabChanged(MainToolTab value)
     {
@@ -64,6 +66,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowGumpBuilderPanel));
         OnPropertyChanged(nameof(ShowHueEditorPanel));
         OnPropertyChanged(nameof(ShowClilocPanel));
+        OnPropertyChanged(nameof(ShowRadarColPanel));
 
         if (value == MainToolTab.AnimationBrowser)
         {
@@ -132,6 +135,11 @@ public partial class MainWindowViewModel : ViewModelBase
         if (value == MainToolTab.Lights && LightEntries.Count == 0)
         {
             LoadLights();
+        }
+
+        if (value == MainToolTab.RadarCol && RadarColEntries.Count == 0)
+        {
+            RebuildRadarColEntries();
         }
     }
 
@@ -978,6 +986,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ExportClilocCommand = new AsyncRelayCommand(ExportClilocAsync);
         ImportClilocCommand = new AsyncRelayCommand(ImportClilocAsync);
         JumpToClilocCommand = new RelayCommand(JumpToCliloc);
+        ShowRadarColCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.RadarCol);
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {

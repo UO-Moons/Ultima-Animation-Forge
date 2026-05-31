@@ -1615,4 +1615,54 @@ public sealed class ArtDataService
 
         return CreateBitmap(width, height, output);
     }
+
+    public ArtVisibleBoundsInfo GetVisibleBounds(WriteableBitmap? bitmap)
+    {
+        ArtVisibleBoundsInfo info = new();
+
+        if (bitmap == null)
+        {
+            return info;
+        }
+
+        ArtFramePixels pixels = ReadPixels(bitmap);
+
+        info.FullWidth = pixels.Width;
+        info.FullHeight = pixels.Height;
+
+        int minX = pixels.Width;
+        int minY = pixels.Height;
+        int maxX = -1;
+        int maxY = -1;
+
+        for (int y = 0; y < pixels.Height; y++)
+        {
+            for (int x = 0; x < pixels.Width; x++)
+            {
+                if (IsTransparent(pixels, x, y))
+                {
+                    continue;
+                }
+
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            }
+        }
+
+        if (maxX < 0 || maxY < 0)
+        {
+            info.HasVisiblePixels = false;
+            return info;
+        }
+
+        info.HasVisiblePixels = true;
+        info.XMin = minX;
+        info.YMin = minY;
+        info.XMax = maxX;
+        info.YMax = maxY;
+
+        return info;
+    }
 }

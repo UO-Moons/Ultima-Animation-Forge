@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
@@ -23,6 +24,49 @@ namespace UltimaAnimationForge.ViewModels;
 public partial class MainWindowViewModel
 {
     public ObservableCollection<ArtCutterSliceEntry> ArtCutterSlices { get; } = new();
+
+    private readonly ArtRadarColorService artRadarColorService = new();
+    private readonly RadarColService radarColService = new();
+    private readonly ArtAndRadarCacheService artAndRadarCacheService = new();
+
+    [ObservableProperty]
+    private Color selectedArtRadarColor = Colors.Transparent;
+
+    public IBrush SelectedArtRadarBrush =>
+        SelectedArtRadarColor.A == 0
+            ? Brushes.Transparent
+            : new SolidColorBrush(SelectedArtRadarColor);
+
+    public string SelectedArtRadarColorText =>
+        artRadarColorService.ToHexText(SelectedArtRadarColor) +
+        " | " +
+        artRadarColorService.ToUoColorText(SelectedArtRadarColor);
+
+    [ObservableProperty]
+    private Color selectedArtCurrentRadarColor = Colors.Transparent;
+
+    [ObservableProperty]
+    private bool selectedArtRadarColorPending;
+
+    public IBrush SelectedArtCurrentRadarBrush =>
+        SelectedArtCurrentRadarColor.A == 0
+            ? Brushes.Transparent
+            : new SolidColorBrush(SelectedArtCurrentRadarColor);
+
+    public string SelectedArtCurrentRadarColorText =>
+        radarColService.IsLoaded
+            ? "#" + SelectedArtCurrentRadarColor.R.ToString("X2") +
+              SelectedArtCurrentRadarColor.G.ToString("X2") +
+              SelectedArtCurrentRadarColor.B.ToString("X2") +
+              " | 0x" + radarColService.GetColor(SelectedArtEntry).ToString("X4") +
+              (SelectedArtRadarColorPending ? " | Pending" : "")
+            : "radarcol.mul not loaded";
+
+    [ObservableProperty]
+    private bool showArtTileBaseOverlay;
+
+    [ObservableProperty]
+    private ArtVisibleBoundsInfo? selectedArtVisibleBounds;
 
     [ObservableProperty]
     private bool showArtBrowserMode;
@@ -201,6 +245,25 @@ public partial class MainWindowViewModel
     {
         OnPropertyChanged(nameof(ShowArtSinglePreview));
         OnPropertyChanged(nameof(ShowArtBrowserPreview));
+    }
+
+    partial void OnSelectedArtRadarColorChanged(Color value)
+    {
+        OnPropertyChanged(nameof(SelectedArtRadarBrush));
+        OnPropertyChanged(nameof(SelectedArtRadarColorText));
+        OnPropertyChanged(nameof(SelectedArtRadarMatchText));
+    }
+
+    partial void OnSelectedArtCurrentRadarColorChanged(Color value)
+    {
+        OnPropertyChanged(nameof(SelectedArtCurrentRadarBrush));
+        OnPropertyChanged(nameof(SelectedArtCurrentRadarColorText));
+        OnPropertyChanged(nameof(SelectedArtRadarMatchText));
+    }
+
+    partial void OnSelectedArtRadarColorPendingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(SelectedArtCurrentRadarColorText));
     }
 
     private static string BuildTileDataFlagText(ulong flags)
@@ -389,20 +452,55 @@ public partial class MainWindowViewModel
     {
         ArtEntries.Clear();
 
-        bool includeFreeSlots =
-            string.Equals(SelectedArtSlotFilter, "All", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(SelectedArtSlotFilter, "Free Slots", StringComparison.OrdinalIgnoreCase);
+        string folderPath = GetCurrentFolderPath();
+
+        if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
+        {
+            ArtStatusText = "Choose a UO folder first.";
+            return;
+        }
+
+        List<ArtEntry> sourceEntries = LoadCachedOrBuildArtEntries(folderPath);
 
         bool freeOnly =
             string.Equals(SelectedArtSlotFilter, "Free Slots", StringComparison.OrdinalIgnoreCase);
 
-        foreach (ArtEntry entry in artDataService.BuildEntries(
-                     ShowLandArt,
-                     ShowStaticArt,
-                     includeFreeSlots,
-                     ArtSearchText))
+        bool usedOnly =
+            string.Equals(SelectedArtSlotFilter, "Used Only", StringComparison.OrdinalIgnoreCase);
+
+        foreach (ArtEntry entry in sourceEntries)
         {
             bool isLand = string.Equals(entry.Type, "Land", StringComparison.OrdinalIgnoreCase);
+
+            if (isLand && !ShowLandArt)
+            {
+                continue;
+            }
+
+            if (!isLand && !ShowStaticArt)
+            {
+                continue;
+            }
+
+            if (freeOnly && !entry.IsFreeSlot && !entry.IsPendingChange)
+            {
+                continue;
+            }
+
+            if (usedOnly && entry.IsFreeSlot && !entry.IsPendingChange)
+            {
+                continue;
+            }
+
+            if (!MatchesArtSearch(entry, ArtSearchText))
+            {
+                continue;
+            }
+
+            if (!IsArtInEraFilter(entry, SelectedArtEraFilter))
+            {
+                continue;
+            }
 
             TileDataEntry? tileDataEntry = TileDataEntries.FirstOrDefault(tile =>
                 tile.IsLand == isLand &&
@@ -426,36 +524,75 @@ public partial class MainWindowViewModel
                 entry.SecondaryText = "Pending TileData edit - not saved yet";
             }
 
-            if (freeOnly && !entry.IsFreeSlot && !entry.IsPendingChange)
-            {
-                continue;
-            }
-
-            if (!IsArtInEraFilter(entry, SelectedArtEraFilter))
-            {
-                continue;
-            }
-
             if (ShowArtThumbnails)
             {
-                //entry.Thumbnail = artDataService.LoadThumbnail(entry);
                 entry.Thumbnail = artDataService.LoadThumbnailCached(entry);
             }
 
             ArtEntries.Add(entry);
         }
 
-        if (ArtEntries.Count > 0)
+        SelectedArtEntry = ArtEntries.Count > 0 ? ArtEntries[0] : null;
+
+        if (SelectedArtEntry == null)
         {
-            SelectedArtEntry = ArtEntries[0];
-        }
-        else
-        {
-            SelectedArtEntry = null;
             SelectedArtBitmap = null;
         }
 
         ArtStatusText = "Loaded " + ArtEntries.Count + " art entries.";
+    }
+
+    private List<ArtEntry> LoadCachedOrBuildArtEntries(string folderPath)
+    {
+        if (activeProfile == null)
+        {
+            activeProfile = GetActiveProfile();
+        }
+
+        string profileId = activeProfile?.ProfileId ?? "default";
+
+        ArtCacheData? cache = artAndRadarCacheService.LoadArtCache(profileId);
+
+        if (artAndRadarCacheService.IsArtCacheValid(cache, folderPath) && cache?.ArtEntries != null)
+        {
+            return cache.ArtEntries.Select(CloneCachedArtEntry).ToList();
+        }
+
+        List<ArtEntry> builtEntries = artDataService.BuildEntries(
+            true,
+            true,
+            true,
+            string.Empty);
+
+        artAndRadarCacheService.SaveArtCache(profileId, folderPath, builtEntries);
+
+        return builtEntries;
+    }
+
+    private static ArtEntry CloneCachedArtEntry(CachedArtEntry source)
+    {
+        return new ArtEntry
+        {
+            IsFreeSlot = source.IsFreeSlot,
+            ArtId = source.ArtId,
+            FileIndex = source.FileIndex,
+            Type = source.Type,
+            SecondaryText = source.SecondaryText
+        };
+    }
+
+    private static bool MatchesArtSearch(ArtEntry entry, string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            return true;
+        }
+
+        string search = searchText.Trim();
+
+        return entry.ArtId.ToString().Contains(search, StringComparison.OrdinalIgnoreCase) ||
+               ("0x" + entry.ArtId.ToString("X4")).Contains(search, StringComparison.OrdinalIgnoreCase) ||
+               entry.Type.Contains(search, StringComparison.OrdinalIgnoreCase);
     }
 
     partial void OnSelectedArtSlotFilterChanged(string value)
@@ -471,6 +608,9 @@ public partial class MainWindowViewModel
     partial void OnSelectedArtEntryChanged(ArtEntry? value)
     {
         SelectedArtBitmap = artDataService.LoadBitmap(value);
+        SelectedArtVisibleBounds = artDataService.GetVisibleBounds(SelectedArtBitmap);
+        SelectedArtRadarColor = artRadarColorService.GetAverageVisibleColor(SelectedArtBitmap);
+        RefreshSelectedArtRadarColInfo();
         originalArtEditBitmap = SelectedArtBitmap != null ? CloneBitmap(SelectedArtBitmap) : null;
         artOverlayBitmap = null;
 
@@ -1962,5 +2102,137 @@ public partial class MainWindowViewModel
         {
             RebuildArtEntries();
         }
+    }
+
+    private void RefreshSelectedArtRadarColInfo()
+    {
+        if (SelectedArtEntry == null || !radarColService.IsLoaded)
+        {
+            SelectedArtCurrentRadarColor = Colors.Transparent;
+            SelectedArtRadarColorPending = false;
+            OnPropertyChanged(nameof(SelectedArtCurrentRadarColorText));
+            return;
+        }
+
+        SelectedArtCurrentRadarColor = radarColService.GetAvaloniaColor(SelectedArtEntry);
+        SelectedArtRadarColorPending = radarColService.HasPendingChange(SelectedArtEntry);
+
+        OnPropertyChanged(nameof(SelectedArtCurrentRadarBrush));
+        OnPropertyChanged(nameof(SelectedArtCurrentRadarColorText));
+        OnPropertyChanged(nameof(SelectedArtRadarMatchText));
+    }
+
+    [RelayCommand]
+    private void ApplyGeneratedRadarColorToSelectedArt()
+    {
+        if (SelectedArtEntry == null)
+        {
+            ArtStatusText = "No art selected.";
+            return;
+        }
+
+        ushort color = artRadarColorService.ConvertColorToUoColor(SelectedArtRadarColor);
+
+        bool success = radarColService.SetColor(
+            SelectedArtEntry,
+            color,
+            out string message);
+
+        ArtStatusText = message;
+
+        if (success)
+        {
+            RefreshSelectedArtRadarColInfo();
+        }
+    }
+
+    [RelayCommand]
+    private void RevertSelectedRadarColor()
+    {
+        bool success = radarColService.RevertSelected(SelectedArtEntry, out string message);
+        ArtStatusText = message;
+
+        if (success)
+        {
+            RefreshSelectedArtRadarColInfo();
+        }
+    }
+
+    public string SelectedArtRadarMatchText
+    {
+        get
+        {
+            if (!radarColService.IsLoaded || SelectedArtEntry == null)
+            {
+                return "Radar match: radarcol.mul not loaded";
+            }
+
+            int dr = SelectedArtRadarColor.R - SelectedArtCurrentRadarColor.R;
+            int dg = SelectedArtRadarColor.G - SelectedArtCurrentRadarColor.G;
+            int db = SelectedArtRadarColor.B - SelectedArtCurrentRadarColor.B;
+
+            int distance = Math.Abs(dr) + Math.Abs(dg) + Math.Abs(db);
+
+            if (distance == 0)
+            {
+                return "Radar match: Exact";
+            }
+
+            if (distance <= 12)
+            {
+                return "Radar match: Close | ΔR " + dr + ", ΔG " + dg + ", ΔB " + db;
+            }
+
+            return "Radar match: Different | ΔR " + dr + ", ΔG " + dg + ", ΔB " + db;
+        }
+    }
+
+    [RelayCommand]
+    private void ApplyGeneratedRadarColorToCheckedArt()
+    {
+        List<ArtEntry> checkedEntries = ArtEntries
+            .Where(entry => entry.IsChecked)
+            .ToList();
+
+        if (checkedEntries.Count == 0)
+        {
+            ArtStatusText = "No checked art entries.";
+            return;
+        }
+
+        int applied = 0;
+        int failed = 0;
+        string lastError = string.Empty;
+
+        foreach (ArtEntry entry in checkedEntries)
+        {
+            WriteableBitmap? bitmap = artDataService.LoadBitmap(entry);
+            Color generatedColor = artRadarColorService.GetAverageVisibleColor(bitmap);
+            ushort uoColor = artRadarColorService.ConvertColorToUoColor(generatedColor);
+
+            bool success = radarColService.SetColor(
+                entry,
+                uoColor,
+                out string message);
+
+            if (success)
+            {
+                applied++;
+            }
+            else
+            {
+                failed++;
+                lastError = message;
+            }
+        }
+
+        RefreshSelectedArtRadarColInfo();
+
+        ArtStatusText =
+            "Applied generated radar colors to checked art. Applied " +
+            applied +
+            ", failed " +
+            failed +
+            (string.IsNullOrWhiteSpace(lastError) ? "." : ". Last error: " + lastError);
     }
 }

@@ -141,6 +141,7 @@ public partial class MainWindowViewModel
         {
             SelectedSourceText = localPath;
             activeAnimationDataSource = null;
+            radarColService.Load(localPath, out _);
 
             await ReportLoadingProgressAsync(10, "Initializing animation sources for cached data...");
 
