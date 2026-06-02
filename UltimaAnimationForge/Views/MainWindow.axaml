@@ -556,6 +556,24 @@
                             Padding="14,6"
                             MinHeight="28" />
 
+                    <Button Content="Sounds"
+                            Command="{Binding ShowSoundsCommand}"
+                            CornerRadius="0"
+                            Padding="14,6"
+                            MinHeight="28" />
+
+                    <Button Content="Map"
+                            Command="{Binding ShowMapsCommand}"
+                            CornerRadius="0"
+                            Padding="14,6"
+                            MinHeight="28" />
+
+                    <Button Content="Map Maker"
+                            Command="{Binding ShowMapMakerCommand}"
+                            CornerRadius="0"
+                            Padding="14,6"
+                            MinHeight="28" />
+
                     <Button Content="Wearables"
                             Command="{Binding ShowWearableWizardCommand}"/>
 
@@ -1190,6 +1208,180 @@
                     </Grid>
                 </Grid>
             </Border>
+
+            <!-- Maps Tab -->
+            <Grid Grid.Column="0"
+                  Grid.ColumnSpan="3"
+                  IsVisible="{Binding ShowMapsPanel}"
+                  ColumnDefinitions="150,*,110"
+                  RowDefinitions="*"
+                  Margin="0"
+                  ColumnSpacing="6"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+
+                <!-- Left Panel -->
+                <Border Grid.Column="0"
+                        Background="#20262E"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="8">
+
+                    <StackPanel Spacing="8">
+
+                        <TextBlock Text="Map Viewer"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2"/>
+
+                        <TextBlock Text="Map" Foreground="#AAB4C0"/>
+
+                        <ComboBox ItemsSource="{Binding MapOptions}"
+                                  SelectedItem="{Binding SelectedMapOption}"
+                                  DisplayMemberBinding="{Binding DisplayText}"
+                                  FontSize="12"/>
+
+                        <Grid ColumnDefinitions="72,72"
+                              ColumnSpacing="6">
+
+                            <StackPanel Grid.Column="0" Spacing="3">
+                                <TextBlock Text="X" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding MapViewX, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="7168"
+                                               Increment="64"
+                                               FormatString="0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="3">
+                                <TextBlock Text="Y" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding MapViewY, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="4096"
+                                               Increment="64"
+                                               FormatString="0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Zoom" Foreground="#AAB4C0"/>
+
+                        <NumericUpDown Value="{Binding MapZoom, Mode=TwoWay}"
+                                       Minimum="0.125"
+                                       Maximum="4"
+                                       Increment="0.125"
+                                       FormatString="0.000"/>
+
+                        <Grid ColumnDefinitions="44,44,44"
+                              RowDefinitions="Auto,Auto,Auto"
+                              RowSpacing="4"
+                              ColumnSpacing="4"
+                              HorizontalAlignment="Center">
+
+                            <Button Grid.Row="0" Grid.Column="1" Content="↑" Width="44" Command="{Binding MapMoveUpCommand}"/>
+                            <Button Grid.Row="1" Grid.Column="0" Content="←" Width="44" Command="{Binding MapMoveLeftCommand}"/>
+                            <Button Grid.Row="1" Grid.Column="1" Content="●" Width="44" Command="{Binding MapGoOriginCommand}"/>
+                            <Button Grid.Row="1" Grid.Column="2" Content="→" Width="44" Command="{Binding MapMoveRightCommand}"/>
+                            <Button Grid.Row="2" Grid.Column="1" Content="↓" Width="44" Command="{Binding MapMoveDownCommand}"/>
+                        </Grid>
+
+                        <Separator/>
+
+                        <CheckBox Content="Altitude shading"
+                                  IsChecked="{Binding MapUseAltitudeShading}"/>
+
+                        <CheckBox Content="Show statics"
+                                  IsChecked="{Binding MapShowStatics}"/>
+
+                        <Button Content="Refresh Map"
+                                Command="{Binding RefreshMapPreviewCommand}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Main Map Area -->
+                <Border Grid.Column="1"
+                        Background="#111317"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="6">
+
+                    <Grid RowDefinitions="Auto,*"
+                          RowSpacing="6">
+
+                        <Border Grid.Row="0"
+                                Background="#171C22"
+                                BorderBrush="#343B46"
+                                BorderThickness="1"
+                                CornerRadius="5"
+                                Padding="6">
+
+                            <TextBlock Text="{Binding MapStatusText}"
+                                       Foreground="#AAB4C0"/>
+                        </Border>
+
+                        <Border Grid.Row="1"
+                                Background="#0B0E12"
+                                PointerPressed="MapPreview_PointerPressed"
+                                PointerWheelChanged="MapPreview_PointerWheelChanged"
+                                ClipToBounds="True">
+
+                            <Viewbox Stretch="Fill"
+                                     StretchDirection="Both"
+                                     HorizontalAlignment="Stretch"
+                                     VerticalAlignment="Stretch">
+
+                                <Image Source="{Binding MapPreviewBitmap}"
+                                       Stretch="Fill"/>
+                            </Viewbox>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Right Panel -->
+                <Border Grid.Column="2"
+                        Background="#20262E"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="8">
+
+                    <StackPanel Spacing="8">
+
+                        <TextBlock Text="View Tools"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2"/>
+
+                        <Button Content="Zoom Full"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding MapZoomFullCommand}"/>
+
+                        <Button Content="Zoom 50%"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding MapZoomHalfCommand}"/>
+
+                        <Button Content="Zoom 100%"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding MapZoomOneCommand}"/>
+
+                        <Button Content="Origin"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding MapGoOriginCommand}"/>
+
+                        <Separator/>
+
+                        <TextBlock Text="Map Info"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2"/>
+
+                        <TextBlock Text="{Binding MapStatusText}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#AAB4C0"/>
+
+                    </StackPanel>
+                </Border>
+            </Grid>
 
             <!-- center -->
             <Grid Grid.Column="1"
@@ -1858,6 +2050,542 @@
                     </Grid>
                 </Grid>
 
+                <!-- Map Maker Tab -->
+                <Grid IsVisible="{Binding ShowMapMakerPanel}"
+                      RowDefinitions="*"
+                      Margin="8"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch">
+
+                    <Grid ColumnDefinitions="240,*,220"
+                          ColumnSpacing="8">
+
+                        <!-- Left terrain panel -->
+                        <Border Grid.Column="0"
+                                Background="#20262E"
+                                BorderBrush="#343B46"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+
+                            <Grid RowDefinitions="Auto,*">
+                                <TextBlock Grid.Row="0"
+                                           Text="Dragon Terrain"
+                                           FontWeight="Bold"
+                                           Foreground="#E6EDF3"
+                                           Margin="0,0,0,8" />
+
+                                <ListBox Grid.Row="1"
+                                         ItemsSource="{Binding DragonTerrainColors}"
+                                         SelectedItem="{Binding SelectedDragonTerrainColor, Mode=TwoWay}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnDefinitions="28,*"
+                                                  ColumnSpacing="8"
+                                                  Margin="0,3">
+                                                <Border Grid.Column="0"
+                                                        Width="22"
+                                                        Height="22"
+                                                        Background="{Binding Brush}" />
+
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding DisplayText}"
+                                                           Foreground="#D8E1EA"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+
+                        <!-- Map canvas -->
+                        <Border Grid.Column="1"
+                                MinWidth="800"
+                                MinHeight="700"
+                                Background="#111317"
+                                BorderBrush="#343B46"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8"
+                                ClipToBounds="True"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch">
+
+                            <Grid RowDefinitions="*,Auto"
+                                  RowSpacing="6">
+
+                                <ScrollViewer Grid.Row="0"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto">
+
+                                    <Image Source="{Binding DragonMapBitmap}"
+                                           Tag="{Binding DragonMapRefreshKey}"
+                                           Width="{Binding DragonMapImageWidth}"
+                                           Height="{Binding DragonMapImageHeight}"
+                                           Stretch="Fill"
+                                           RenderOptions.BitmapInterpolationMode="None"
+                                           PointerPressed="DragonMapPointerPressed"
+                                           PointerMoved="DragonMapPointerMoved" />
+
+                                </ScrollViewer>
+
+                                <TextBlock Grid.Row="1"
+                                           Text="{Binding DragonMapHoverStatusText}"
+                                           Foreground="#9FB3C8"
+                                           FontSize="12" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Right tools panel -->
+                        <Border Grid.Column="2"
+                                Background="#20262E"
+                                BorderBrush="#343B46"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="8">
+
+                                    <TextBlock Text="Map Tools"
+                                               FontWeight="Bold"
+                                               Foreground="#E6EDF3" />
+
+                                    <Button Content="New Dragon Map"
+                                            Command="{Binding NewDragonMapCommand}" />
+
+                                    <Button Content="Open BMP"
+                                            Click="OpenDragonMapButton_Click" />
+
+                                    <Button Content="Save BMP"
+                                            Click="SaveDragonMapButton_Click" />
+
+                                    <Button Content="Export map0 MUL"
+                                            Click="ExportDragonMapMulButton_Click" />
+
+                                    <Button Content="Validate"
+                                            Command="{Binding ValidateDragonMapCommand}" />
+
+                                    <Button Content="Undo"
+                                            Command="{Binding UndoDragonMapCommand}" />
+
+                                    <Button Content="Fill Canvas"
+                                            Command="{Binding FillDragonMapCanvasCommand}" />
+
+                                    <Separator />
+
+                                    <TextBlock Text="Tool"
+                                               Foreground="#C7D1DB" />
+
+                                    <ComboBox ItemsSource="{Binding DragonMapTools}"
+                                              SelectedItem="{Binding SelectedDragonMapTool, Mode=TwoWay}" />
+
+                                    <TextBlock Text="Brush Size"
+                                               Foreground="#C7D1DB" />
+
+                                    <NumericUpDown Minimum="1"
+                                                   Maximum="128"
+                                                   Increment="1"
+                                                   FormatString="0"
+                                                   Value="{Binding DragonBrushSize, Mode=TwoWay}" />
+
+                                    <TextBlock Text="Brush Shape"
+                                               Foreground="#C7D1DB" />
+
+                                    <ComboBox ItemsSource="{Binding DragonBrushShapes}"
+                                              SelectedItem="{Binding SelectedDragonBrushShape, Mode=TwoWay}" />
+
+                                    <TextBlock Text="Stamp"
+                                               Foreground="#C7D1DB" />
+
+                                    <ComboBox ItemsSource="{Binding DragonMapStamps}"
+                                              SelectedItem="{Binding SelectedDragonMapStamp, Mode=TwoWay}" />
+
+                                    <TextBlock Text="Zoom"
+                                               Foreground="#C7D1DB" />
+
+                                    <NumericUpDown Minimum="0.05"
+                                                   Maximum="4"
+                                                   Increment="0.05"
+                                                   FormatString="0.00"
+                                                   Value="{Binding DragonMapZoom, Mode=TwoWay}" />
+
+                                    <TextBlock Text="{Binding DragonMapZoomText}"
+                                               Foreground="#9FB3C8" />
+
+                                    <Separator />
+
+                                    <TextBlock Text="{Binding DragonMapStatusText}"
+                                               TextWrapping="Wrap"
+                                               Foreground="#9FB3C8" />
+
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- Sound Tab -->
+                <Grid IsVisible="{Binding ShowSoundsPanel}"
+                      RowDefinitions="Auto,*"
+                      RowSpacing="8"
+                      Margin="8">
+
+                    <!-- Top Sound Toolbar -->
+                    <Border Grid.Row="0"
+                            Background="#20262E"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10">
+
+                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto"
+                              ColumnSpacing="8">
+
+                            <Button Grid.Column="0"
+                                    Content="Load Sounds"
+                                    Command="{Binding LoadSoundsCommand}" />
+
+                            <Button Grid.Column="1"
+                                    Content="Save Sounds"
+                                    Command="{Binding SaveSoundsCommand}" />
+
+                            <Button Grid.Column="2"
+                                    Content="Import Audio"
+                                    Command="{Binding ImportSelectedSoundCommand}" />
+
+                            <Button Grid.Column="3"
+                                    Content="Export Selected"
+                                    Command="{Binding ExportSelectedSoundCommand}" />
+
+                            <Button Grid.Column="4"
+                                    Content="Export All"
+                                    Command="{Binding ExportAllSoundsCommand}" />
+
+                            <Button Grid.Column="5"
+                                    Content="Find Free"
+                                    Command="{Binding FindFirstFreeSoundSlotCommand}" />
+
+                            <TextBox Grid.Column="6"
+                                     Watermark="Search sound ID, hex, or name..."
+                                     Text="{Binding SoundSearchText, Mode=TwoWay}" />
+
+                            <CheckBox Grid.Column="7"
+                                      Content="Free"
+                                      IsChecked="{Binding ShowFreeSoundSlots}" />
+
+                            <CheckBox Grid.Column="8"
+                                      Content="Sort Name"
+                                      IsChecked="{Binding SortSoundsByName}" />
+
+                            <Button Grid.Column="9"
+                                    Content="Remove"
+                                    Command="{Binding RemoveSelectedSoundCommand}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Main Layout -->
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="360,360,*"
+                          ColumnSpacing="8">
+
+                        <!-- Sound List -->
+                        <Border Grid.Column="0"
+                                Background="#181D24"
+                                BorderBrush="#343B46"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+
+                            <Grid RowDefinitions="Auto,*"
+                                  RowSpacing="8">
+
+                                <TextBlock Text="Sounds"
+                                           FontSize="16"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2" />
+
+                                <ListBox Grid.Row="1"
+                                         ItemsSource="{Binding SoundEntries}"
+                                         SelectedItem="{Binding SelectedSoundEntry}"
+                                         BorderThickness="0"
+                                         Background="Transparent">
+
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid RowDefinitions="Auto,Auto">
+                                                <TextBlock Text="{Binding DisplayText}"
+                                                           Foreground="#E4EAF2" />
+
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding LengthText}"
+                                                           Foreground="#8F9AA8"
+                                                           FontSize="11" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+
+                        <!-- Music List -->
+                        <Border Grid.Column="1"
+                                Background="#181D24"
+                                BorderBrush="#343B46"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+
+                            <Grid RowDefinitions="Auto,Auto,*,Auto"
+                                  RowSpacing="8">
+
+                                <TextBlock Text="Music / MP3"
+                                           FontSize="16"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2" />
+
+                                <Grid Grid.Row="1"
+                                      ColumnDefinitions="*,Auto"
+                                      ColumnSpacing="8">
+
+                                    <TextBox Grid.Column="0"
+                                             Watermark="Search music ID or name..."
+                                             Text="{Binding MusicSearchText, Mode=TwoWay}" />
+
+                                    <Button Grid.Column="1"
+                                            Content="Load"
+                                            Command="{Binding LoadMusicCommand}" />
+                                </Grid>
+
+                                <ListBox Grid.Row="2"
+                                         ItemsSource="{Binding MusicEntries}"
+                                         SelectedItem="{Binding SelectedMusicEntry}"
+                                         BorderThickness="0"
+                                         Background="Transparent">
+
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid RowDefinitions="Auto,Auto">
+                                                <TextBlock Text="{Binding DisplayText}"
+                                                           Foreground="#E4EAF2" />
+
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding StatusText}"
+                                                           Foreground="#8F9AA8"
+                                                           FontSize="11" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <TextBlock Grid.Row="3"
+                                           Text="{Binding MusicStatusText}"
+                                           Foreground="#8F9AA8"
+                                           TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Right Tools / Details -->
+                        <Border Grid.Column="2"
+                                Background="#20262E"
+                                BorderBrush="#343B46"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12">
+
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="12">
+
+                                    <TextBlock Text="Audio Tools"
+                                               FontSize="18"
+                                               FontWeight="Bold"
+                                               Foreground="#E4EAF2" />
+
+                                    <!-- Sound Preview -->
+                                    <Border Background="#181D24"
+                                            BorderBrush="#3A4350"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10">
+
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="Sound Preview"
+                                                       FontWeight="Bold"
+                                                       Foreground="#E4EAF2" />
+
+                                            <TextBlock Text="{Binding SelectedSoundInfoText}"
+                                                       Foreground="#AAB4C0"
+                                                       TextWrapping="Wrap" />
+
+                                            <Border Background="#11161D"
+                                                    BorderBrush="#3A4350"
+                                                    BorderThickness="1"
+                                                    CornerRadius="6"
+                                                    Height="108"
+                                                    Padding="6">
+
+                                                <Image Source="{Binding SoundWaveformBitmap}"
+                                                       Stretch="Fill"
+                                                       HorizontalAlignment="Stretch"
+                                                       VerticalAlignment="Stretch" />
+                                            </Border>
+
+                                            <StackPanel Orientation="Horizontal"
+                                                        Spacing="8">
+                                                <Button Content="Play Sound"
+                                                        Command="{Binding PlaySelectedSoundCommand}" />
+
+                                                <Button Content="Stop"
+                                                        Command="{Binding StopSoundCommand}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Required Format -->
+                                    <Border Background="#181D24"
+                                            BorderBrush="#3A4350"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="8">
+
+                                        <TextBlock
+                                        Text="UO Format: PCM WAV  |  Mono  |  22050 Hz  |  16-bit"
+                                        Foreground="#AAB4C0"/>
+                                    </Border>
+
+                                    <!-- Music Controls -->
+                                    <Border Background="#181D24"
+                                            BorderBrush="#3A4350"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10">
+
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="Music Controls"
+                                                       FontWeight="Bold"
+                                                       Foreground="#E4EAF2" />
+
+                                            <WrapPanel>
+                                                <Button Content="Import Music"
+                                                        Margin="0,0,8,8"
+                                                        Command="{Binding ImportMusicCommand}" />
+
+                                                <CheckBox Content="Loop"
+                                                          Margin="0,0,8,8"
+                                                          IsChecked="{Binding ImportedMusicShouldLoop}" />
+
+                                                <Button Content="Play Music"
+                                                        Margin="0,0,8,8"
+                                                        Command="{Binding PlaySelectedMusicCommand}" />
+
+                                                <Button Content="Stop Music"
+                                                        Margin="0,0,8,8"
+                                                        Command="{Binding StopMusicCommand}" />
+
+                                                <Button Content="Music → Sound"
+                                                        Margin="0,0,8,8"
+                                                        Command="{Binding ConvertSelectedMusicToSoundCommand}" />
+
+                                                <Button Content="Remove Music"
+                                                        Margin="0,0,8,8"
+                                                        Command="{Binding RemoveSelectedMusicCommand}" />
+
+                                                <CheckBox Content="Delete MP3"
+                                                          Margin="0,0,8,8"
+                                                          IsChecked="{Binding DeleteMusicFileOnRemove}" />
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Edit Music Config Entry -->
+                                    <Border Background="#181D24"
+                                            BorderBrush="#3A4350"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10">
+
+                                        <Grid RowDefinitions="Auto,Auto,Auto"
+                                              RowSpacing="10">
+
+                                            <TextBlock Text="Edit Music Config Entry"
+                                                       FontWeight="Bold"
+                                                       Foreground="#E4EAF2" />
+
+                                            <Grid Grid.Row="1"
+                                                  ColumnDefinitions="80,*"
+                                                  RowDefinitions="Auto,Auto,Auto"
+                                                  ColumnSpacing="10"
+                                                  RowSpacing="8">
+
+                                                <TextBlock Grid.Row="0"
+                                                           Grid.Column="0"
+                                                           Text="ID"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="#AAB4C0" />
+
+                                                <NumericUpDown Grid.Row="0"
+                                                               Grid.Column="1"
+                                                               Width="140"
+                                                               HorizontalAlignment="Left"
+                                                               Value="{Binding EditableMusicId, Mode=TwoWay}"
+                                                               Minimum="0"
+                                                               Maximum="9999"
+                                                               FormatString="0" />
+
+                                                <TextBlock Grid.Row="1"
+                                                           Grid.Column="0"
+                                                           Text="File"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="#AAB4C0" />
+
+                                                <TextBox Grid.Row="1"
+                                                         Grid.Column="1"
+                                                         MinWidth="320"
+                                                         HorizontalAlignment="Stretch"
+                                                         Text="{Binding EditableMusicFileName, Mode=TwoWay}" />
+
+                                                <CheckBox Grid.Row="2"
+                                                          Grid.Column="1"
+                                                          Content="Loop"
+                                                          IsChecked="{Binding EditableMusicLoop}" />
+                                            </Grid>
+
+                                            <Button Grid.Row="2"
+                                                    Content="Save Entry"
+                                                    HorizontalAlignment="Left"
+                                                    Command="{Binding SaveSelectedMusicEntryCommand}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Music Info -->
+                                    <Border Background="#181D24"
+                                            BorderBrush="#3A4350"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10">
+
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="Selected Music Info"
+                                                       FontWeight="Bold"
+                                                       Foreground="#E4EAF2" />
+
+                                            <TextBlock Text="{Binding SelectedMusicInfoText}"
+                                                       Foreground="#AAB4C0"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <TextBlock Text="{Binding SoundStatusText}"
+                                               Foreground="#8F9AA8"
+                                               TextWrapping="Wrap" />
+
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+
                 <!-- Cliloc Tab -->
                 <Grid Grid.Column="0"
                       Grid.ColumnSpan="3"
@@ -2498,7 +3226,6 @@
                         </Grid>
                     </Grid>
                 </Grid>
-
 
                 <!-- Gump Builder Tab -->
                 <Grid Grid.Column="0"
@@ -3954,6 +4681,7 @@
                         </Border>
                     </Grid>
                 </Grid>
+
                 <!-- RadarCol Tab -->
                 <Grid IsVisible="{Binding ShowRadarColPanel}"
                       ColumnDefinitions="320,*,320"
@@ -5331,6 +6059,7 @@
                         </Grid>
                     </Grid>
                 </Grid>
+
                 <!-- Normal Editor Preview -->
                 <Grid Grid.Column="0"
                       RowDefinitions="Auto,*"

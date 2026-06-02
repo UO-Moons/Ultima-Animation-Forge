@@ -31,8 +31,25 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Windows.Extensions" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Scripts\Dragon\**\*.*"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="UAF.ico" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
 
   <ItemGroup>
     <Compile Update="Views\DetachedPreviewWindow.axaml.cs">

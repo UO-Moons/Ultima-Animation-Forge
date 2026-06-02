@@ -36,6 +36,9 @@ public partial class MainWindowViewModel : ViewModelBase
     public ICommand ImportClilocCommand { get; }
     public ICommand JumpToClilocCommand { get; }
     public ICommand ShowRadarColCommand { get; }
+    public ICommand ShowSoundsCommand { get; }
+    public ICommand ShowMapsCommand { get; }
+    public ICommand ShowMapMakerCommand { get; }
 
     [ObservableProperty]
     private MainToolTab activeToolTab = MainToolTab.AnimationEditor;
@@ -53,6 +56,9 @@ public partial class MainWindowViewModel : ViewModelBase
     public bool ShowWearableWizardPanel => ActiveToolTab == MainToolTab.Wearables;
     public bool ShowRadarColPanel => ActiveToolTab == MainToolTab.RadarCol;
     public bool ShowMultisPanel => ActiveToolTab == MainToolTab.Multis;
+    public bool ShowSoundsPanel => ActiveToolTab == MainToolTab.Sounds;
+    public bool ShowMapsPanel => ActiveToolTab == MainToolTab.Maps;
+    public bool ShowMapMakerPanel => ActiveToolTab == MainToolTab.MapMaker;
 
     partial void OnActiveToolTabChanged(MainToolTab value)
     {
@@ -69,6 +75,9 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowClilocPanel));
         OnPropertyChanged(nameof(ShowRadarColPanel));
         OnPropertyChanged(nameof(ShowMultisPanel));
+        OnPropertyChanged(nameof(ShowSoundsPanel));
+        OnPropertyChanged(nameof(ShowMapsPanel));
+        OnPropertyChanged(nameof(ShowMapMakerPanel));
 
         if (value == MainToolTab.AnimationBrowser)
         {
@@ -160,6 +169,21 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 LoadMultis();
             }
+        }
+
+        if (value == MainToolTab.Sounds && SoundEntries.Count == 0)
+        {
+            LoadSounds();
+        }
+
+        if (value == MainToolTab.Maps && MapPreviewBitmap == null)
+        {
+            RefreshMapPreview();
+        }
+
+        if (value == MainToolTab.MapMaker && DragonTerrainColors.Count == 0)
+        {
+            InitializeMapMaker();
         }
     }
 
@@ -975,6 +999,19 @@ public partial class MainWindowViewModel : ViewModelBase
         ClearCompareOverlayCommand = new RelayCommand(ClearCompareOverlay);
         ShowAnimationEditorCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.AnimationEditor);
         ShowAnimationBrowserCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.AnimationBrowser);
+        ShowSoundsCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Sounds);
+        ShowMapsCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Maps);
+        InitializeMapsTab();
+        ShowMapMakerCommand = new RelayCommand(() =>
+        {
+            ActiveToolTab = MainToolTab.MapMaker;
+
+            if (DragonTerrainColors.Count == 0)
+            {
+                InitializeMapMaker();
+            }
+        });
+
         ToggleCompareOverlayDragModeCommand = new RelayCommand(() =>
         {
             CompareOverlayDragModeEnabled = !CompareOverlayDragModeEnabled;
