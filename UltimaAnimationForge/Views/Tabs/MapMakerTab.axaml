@@ -1,0 +1,180 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.MapMakerTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid RowDefinitions="*"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+
+        <Grid ColumnDefinitions="240,*,220"
+              ColumnSpacing="8">
+
+            <!-- Left terrain panel -->
+            <Border Grid.Column="0"
+                    Background="#20262E"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="8">
+
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0"
+                               Text="Dragon Terrain"
+                               FontWeight="Bold"
+                               Foreground="#E6EDF3"
+                               Margin="0,0,0,8" />
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding DragonTerrainColors}"
+                             SelectedItem="{Binding SelectedDragonTerrainColor, Mode=TwoWay}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="28,*"
+                                      ColumnSpacing="8"
+                                      Margin="0,3">
+                                    <Border Grid.Column="0"
+                                            Width="22"
+                                            Height="22"
+                                            Background="{Binding Brush}" />
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding DisplayText}"
+                                               Foreground="#D8E1EA"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Map canvas -->
+            <Border Grid.Column="1"
+                    MinWidth="800"
+                    MinHeight="700"
+                    Background="#111317"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="8"
+                    ClipToBounds="True"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+
+                <Grid RowDefinitions="*,Auto"
+                      RowSpacing="6">
+
+                    <ScrollViewer Grid.Row="0"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+
+                        <Image Source="{Binding DragonMapBitmap}"
+                               Tag="{Binding DragonMapRefreshKey}"
+                               Width="{Binding DragonMapImageWidth}"
+                               Height="{Binding DragonMapImageHeight}"
+                               Stretch="Fill"
+                               RenderOptions.BitmapInterpolationMode="None"
+                               PointerPressed="DragonMapPointerPressed"
+                               PointerMoved="DragonMapPointerMoved" />
+
+                    </ScrollViewer>
+
+                    <TextBlock Grid.Row="1"
+                               Text="{Binding DragonMapHoverStatusText}"
+                               Foreground="#9FB3C8"
+                               FontSize="12" />
+                </Grid>
+            </Border>
+
+            <!-- Right tools panel -->
+            <Border Grid.Column="2"
+                    Background="#20262E"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="8">
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="8">
+
+                        <TextBlock Text="Map Tools"
+                                   FontWeight="Bold"
+                                   Foreground="#E6EDF3" />
+
+                        <Button Content="New Dragon Map"
+                                Command="{Binding NewDragonMapCommand}" />
+
+                        <Button Content="Open BMP"
+                                Click="OpenDragonMapButton_Click" />
+
+                        <Button Content="Save BMP"
+                                Click="SaveDragonMapButton_Click" />
+
+                        <Button Content="Export map0 MUL"
+                                Click="ExportDragonMapMulButton_Click" />
+
+                        <Button Content="Validate"
+                                Command="{Binding ValidateDragonMapCommand}" />
+
+                        <Button Content="Undo"
+                                Command="{Binding UndoDragonMapCommand}" />
+
+                        <Button Content="Fill Canvas"
+                                Command="{Binding FillDragonMapCanvasCommand}" />
+
+                        <Separator />
+
+                        <TextBlock Text="Tool"
+                                   Foreground="#C7D1DB" />
+
+                        <ComboBox ItemsSource="{Binding DragonMapTools}"
+                                  SelectedItem="{Binding SelectedDragonMapTool, Mode=TwoWay}" />
+
+                        <TextBlock Text="Brush Size"
+                                   Foreground="#C7D1DB" />
+
+                        <NumericUpDown Minimum="1"
+                                       Maximum="128"
+                                       Increment="1"
+                                       FormatString="0"
+                                       Value="{Binding DragonBrushSize, Mode=TwoWay}" />
+
+                        <TextBlock Text="Brush Shape"
+                                   Foreground="#C7D1DB" />
+
+                        <ComboBox ItemsSource="{Binding DragonBrushShapes}"
+                                  SelectedItem="{Binding SelectedDragonBrushShape, Mode=TwoWay}" />
+
+                        <TextBlock Text="Stamp"
+                                   Foreground="#C7D1DB" />
+
+                        <ComboBox ItemsSource="{Binding DragonMapStamps}"
+                                  SelectedItem="{Binding SelectedDragonMapStamp, Mode=TwoWay}" />
+
+                        <TextBlock Text="Zoom"
+                                   Foreground="#C7D1DB" />
+
+                        <NumericUpDown Minimum="0.05"
+                                       Maximum="4"
+                                       Increment="0.05"
+                                       FormatString="0.00"
+                                       Value="{Binding DragonMapZoom, Mode=TwoWay}" />
+
+                        <TextBlock Text="{Binding DragonMapZoomText}"
+                                   Foreground="#9FB3C8" />
+
+                        <Separator />
+
+                        <TextBlock Text="{Binding DragonMapStatusText}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#9FB3C8" />
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+    </Grid>
+</UserControl>

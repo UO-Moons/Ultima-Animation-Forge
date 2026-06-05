@@ -4,6 +4,16 @@ using System.Collections.Generic;
 
 namespace UltimaAnimationForge.Models;
 
+public sealed class UoMapGotoLocation
+{
+    public string Name { get; set; } = string.Empty;
+    public int MapId { get; set; }
+    public int X { get; set; }
+    public int Y { get; set; }
+
+    public string DisplayText => $"{Name} ({X}, {Y})";
+}
+
 public sealed class UoMapOption
 {
     public string Name { get; set; } = string.Empty;

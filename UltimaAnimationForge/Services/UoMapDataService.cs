@@ -44,8 +44,13 @@ public sealed class UoMapDataService
         UoMapAltitudeMode altitudeMode,
         UoMapAltitudePreset altitudePreset,
         int altitudeIntensity,
-        bool showStatics,
-        List<UoMapMarker>? markers)
+bool showStatics,
+List<UoMapMarker>? markers,
+bool showCenterCross,
+bool showClientCross,
+int clientX,
+int clientY,
+List<UoMapGotoLocation>? townMarkers)
     {
         try
         {
@@ -259,6 +264,46 @@ public sealed class UoMapDataService
                     altitudePreset,
                     altitudeIntensity);
             }
+
+            if (showCenterCross)
+            {
+                DrawOverlayCross(
+                    pixels,
+                    safeOutputWidth,
+                    safeOutputHeight,
+                    safeOutputWidth / 2,
+                    safeOutputHeight / 2,
+                    0,
+                    255,
+                    255);
+            }
+
+            if (showClientCross)
+            {
+                DrawWorldCross(
+                    pixels,
+                    safeOutputWidth,
+                    safeOutputHeight,
+                    startX,
+                    startY,
+                    safeWorldWidth,
+                    safeWorldHeight,
+                    clientX,
+                    clientY,
+                    255,
+                    255,
+                    0);
+            }
+
+            DrawTownMarkers(
+    pixels,
+    safeOutputWidth,
+    safeOutputHeight,
+    startX,
+    startY,
+    safeWorldWidth,
+    safeWorldHeight,
+    townMarkers);
 
             DrawMarkers(
                 pixels,
@@ -804,5 +849,138 @@ public sealed class UoMapDataService
                 pixels[pixel + 2] = (byte)Math.Clamp(r, 0, 255);
             }
         }
+    }
+
+    private static void DrawWorldCross(
+    byte[] pixels,
+    int outputWidth,
+    int outputHeight,
+    int startX,
+    int startY,
+    int worldWidth,
+    int worldHeight,
+    int worldX,
+    int worldY,
+    byte r,
+    byte g,
+    byte b)
+    {
+        int relativeX = worldX - startX;
+        int relativeY = worldY - startY;
+
+        if (relativeX < 0 || relativeY < 0 || relativeX >= worldWidth || relativeY >= worldHeight)
+        {
+            return;
+        }
+
+        int drawX = (relativeX * outputWidth) / worldWidth;
+        int drawY = (relativeY * outputHeight) / worldHeight;
+
+        DrawOverlayCross(pixels, outputWidth, outputHeight, drawX, drawY, r, g, b);
+    }
+
+    private static void DrawOverlayCross(
+        byte[] pixels,
+        int width,
+        int height,
+        int x,
+        int y,
+        byte r,
+        byte g,
+        byte b)
+    {
+        for (int offset = -10; offset <= 10; offset++)
+        {
+            WriteOverlayPixel(pixels, width, height, x + offset, y, 0, 0, 0);
+            WriteOverlayPixel(pixels, width, height, x, y + offset, 0, 0, 0);
+        }
+
+        for (int offset = -8; offset <= 8; offset++)
+        {
+            WriteOverlayPixel(pixels, width, height, x + offset, y, r, g, b);
+            WriteOverlayPixel(pixels, width, height, x, y + offset, r, g, b);
+        }
+    }
+
+    private static void WriteOverlayPixel(
+        byte[] pixels,
+        int width,
+        int height,
+        int x,
+        int y,
+        byte r,
+        byte g,
+        byte b)
+    {
+        if (x < 0 || y < 0 || x >= width || y >= height)
+        {
+            return;
+        }
+
+        int index = ((y * width) + x) * 4;
+
+        pixels[index + 0] = b;
+        pixels[index + 1] = g;
+        pixels[index + 2] = r;
+        pixels[index + 3] = 255;
+    }
+
+    private static void DrawTownMarkers(
+    byte[] pixels,
+    int outputWidth,
+    int outputHeight,
+    int startX,
+    int startY,
+    int worldWidth,
+    int worldHeight,
+    List<UoMapGotoLocation>? towns)
+    {
+        if (towns == null || towns.Count == 0)
+        {
+            return;
+        }
+
+        foreach (UoMapGotoLocation town in towns)
+        {
+            int relativeX = town.X - startX;
+            int relativeY = town.Y - startY;
+
+            if (relativeX < 0 || relativeY < 0 || relativeX >= worldWidth || relativeY >= worldHeight)
+            {
+                continue;
+            }
+
+            int drawX = (relativeX * outputWidth) / worldWidth;
+            int drawY = (relativeY * outputHeight) / worldHeight;
+
+            DrawTownDot(pixels, outputWidth, outputHeight, drawX, drawY);
+        }
+    }
+
+    private static void DrawTownDot(byte[] pixels, int width, int height, int x, int y)
+    {
+        for (int yy = -5; yy <= 5; yy++)
+        {
+            for (int xx = -5; xx <= 5; xx++)
+            {
+                if ((xx * xx) + (yy * yy) <= 25)
+                {
+                    WriteOverlayPixel(pixels, width, height, x + xx, y + yy, 0, 0, 0);
+                }
+            }
+        }
+
+        for (int yy = -3; yy <= 3; yy++)
+        {
+            for (int xx = -3; xx <= 3; xx++)
+            {
+                if ((xx * xx) + (yy * yy) <= 9)
+                {
+                    WriteOverlayPixel(pixels, width, height, x + xx, y + yy, 255, 255, 255);
+                }
+            }
+        }
+
+        DrawOverlayCross(pixels, width, height, x, y, 255, 80, 80);
     }
 }

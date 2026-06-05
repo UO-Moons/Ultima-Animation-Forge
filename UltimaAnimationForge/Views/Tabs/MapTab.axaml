@@ -1,0 +1,302 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.MapTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid ColumnDefinitions="320,12,*,12,260"
+          RowDefinitions="*"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+
+        <!-- Left Panel -->
+        <Border Grid.Column="0"
+                Background="#20262E"
+                BorderBrush="#343B46"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="10">
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="10">
+
+                    <TextBlock Text="Map Viewer"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="#E4EAF2"/>
+
+                    <TextBlock Text="Map" Foreground="#AAB4C0"/>
+                    <ComboBox ItemsSource="{Binding MapOptions}"
+                              SelectedItem="{Binding SelectedMapOption}"
+                              DisplayMemberBinding="{Binding DisplayText}"/>
+
+                    <Grid ColumnDefinitions="*,*"
+                          ColumnSpacing="10">
+
+                        <StackPanel Grid.Column="0" Spacing="3">
+                            <TextBlock Text="X" Foreground="#AAB4C0"/>
+                            <NumericUpDown Width="130"
+                                           Value="{Binding MapViewX, Mode=TwoWay}"
+                                           Minimum="0"
+                                           Maximum="7168"
+                                           Increment="64"
+                                           FormatString="0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="3">
+                            <TextBlock Text="Y" Foreground="#AAB4C0"/>
+                            <NumericUpDown Width="130"
+                                           Value="{Binding MapViewY, Mode=TwoWay}"
+                                           Minimum="0"
+                                           Maximum="4096"
+                                           Increment="64"
+                                           FormatString="0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Zoom" Foreground="#AAB4C0"/>
+                    <NumericUpDown Value="{Binding MapZoom, Mode=TwoWay}"
+                                   Minimum="0.125"
+                                   Maximum="4"
+                                   Increment="0.125"
+                                   FormatString="0.000"/>
+
+                    <Grid ColumnDefinitions="52,52,52"
+                          RowDefinitions="Auto,Auto,Auto"
+                          RowSpacing="5"
+                          ColumnSpacing="5"
+                          HorizontalAlignment="Center">
+
+                        <Button Grid.Row="0" Grid.Column="1" Content="?" Command="{Binding MapMoveUpCommand}"/>
+                        <Button Grid.Row="1" Grid.Column="0" Content="?" Command="{Binding MapMoveLeftCommand}"/>
+                        <Button Grid.Row="1" Grid.Column="1" Content="?" Command="{Binding MapGoOriginCommand}"/>
+                        <Button Grid.Row="1" Grid.Column="2" Content="?" Command="{Binding MapMoveRightCommand}"/>
+                        <Button Grid.Row="2" Grid.Column="1" Content="?" Command="{Binding MapMoveDownCommand}"/>
+                    </Grid>
+
+                    <Separator/>
+
+                    <TextBlock Text="Altitude Mode" Foreground="#AAB4C0"/>
+                    <ComboBox ItemsSource="{Binding MapAltitudeModes}"
+                              SelectedItem="{Binding SelectedMapAltitudeMode}"/>
+
+                    <TextBlock Text="Altitude Preset" Foreground="#AAB4C0"/>
+                    <ComboBox ItemsSource="{Binding MapAltitudePresets}"
+                              SelectedItem="{Binding SelectedMapAltitudePreset}"/>
+
+                    <TextBlock Text="Intensity" Foreground="#AAB4C0"/>
+                    <NumericUpDown Value="{Binding MapAltitudeIntensity, Mode=TwoWay}"
+                                   Minimum="1"
+                                   Maximum="20"
+                                   Increment="1"
+                                   FormatString="0"/>
+
+                    <CheckBox Content="Show statics"
+                              IsChecked="{Binding MapShowStatics}"/>
+
+                    <CheckBox Content="Center cross"
+                              IsChecked="{Binding MapShowCenterCross}"/>
+
+                    <CheckBox Content="Client cross"
+                              IsChecked="{Binding MapShowClientCross}"/>
+
+                    <Grid ColumnDefinitions="*,*"
+                          ColumnSpacing="6"
+                          IsVisible="{Binding MapShowClientCross}">
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Client X"
+                                       Foreground="#AAB4C0"/>
+                            <NumericUpDown Value="{Binding MapClientX, Mode=TwoWay}"
+                                           Minimum="0"
+                                           Maximum="7168"
+                                           Increment="1"
+                                           FormatString="0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Client Y"
+                                       Foreground="#AAB4C0"/>
+                            <NumericUpDown Value="{Binding MapClientY, Mode=TwoWay}"
+                                           Minimum="0"
+                                           Maximum="4096"
+                                           Increment="1"
+                                           FormatString="0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Button Content="Refresh Map"
+                            Command="{Binding RefreshMapPreviewCommand}"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Main Map Area -->
+        <Border Grid.Column="2"
+                Background="#111317"
+                BorderBrush="#343B46"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="6">
+
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="6">
+
+                <Border Grid.Row="0"
+                        Background="#171C22"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="7">
+
+                    <TextBlock Text="{Binding MapStatusText}"
+                               Foreground="#AAB4C0"/>
+                </Border>
+
+                <Border Grid.Row="1"
+                        Background="#0B0E12"
+                        PointerPressed="MapPreview_PointerPressed"
+                        PointerMoved="MapPreview_PointerMoved"
+                        PointerWheelChanged="MapPreview_PointerWheelChanged"
+                        ClipToBounds="True">
+
+                    <Viewbox Stretch="Fill"
+                             StretchDirection="Both"
+                             HorizontalAlignment="Stretch"
+                             VerticalAlignment="Stretch">
+
+                        <Image Source="{Binding MapPreviewBitmap}"
+                               Stretch="Fill"/>
+                    </Viewbox>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Right Panel -->
+        <Border Grid.Column="4"
+                Background="#20262E"
+                BorderBrush="#343B46"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="10">
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="10">
+
+                    <TextBlock Text="View Tools"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="#E4EAF2"/>
+
+                    <Grid ColumnDefinitions="*,*"
+                          ColumnSpacing="8"
+                          RowDefinitions="Auto,Auto"
+                          RowSpacing="8">
+
+                        <Button Grid.Row="0" Grid.Column="0"
+                                Content="Zoom Full"
+                                Command="{Binding MapZoomFullCommand}"/>
+
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Content="Zoom 50%"
+                                Command="{Binding MapZoomHalfCommand}"/>
+
+                        <Button Grid.Row="1" Grid.Column="0"
+                                Content="Zoom 100%"
+                                Command="{Binding MapZoomOneCommand}"/>
+
+                        <Button Grid.Row="1" Grid.Column="1"
+                                Content="Origin"
+                                Command="{Binding MapGoOriginCommand}"/>
+                    </Grid>
+
+                    <Separator/>
+
+                    <TextBlock Text="Tile Inspector"
+                               FontWeight="Bold"
+                               Foreground="#E4EAF2"/>
+
+                    <Border Background="#171B21"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+
+                        <TextBlock Text="{Binding MapTileDetailsText}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#AAB4C0"/>
+                    </Border>
+
+                    <Separator/>
+
+                    <TextBlock Text="Markers"
+                               FontWeight="Bold"
+                               Foreground="#E4EAF2"/>
+
+                    <TextBox Text="{Binding NewMapMarkerLabel, Mode=TwoWay}"
+                             Watermark="Marker label"/>
+
+                    <TextBlock Text="{Binding PendingMapMarkerText}"
+                               TextWrapping="Wrap"
+                               Foreground="#AAB4C0"/>
+
+                    <Grid ColumnDefinitions="*,*"
+                          RowDefinitions="Auto,Auto,Auto"
+                          ColumnSpacing="8"
+                          RowSpacing="8">
+
+                        <Button Grid.Row="0" Grid.Column="0"
+                                Content="Pick Spot"
+                                Command="{Binding StartPlaceMapMarkerCommand}"/>
+
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Content="Add"
+                                Command="{Binding AddMapMarkerCommand}"/>
+
+                        <Button Grid.Row="1" Grid.Column="0"
+                                Content="Go To"
+                                Command="{Binding GoToMapMarkerCommand}"/>
+
+                        <Button Grid.Row="1" Grid.Column="1"
+                                Content="Remove"
+                                Command="{Binding RemoveMapMarkerCommand}"/>
+                    </Grid>
+
+                    <ListBox ItemsSource="{Binding MapMarkers}"
+                             SelectedItem="{Binding SelectedMapMarker}"
+                             MinHeight="180">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}"
+                                           Foreground="#DCE6F1"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Separator/>
+
+                    <TextBlock Text="Goto"
+                               FontWeight="Bold"
+                               Foreground="#E4EAF2"/>
+
+                    <ComboBox ItemsSource="{Binding MapGotoLocations}"
+                              SelectedItem="{Binding SelectedMapGotoLocation}"
+                              DisplayMemberBinding="{Binding DisplayText}"/>
+
+                    <Button Content="Go"
+                            Command="{Binding GoToMapLocationCommand}"/>
+
+                    <CheckBox Content="Town markers"
+                              IsChecked="{Binding MapShowTownMarkers}"/>
+
+                    <Separator/>
+
+                    <TextBlock Text="{Binding MapStatusText}"
+                               TextWrapping="Wrap"
+                               Foreground="#AAB4C0"/>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

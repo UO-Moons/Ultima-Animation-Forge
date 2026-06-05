@@ -13,6 +13,27 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel
 {
+    [ObservableProperty]
+    private bool mapShowTownMarkers;
+
+    public ObservableCollection<UoMapGotoLocation> MapGotoLocations { get; } = new();
+
+    [ObservableProperty]
+    private UoMapGotoLocation? selectedMapGotoLocation;
+
+    public IRelayCommand GoToMapLocationCommand { get; private set; } = null!;
+
+    [ObservableProperty]
+    private bool mapShowCenterCross = true;
+
+    [ObservableProperty]
+    private bool mapShowClientCross;
+
+    [ObservableProperty]
+    private int mapClientX;
+
+    [ObservableProperty]
+    private int mapClientY;
 
     [ObservableProperty]
     private int pendingMapMarkerX;
@@ -83,7 +104,7 @@ public partial class MainWindowViewModel
     private UoMapAltitudePreset selectedMapAltitudePreset = UoMapAltitudePreset.Normal;
 
     [ObservableProperty]
-    private int mapAltitudeIntensity = 15;
+    private int mapAltitudeIntensity = 20;
 
     public IRelayCommand RefreshMapPreviewCommand { get; private set; } = null!;
     public IRelayCommand MapMoveUpCommand { get; private set; } = null!;
@@ -154,6 +175,9 @@ public partial class MainWindowViewModel
             IsPlacingMapMarker = true;
             PendingMapMarkerText = "Click a spot on the map for the marker.";
         });
+
+        GoToMapLocationCommand = new RelayCommand(GoToMapLocation);
+        BuildMapGotoLocations();
 
         BuildMapOptions();
     }
@@ -246,7 +270,14 @@ SelectedMapAltitudeMode,
 SelectedMapAltitudePreset,
 MapAltitudeIntensity,
 MapShowStatics,
-MapMarkers.Where(x => x.MapId == SelectedMapOption.MapId).ToList());
+MapMarkers.Where(x => x.MapId == SelectedMapOption.MapId).ToList(),
+MapShowCenterCross,
+MapShowClientCross,
+MapClientX,
+MapClientY,
+MapShowTownMarkers
+    ? MapGotoLocations.Where(x => x.MapId == SelectedMapOption.MapId).ToList()
+    : null);
 
         MapPreviewBitmap = result.Bitmap;
         MapStatusText = result.Message;
@@ -506,6 +537,143 @@ MapMarkers.Where(x => x.MapId == SelectedMapOption.MapId).ToList());
             0,
             Math.Max(0, SelectedMapOption.Height - worldHeight));
 
+        RefreshMapPreview();
+    }
+
+    partial void OnMapShowCenterCrossChanged(bool value)
+    {
+        RefreshMapPreview();
+    }
+
+    partial void OnMapShowClientCrossChanged(bool value)
+    {
+        RefreshMapPreview();
+    }
+
+    partial void OnMapClientXChanged(int value)
+    {
+        RefreshMapPreview();
+    }
+
+    partial void OnMapClientYChanged(int value)
+    {
+        RefreshMapPreview();
+    }
+
+    private void BuildMapGotoLocations()
+    {
+        MapGotoLocations.Clear();
+
+        // Felucca / Trammel common towns
+        AddGoto("Britain", 0, 1495, 1629);
+        AddGoto("Moonglow", 0, 4442, 1172);
+        AddGoto("Minoc", 0, 2477, 407);
+        AddGoto("Vesper", 0, 2899, 676);
+        AddGoto("Yew", 0, 548, 979);
+        AddGoto("Skara Brae", 0, 639, 2236);
+        AddGoto("Trinsic", 0, 1828, 2948);
+        AddGoto("Jhelom", 0, 1414, 3826);
+        AddGoto("Cove", 0, 2239, 1206);
+        AddGoto("Buccaneer's Den", 0, 2716, 2194);
+        AddGoto("Serpent's Hold", 0, 3006, 3374);
+        AddGoto("Nujel'm", 0, 3768, 1313);
+        AddGoto("Magincia", 0, 3728, 2164);
+        AddGoto("Occlo / Haven", 0, 3623, 2621);
+
+        AddGoto("Britain", 1, 1495, 1629);
+        AddGoto("Moonglow", 1, 4442, 1172);
+        AddGoto("Minoc", 1, 2477, 407);
+        AddGoto("Vesper", 1, 2899, 676);
+        AddGoto("Yew", 1, 548, 979);
+        AddGoto("Skara Brae", 1, 639, 2236);
+        AddGoto("Trinsic", 1, 1828, 2948);
+        AddGoto("Jhelom", 1, 1414, 3826);
+        AddGoto("Cove", 1, 2239, 1206);
+        AddGoto("Buccaneer's Den", 1, 2716, 2194);
+        AddGoto("Serpent's Hold", 1, 3006, 3374);
+        AddGoto("Nujel'm", 1, 3768, 1313);
+        AddGoto("Magincia", 1, 3728, 2164);
+        AddGoto("New Haven", 1, 3503, 2574);
+
+        // Ilshenar
+        AddGoto("Lakeshire", 2, 1203, 1124);
+        AddGoto("Gargoyle City", 2, 852, 602);
+        AddGoto("Mistas", 2, 819, 1130);
+
+        // Malas
+        AddGoto("Luna", 3, 1015, 527);
+        AddGoto("Umbra", 3, 1997, 1386);
+        AddGoto("Doom", 3, 2368, 1267);
+
+        // Tokuno
+        AddGoto("Zento", 4, 736, 1260);
+        AddGoto("Makoto-Jima", 4, 800, 1200);
+        AddGoto("Homare-Jima", 4, 250, 650);
+        AddGoto("Isamu-Jima", 4, 1160, 1000);
+
+        // Ter Mur
+        AddGoto("Royal City", 5, 852, 3527);
+        AddGoto("Holy City", 5, 997, 3895);
+        AddGoto("Tomb of Kings", 5, 997, 3840);
+    }
+
+    private void AddGoto(string name, int mapId, int x, int y)
+    {
+        MapGotoLocations.Add(new UoMapGotoLocation
+        {
+            Name = name,
+            MapId = mapId,
+            X = x,
+            Y = y
+        });
+    }
+
+    private void GoToMapLocation()
+    {
+        if (SelectedMapOption == null || SelectedMapGotoLocation == null)
+        {
+            return;
+        }
+
+        UoMapOption? targetMap = MapOptions.FirstOrDefault(x => x.MapId == SelectedMapGotoLocation.MapId);
+        if (targetMap != null && SelectedMapOption.MapId != targetMap.MapId)
+        {
+            SelectedMapOption = targetMap;
+        }
+
+        CenterMapOnWorldPoint(SelectedMapGotoLocation.X, SelectedMapGotoLocation.Y);
+    }
+
+    private void CenterMapOnWorldPoint(int worldX, int worldY)
+    {
+        if (SelectedMapOption == null)
+        {
+            return;
+        }
+
+        double safeZoom = MapZoom <= 0 ? 1.0 : MapZoom;
+
+        const int outputWidth = 1024;
+        const int outputHeight = 768;
+
+        int worldWidth = (int)(outputWidth / safeZoom);
+        int worldHeight = (int)(outputHeight / safeZoom);
+
+        MapViewX = Math.Clamp(
+            worldX - (worldWidth / 2),
+            0,
+            Math.Max(0, SelectedMapOption.Width - worldWidth));
+
+        MapViewY = Math.Clamp(
+            worldY - (worldHeight / 2),
+            0,
+            Math.Max(0, SelectedMapOption.Height - worldHeight));
+
+        RefreshMapPreview();
+    }
+
+    partial void OnMapShowTownMarkersChanged(bool value)
+    {
         RefreshMapPreview();
     }
 }
