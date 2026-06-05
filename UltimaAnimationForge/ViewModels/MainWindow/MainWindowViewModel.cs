@@ -22,6 +22,39 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    [ObservableProperty]
+    private int selectedAnimationOffsetX = 0;
+
+    [ObservableProperty]
+    private int selectedAnimationOffsetY = 0;
+
+    public string SelectedAnimationOffsetXText
+    {
+        get => SelectedAnimationOffsetX.ToString();
+        set
+        {
+            if (int.TryParse(value, out int result))
+            {
+                SelectedAnimationOffsetX = result;
+            }
+        }
+    }
+
+    public string SelectedAnimationOffsetYText
+    {
+        get => SelectedAnimationOffsetY.ToString();
+        set
+        {
+            if (int.TryParse(value, out int result))
+            {
+                SelectedAnimationOffsetY = result;
+            }
+        }
+    }
+
+    public ICommand ApplySelectedAnimationOffsetToCurrentFrameCommand { get; }
+    public ICommand ApplySelectedAnimationOffsetToCurrentDirectionCommand { get; }
+    public ICommand ClearSelectedAnimationOffsetCommand { get; }
     public ICommand ShowLightCommand { get; }
     public ICommand ShowClilocCommand { get; }
     public ICommand LoadClilocCommand { get; }
@@ -353,6 +386,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private string loadedPropOverlayPath = string.Empty;
 
     private readonly List<WriteableBitmap> compareOverlayFrames = new();
+    private readonly List<VdFrameData> compareOverlayFrameData = new();
+
+    private readonly Dictionary<string, CompareFramePose> selectedAnimationFramePoses = new(StringComparer.Ordinal);
+
     private string compareOverlayCacheKey = string.Empty;
 
     public ObservableCollection<AnimationBrowserTileViewModel> AnimationBrowserTiles { get; } = new();
@@ -524,6 +561,22 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     private readonly Dictionary<string, CompareFramePose> compareFramePoses = new(StringComparer.Ordinal);
+
+    private CompareFramePose GetEffectiveSelectedPoseForFrame(int frameIndex)
+    {
+        string key = GetComparePoseKey(frameIndex);
+
+        if (selectedAnimationFramePoses.TryGetValue(key, out CompareFramePose? pose))
+        {
+            return pose;
+        }
+
+        return new CompareFramePose
+        {
+            OffsetX = 0,
+            OffsetY = 0
+        };
+    }
 
     public ICommand SaveComparePoseForCurrentFrameCommand { get; }
     public ICommand CopyComparePoseFromPreviousFrameCommand { get; }
@@ -1046,6 +1099,10 @@ public partial class MainWindowViewModel : ViewModelBase
         JumpToClilocCommand = new RelayCommand(JumpToCliloc);
         ShowRadarColCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.RadarCol);
         ShowMultisCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Multis);
+
+        ApplySelectedAnimationOffsetToCurrentFrameCommand = new RelayCommand(ApplySelectedAnimationOffsetToCurrentFrame);
+        ApplySelectedAnimationOffsetToCurrentDirectionCommand = new RelayCommand(ApplySelectedAnimationOffsetToCurrentDirection);
+        ClearSelectedAnimationOffsetCommand = new RelayCommand(ClearSelectedAnimationOffset);
 
         TogglePreviewDragModeCommand = new RelayCommand(() =>
         {

@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:UltimaAnimationForge.ViewModels"
         xmlns:converters="clr-namespace:UltimaAnimationForge.Converters"
+        xmlns:tabs="clr-namespace:UltimaAnimationForge.Views.Tabs"
         x:Class="UltimaAnimationForge.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Width="1500"
@@ -13,7 +14,7 @@
         Background="#1B1F25"
         Foreground="White"
         RequestedThemeVariant="Dark"
-        Title="Ultima Animation Forge Alpha 25"
+        Title="Ultima Animation Forge Alpha 26"
         DragDrop.AllowDrop="True"
         KeyDown="Window_KeyDown"
         mc:Ignorable="d">
@@ -825,33 +826,79 @@
                                    Margin="0,0,6,0"
                                    IsVisible="{Binding IsCompareOverlayManualFrameMode}" />
 
+                    <TextBlock Text="Selected"
+                               VerticalAlignment="Center"
+                               Foreground="#D5DCE4"
+                               Margin="10,0,4,0"/>
+
                     <TextBlock Text="X"
                                VerticalAlignment="Center"
-                               Margin="0,0,4,0"
-                               Foreground="#D5DCE4" />
+                               Foreground="#D5DCE4"/>
 
-                    <NumericUpDown Width="70"
+                    <NumericUpDown Width="60"
+                                   Minimum="-500"
+                                   Maximum="500"
+                                   Increment="1"
+                                   FormatString="0"
+                                   ShowButtonSpinner="False"
+                                   Value="{Binding SelectedAnimationOffsetXText, Mode=TwoWay}"
+                                   Margin="0,0,4,0"/>
+
+                    <TextBlock Text="Y"
+                               VerticalAlignment="Center"
+                               Foreground="#D5DCE4"/>
+
+                    <NumericUpDown Width="60"
+                                   Minimum="-500"
+                                   Maximum="500"
+                                   Increment="1"
+                                   FormatString="0"
+                                   ShowButtonSpinner="False"
+                                   Value="{Binding SelectedAnimationOffsetYText, Mode=TwoWay}"
+                                   Margin="0,0,6,0"/>
+
+                    <Menu Background="Transparent">
+                        <MenuItem Header="Selected ▼"
+                                  Classes="topAction">
+                            <MenuItem Header="Apply Offset To Frame"
+                                      Command="{Binding ApplySelectedAnimationOffsetToCurrentFrameCommand}" />
+                            <MenuItem Header="Apply Offset To Direction"
+                                      Command="{Binding ApplySelectedAnimationOffsetToCurrentDirectionCommand}" />
+                            <MenuItem Header="Clear Selected Offset"
+                                      Command="{Binding ClearSelectedAnimationOffsetCommand}" />
+                        </MenuItem>
+                    </Menu>
+
+                    <TextBlock Text="Compare"
+                               VerticalAlignment="Center"
+                               Foreground="#D5DCE4"
+                               Margin="10,0,4,0"/>
+
+                    <TextBlock Text="X"
+                               VerticalAlignment="Center"
+                               Foreground="#D5DCE4"/>
+
+                    <NumericUpDown Width="60"
                                    Minimum="-500"
                                    Maximum="500"
                                    Increment="1"
                                    FormatString="0"
                                    ShowButtonSpinner="False"
                                    Value="{Binding CompareOverlayOffsetXText, Mode=TwoWay}"
-                                   Margin="0,0,6,0" />
+                                   Margin="0,0,4,0"/>
 
                     <TextBlock Text="Y"
                                VerticalAlignment="Center"
-                               Margin="0,0,4,0"
-                               Foreground="#D5DCE4" />
+                               Foreground="#D5DCE4"/>
 
-                    <NumericUpDown Width="70"
+                    <NumericUpDown Width="60"
                                    Minimum="-500"
                                    Maximum="500"
                                    Increment="1"
                                    FormatString="0"
                                    ShowButtonSpinner="False"
                                    Value="{Binding CompareOverlayOffsetYText, Mode=TwoWay}"
-                                   Margin="0,0,6,0" />
+                                   Margin="0,0,6,0"/>
 
                     <TextBlock Text="Opacity"
                                VerticalAlignment="Center"
@@ -1287,8 +1334,26 @@
 
                         <Separator/>
 
-                        <CheckBox Content="Altitude shading"
-                                  IsChecked="{Binding MapUseAltitudeShading}"/>
+                        <TextBlock Text="Altitude Mode"
+                                   Foreground="#AAB4C0"/>
+
+                        <ComboBox ItemsSource="{Binding MapAltitudeModes}"
+                                  SelectedItem="{Binding SelectedMapAltitudeMode}"/>
+
+                        <TextBlock Text="Altitude Preset"
+                                   Foreground="#AAB4C0"/>
+
+                        <ComboBox ItemsSource="{Binding MapAltitudePresets}"
+                                  SelectedItem="{Binding SelectedMapAltitudePreset}"/>
+
+                        <TextBlock Text="Intensity"
+                                   Foreground="#AAB4C0"/>
+
+                        <NumericUpDown Value="{Binding MapAltitudeIntensity, Mode=TwoWay}"
+                                       Minimum="1"
+                                       Maximum="20"
+                                       Increment="1"
+                                       FormatString="0"/>
 
                         <CheckBox Content="Show statics"
                                   IsChecked="{Binding MapShowStatics}"/>
@@ -1323,6 +1388,7 @@
                         <Border Grid.Row="1"
                                 Background="#0B0E12"
                                 PointerPressed="MapPreview_PointerPressed"
+                                PointerMoved="MapPreview_PointerMoved"
                                 PointerWheelChanged="MapPreview_PointerWheelChanged"
                                 ClipToBounds="True">
 
@@ -1374,6 +1440,55 @@
                         <TextBlock Text="Map Info"
                                    FontWeight="Bold"
                                    Foreground="#E4EAF2"/>
+
+                        <Separator/>
+
+                        <TextBlock Text="Tile Inspector"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2"/>
+
+                        <TextBlock Text="{Binding MapTileDetailsText}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#AAB4C0"/>
+
+                        <Separator/>
+
+                        <TextBlock Text="Markers"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2"/>
+
+                        <TextBox Text="{Binding NewMapMarkerLabel, Mode=TwoWay}"
+                                 Watermark="Marker label"/>
+
+                        <TextBlock Text="{Binding PendingMapMarkerText}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#AAB4C0"/>
+
+                        <Button Content="Pick Spot On Map"
+                                Command="{Binding StartPlaceMapMarkerCommand}"/>
+
+                        <TextBox Text="{Binding NewMapMarkerLabel, Mode=TwoWay}"
+                                 Watermark="Marker label"/>
+
+                        <Button Content="Add Marker"
+                                Command="{Binding AddMapMarkerCommand}"/>
+
+                        <Button Content="Go To Marker"
+                                Command="{Binding GoToMapMarkerCommand}"/>
+
+                        <Button Content="Remove Marker"
+                                Command="{Binding RemoveMapMarkerCommand}"/>
+
+                        <ListBox ItemsSource="{Binding MapMarkers}"
+                                 SelectedItem="{Binding SelectedMapMarker}"
+                                 Height="160">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayText}"
+                                               Foreground="#DCE6F1"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
 
                         <TextBlock Text="{Binding MapStatusText}"
                                    TextWrapping="Wrap"
@@ -2913,319 +3028,10 @@
                 </Grid>
 
                 <!-- Hues Tab -->
-                <Grid Grid.Column="0"
-                      Grid.ColumnSpan="3"
-                      Margin="-270,10,10,10"
-                      RowDefinitions="Auto,*"
-                      RowSpacing="10"
-                      HorizontalAlignment="Stretch"
-                      VerticalAlignment="Stretch"
-                      IsVisible="{Binding ShowHueEditorPanel}">
-                    <Border Grid.Row="0"
-                            Background="#20262E"
-                            BorderBrush="#3A4350"
-                            BorderThickness="1"
-                            CornerRadius="10"
-                            Padding="10">
-                        <Grid ColumnDefinitions="Auto,8,260,8,Auto,8,Auto,8,Auto,16,Auto,8,Auto,16,Auto,8,Auto,8,90,8,Auto,16,Auto,8,Auto,*,Auto">
-
-                            <TextBlock Grid.Column="0"
-                                       Text="Search"
-                                       Foreground="#D5DCE4"
-                                       VerticalAlignment="Center"/>
-
-                            <TextBox Grid.Column="2"
-                                     Watermark="ID, hex, or name"
-                                     Text="{Binding HueEditorSearchText, Mode=TwoWay}"/>
-
-                            <Button Grid.Column="4"
-                                    Content="Load hues.mul"
-                                    Command="{Binding LoadHueEditorCommand}"/>
-
-                            <Button Grid.Column="6"
-                                    Content="Save"
-                                    Command="{Binding SaveHueEditorCommand}"/>
-
-                            <Button Grid.Column="8"
-                                    Content="Revert"
-                                    Command="{Binding RevertHueEditorCommand}"/>
-
-                            <Button Grid.Column="10"
-                                    Content="Export Hue"
-                                    Command="{Binding ExportSelectedHueCommand}"/>
-
-                            <Button Grid.Column="12"
-                                    Content="Import / Replace"
-                                    Command="{Binding ImportReplaceSelectedHueCommand}"/>
-
-                            <TextBlock Grid.Column="14"
-                                       Text="Copy from"
-                                       Foreground="#AAB4C0"
-                                       VerticalAlignment="Center"/>
-
-                            <NumericUpDown Grid.Column="16"
-                                           Value="{Binding HueEditorReplaceSourceHueId, Mode=TwoWay}"
-                                           FormatString="0"/>
-
-                            <Button Grid.Column="18"
-                                    Content="Copy ID"
-                                    Command="{Binding ReplaceHueFromIndexCommand}"/>
-
-                            <CheckBox Grid.Column="20"
-                                      Content="Free only"
-                                      IsChecked="{Binding HueEditorShowFreeOnly}"
-                                      Foreground="#D5DCE4"
-                                      VerticalAlignment="Center"/>
-
-                            <Button Grid.Column="22"
-                                    Content="Next Free Slot"
-                                    Command="{Binding SelectNextFreeHueSlotCommand}"/>
-
-                            <TextBlock Grid.Column="24"
-                                       Text="{Binding HueEditorFreeSlotText}"
-                                       Foreground="#AAB4C0"
-                                       VerticalAlignment="Center"/>
-
-                            <StackPanel Grid.Column="26"
-                                        Spacing="2"
-                                        HorizontalAlignment="Right">
-                                <TextBlock Text="{Binding HueEditorLoadedFileText}"
-                                           Foreground="#EDF1F5"
-                                           HorizontalAlignment="Right"/>
-                                <TextBlock Text="{Binding HueEditorCountText}"
-                                           Foreground="#AAB4C0"
-                                           FontSize="12"
-                                           HorizontalAlignment="Right"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <Grid Grid.Row="1"
-                          ColumnDefinitions="420,10,*"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch">
-
-                        <Border Grid.Column="0"
-                                Background="#171B21"
-                                BorderBrush="#343B46"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Padding="8">
-                            <ListBox ItemsSource="{Binding HueEditorEntries}"
-                                     SelectedItem="{Binding SelectedHueEditorEntry}"
-                                     Background="#11151A">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid ColumnDefinitions="74,*,100" Margin="4">
-                                            <TextBlock Grid.Column="0" Text="{Binding HexText}" Foreground="#86C5FF"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding DisplayText}" Foreground="#EDF1F5"/>
-                                            <TextBlock Grid.Column="2" Text="{Binding RangeText}" Foreground="#AAB4C0" HorizontalAlignment="Right"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Border>
-
-                        <Grid Grid.Column="2"
-                              RowDefinitions="Auto,10,*,10,Auto"
-                              HorizontalAlignment="Stretch"
-                              VerticalAlignment="Stretch">
-
-                            <Border Grid.Row="0"
-                                    Background="#20262E"
-                                    BorderBrush="#3A4350"
-                                    BorderThickness="1"
-                                    CornerRadius="10"
-                                    Padding="14">
-                                <Grid ColumnDefinitions="*,130,130" ColumnSpacing="12">
-                                    <StackPanel Grid.Column="0" Spacing="8">
-                                        <TextBlock Text="Selected Hue" FontSize="18" FontWeight="Bold" Foreground="#EDF1F5"/>
-                                        <TextBox Text="{Binding SelectedHueEditorEntry.Name, Mode=TwoWay}" Watermark="Hue name"/>
-                                    </StackPanel>
-
-                                    <StackPanel Grid.Column="1" Spacing="6">
-                                        <TextBlock Text="Table Start" Foreground="#AAB4C0"/>
-                                        <NumericUpDown Value="{Binding SelectedHueEditorEntry.TableStart, Mode=TwoWay}" Minimum="0" Maximum="65535" FormatString="0"/>
-                                    </StackPanel>
-
-                                    <StackPanel Grid.Column="2" Spacing="6">
-                                        <TextBlock Text="Table End" Foreground="#AAB4C0"/>
-                                        <NumericUpDown Value="{Binding SelectedHueEditorEntry.TableEnd, Mode=TwoWay}" Minimum="0" Maximum="65535" FormatString="0"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <Border Grid.Row="2"
-                                    Background="#171B21"
-                                    BorderBrush="#343B46"
-                                    BorderThickness="1"
-                                    CornerRadius="10"
-                                    Padding="14">
-                                <Grid RowDefinitions="Auto,88,18,Auto,88,*">
-
-                                    <TextBlock Grid.Row="0"
-                                               Text="Original Hue"
-                                               Foreground="#D5DCE4"
-                                               FontWeight="Bold"/>
-
-                                    <ListBox Grid.Row="1"
-                                             ItemsSource="{Binding HueOriginalColorSlots}"
-                                             Background="Transparent"
-                                             BorderThickness="0"
-                                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                        <ListBox.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel/>
-                                            </ItemsPanelTemplate>
-                                        </ListBox.ItemsPanel>
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Width="58" Height="42" Margin="3">
-                                                    <Border Height="18" Background="{Binding Brush}" CornerRadius="4"/>
-                                                    <TextBlock Text="{Binding IndexText}" HorizontalAlignment="Center" Foreground="#D5DCE4" FontSize="10"/>
-                                                    <TextBlock Text="{Binding RawHexText}" HorizontalAlignment="Center" Foreground="#AAB4C0" FontSize="9"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-
-                                    <TextBlock Grid.Row="3"
-                                               Text="Edited Hue"
-                                               Foreground="#D5DCE4"
-                                               FontWeight="Bold"/>
-
-                                    <ListBox Grid.Row="4"
-                                             ItemsSource="{Binding SelectedHueEditorEntry.Colors}"
-                                             SelectedItem="{Binding SelectedHueEditorColor}"
-                                             Background="Transparent"
-                                             BorderThickness="0"
-                                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                        <ListBox.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel/>
-                                            </ItemsPanelTemplate>
-                                        </ListBox.ItemsPanel>
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Width="58" Height="42" Margin="3">
-                                                    <Border Height="18" Background="{Binding Brush}" CornerRadius="4"/>
-                                                    <TextBlock Text="{Binding IndexText}" HorizontalAlignment="Center" Foreground="#D5DCE4" FontSize="10"/>
-                                                    <TextBlock Text="{Binding RawHexText}" HorizontalAlignment="Center" Foreground="#AAB4C0" FontSize="9"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                </Grid>
-                            </Border>
-
-                            <Border Grid.Row="4"
-                                    Background="#20262E"
-                                    BorderBrush="#3A4350"
-                                    BorderThickness="1"
-                                    CornerRadius="10"
-                                    Padding="10">
-                                <Grid ColumnDefinitions="Auto,*,Auto"
-                                      ColumnSpacing="14">
-
-                                    <!-- Color controls -->
-                                    <StackPanel Grid.Column="0"
-                                                Orientation="Horizontal"
-                                                Spacing="8"
-                                                VerticalAlignment="Center">
-
-                                        <Border Width="86"
-                                                Height="54"
-                                                Background="{Binding HueEditorSelectedColorBrush}"
-                                                CornerRadius="8"/>
-
-                                        <StackPanel Spacing="2">
-                                            <TextBlock Text="R" Foreground="#AAB4C0" FontSize="11"/>
-                                            <NumericUpDown Width="120"
-                                                           Value="{Binding HueEditorRed, Mode=TwoWay}"
-                                                           FormatString="0"/>
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="2">
-                                            <TextBlock Text="G" Foreground="#AAB4C0" FontSize="11"/>
-                                            <NumericUpDown Width="120"
-                                                           Value="{Binding HueEditorGreen, Mode=TwoWay}"
-                                                           FormatString="0"/>
-                                        </StackPanel>
-
-                                        <StackPanel Spacing="2">
-                                            <TextBlock Text="B" Foreground="#AAB4C0" FontSize="11"/>
-                                            <NumericUpDown Width="120"
-                                                           Value="{Binding HueEditorBlue, Mode=TwoWay}"
-                                                           FormatString="0"/>
-                                        </StackPanel>
-
-                                        <Button Content="Set Color"
-                                                Command="{Binding ApplyHueEditorColorCommand}"/>
-
-                                        <Button Content="Make Gradient"
-                                                Command="{Binding MakeHueEditorGradientCommand}"/>
-
-                                        <Button Content="Create Guided Hue"
-                                                Command="{Binding CreateGuidedHueCommand}"/>
-
-                                        <ComboBox Width="130"
-                                                  ItemsSource="{Binding HuePresetOptions}"
-                                                  SelectedItem="{Binding SelectedHuePreset}"/>
-
-                                        <Button Content="Apply Preset"
-                                                Command="{Binding ApplyHuePresetCommand}"/>
-                                    </StackPanel>
-
-                                    <!-- Preview -->
-                                    <Border Grid.Column="2"
-                                            Background="#171B21"
-                                            BorderBrush="#343B46"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Padding="8"
-                                            VerticalAlignment="Center">
-
-                                        <Grid ColumnDefinitions="86,10,120"
-                                              RowDefinitions="Auto,6,Auto,6,Auto">
-
-                                            <Border Grid.Column="0"
-                                                    Grid.RowSpan="3"
-                                                    Width="80"
-                                                    Height="80"
-                                                    Background="#11151A"
-                                                    BorderBrush="#3A4350"
-                                                    BorderThickness="1"
-                                                    CornerRadius="6"
-                                                    Padding="4">
-                                                <Image Source="{Binding HuePreviewBitmap}"
-                                                       Stretch="Uniform"/>
-                                            </Border>
-
-                                            <TextBlock Grid.Column="2"
-                                                       Grid.Row="0"
-                                                       Text="Preview Art"
-                                                       Foreground="#AAB4C0"
-                                                       HorizontalAlignment="Center"/>
-
-                                            <NumericUpDown Grid.Column="2"
-                                                           Grid.Row="2"
-                                                           Width="120"
-                                                           Value="{Binding HuePreviewArtId, Mode=TwoWay}"
-                                                           FormatString="0"/>
-
-                                            <Button Grid.Column="2"
-                                                    Grid.Row="4"
-                                                    Content="Refresh"
-                                                    Command="{Binding RefreshHuePreviewCommand}"/>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-                            </Border>
-                        </Grid>
-                    </Grid>
-                </Grid>
+                <tabs:HueEditorTab Grid.Column="0"
+                                   Grid.ColumnSpan="3"
+                                   Margin="-270,10,10,10"
+                                   IsVisible="{Binding ShowHueEditorPanel}" />
 
                 <!-- Gump Builder Tab -->
                 <Grid Grid.Column="0"

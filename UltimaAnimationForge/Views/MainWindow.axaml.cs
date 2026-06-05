@@ -1114,6 +1114,18 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (vm.IsPlacingMapMarker)
+        {
+            vm.SelectMarkerSpotFromPreview(
+                point.Position.X,
+                point.Position.Y,
+                control.Bounds.Width,
+                control.Bounds.Height);
+
+            e.Handled = true;
+            return;
+        }
+
         vm.NavigateMapFromPreview(
             point.Position.X,
             point.Position.Y,
@@ -1285,5 +1297,26 @@ public partial class MainWindow : Window
         }
 
         vm.ExportDragonMapMulAndUop(folder.Path.LocalPath);
+    }
+
+    private void MapPreview_PointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            return;
+        }
+
+        if (sender is not Control control)
+        {
+            return;
+        }
+
+        Avalonia.Point point = e.GetPosition(control);
+
+        vm.InspectMapFromPreview(
+            point.X,
+            point.Y,
+            control.Bounds.Width,
+            control.Bounds.Height);
     }
 }

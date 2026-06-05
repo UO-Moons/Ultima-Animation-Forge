@@ -41,8 +41,11 @@ public sealed class UoMapDataService
         int worldHeight,
         int outputWidth,
         int outputHeight,
-        bool useAltitudeShading,
-        bool showStatics)
+        UoMapAltitudeMode altitudeMode,
+        UoMapAltitudePreset altitudePreset,
+        int altitudeIntensity,
+        bool showStatics,
+        List<UoMapMarker>? markers)
     {
         try
         {
@@ -75,6 +78,7 @@ public sealed class UoMapDataService
             startY = Math.Clamp(startY, 0, Math.Max(0, map.Height - safeWorldHeight));
 
             byte[] pixels = new byte[safeOutputWidth * safeOutputHeight * 4];
+            sbyte[] zBuffer = new sbyte[safeOutputWidth * safeOutputHeight];
 
             int blockWidth = map.Width / 8;
             int blockHeight = map.Height / 8;
@@ -184,12 +188,17 @@ public sealed class UoMapDataService
 
                         ushort color1555 = GetRadarColor(radarColors, tileId);
 
-                        if (useAltitudeShading)
+                        if (altitudeMode == UoMapAltitudeMode.AltitudeMap)
                         {
-                            ApplyAltitudeShade(ref color1555, z);
+                            color1555 = BuildAltitudeGrayColor(z);
+                        }
+                        else if (altitudeMode == UoMapAltitudeMode.NormalWithAltitude)
+                        {
+                            ApplyAltitudeShade(ref color1555, z, altitudePreset, altitudeIntensity);
                         }
 
                         Write1555ToBgra(pixels, safeOutputWidth, drawX, drawY, color1555);
+                        zBuffer[(drawY * safeOutputWidth) + drawX] = z;
                     }
 
                     if (showStatics)
@@ -224,16 +233,42 @@ public sealed class UoMapDataService
 
                             ushort color1555 = GetRadarColor(radarColors, 0x4000 + staticTile.Graphic);
 
-                            if (useAltitudeShading)
+                            if (altitudeMode == UoMapAltitudeMode.AltitudeMap)
                             {
-                                ApplyAltitudeShade(ref color1555, staticTile.Z);
+                                color1555 = BuildAltitudeGrayColor(staticTile.Z);
+                            }
+                            else if (altitudeMode == UoMapAltitudeMode.NormalWithAltitude)
+                            {
+                                ApplyAltitudeShade(ref color1555, staticTile.Z, altitudePreset, altitudeIntensity);
                             }
 
                             Write1555ToBgra(pixels, safeOutputWidth, drawX, drawY, color1555);
+                            zBuffer[(drawY * safeOutputWidth) + drawX] = staticTile.Z;
                         }
                     }
                 }
             }
+
+            if (altitudeMode == UoMapAltitudeMode.NormalWithAltitude)
+            {
+                ApplyReliefShade(
+                    pixels,
+                    safeOutputWidth,
+                    safeOutputHeight,
+                    zBuffer,
+                    altitudePreset,
+                    altitudeIntensity);
+            }
+
+            DrawMarkers(
+                pixels,
+                safeOutputWidth,
+                safeOutputHeight,
+                startX,
+                startY,
+                safeWorldWidth,
+                safeWorldHeight,
+                markers);
 
             WriteableBitmap bitmap = new(
                 new PixelSize(safeOutputWidth, safeOutputHeight),
@@ -297,10 +332,26 @@ public sealed class UoMapDataService
         return 0x4210;
     }
 
-    private static void ApplyAltitudeShade(ref ushort color, sbyte z)
+    private static void ApplyAltitudeShade(
+        ref ushort color,
+        sbyte z,
+        UoMapAltitudePreset preset,
+        int intensity)
     {
+        int clampedIntensity = Math.Clamp(intensity, 1, 20);
+
+        float presetMultiplier = preset switch
+        {
+            UoMapAltitudePreset.Sharp => 1.75f,
+            UoMapAltitudePreset.Normal => 1.25f,
+            UoMapAltitudePreset.Soft => 0.65f,
+            _ => 1.0f
+        };
+
         int shade = Math.Clamp((int)z, -30, 30);
-        int adjustment = shade / 8;
+
+        float intensityMultiplier = (21 - clampedIntensity) / 10.0f;
+        int adjustment = (int)((shade / 4.0f) * presetMultiplier * intensityMultiplier);
 
         int r = (color >> 10) & 0x1F;
         int g = (color >> 5) & 0x1F;
@@ -311,6 +362,14 @@ public sealed class UoMapDataService
         b = Math.Clamp(b + adjustment, 0, 31);
 
         color = (ushort)((r << 10) | (g << 5) | b);
+    }
+
+    private static ushort BuildAltitudeGrayColor(sbyte z)
+    {
+        int value = Math.Clamp(z + 128, 0, 255);
+        int gray5 = value >> 3;
+
+        return (ushort)((gray5 << 10) | (gray5 << 5) | gray5);
     }
 
     private static void Write1555ToBgra(byte[] pixels, int width, int x, int y, ushort color)
@@ -478,5 +537,272 @@ public sealed class UoMapDataService
 
         staticBlockCache[cacheKey] = result;
         return result;
+    }
+
+    public UoMapTileDetails? GetTileDetails(
+    string uoFolderPath,
+    UoMapOption map,
+    int worldX,
+    int worldY)
+    {
+        if (string.IsNullOrWhiteSpace(uoFolderPath) || !Directory.Exists(uoFolderPath))
+        {
+            return null;
+        }
+
+        if (worldX < 0 || worldY < 0 || worldX >= map.Width || worldY >= map.Height)
+        {
+            return null;
+        }
+
+        int blockWidth = map.Width / 8;
+        int blockHeight = map.Height / 8;
+
+        int blockX = worldX / 8;
+        int blockY = worldY / 8;
+
+        int localX = worldX % 8;
+        int localY = worldY % 8;
+
+        byte[]? blockData = ReadMapBlock(uoFolderPath, map, blockX, blockY, blockWidth, blockHeight);
+
+        if (blockData == null || blockData.Length < BlockSize)
+        {
+            return null;
+        }
+
+        using MemoryStream blockStream = new(blockData);
+        using BinaryReader blockReader = new(blockStream);
+
+        blockReader.ReadUInt32();
+
+        int tileIndex = (localY * 8) + localX;
+
+        blockReader.BaseStream.Seek(4 + (tileIndex * 3), SeekOrigin.Begin);
+
+        ushort landTileId = blockReader.ReadUInt16();
+        sbyte landZ = blockReader.ReadSByte();
+
+        UoMapTileDetails details = new()
+        {
+            X = worldX,
+            Y = worldY,
+            LandTileId = landTileId,
+            LandZ = landZ
+        };
+
+        List<StaticTileEntry> statics = ReadStaticBlock(
+            uoFolderPath,
+            map,
+            blockX,
+            blockY,
+            blockHeight);
+
+        foreach (StaticTileEntry staticTile in statics)
+        {
+            if (staticTile.X == localX && staticTile.Y == localY)
+            {
+                details.Statics.Add(new UoMapStaticDetails
+                {
+                    Graphic = staticTile.Graphic,
+                    LocalX = staticTile.X,
+                    LocalY = staticTile.Y,
+                    Z = staticTile.Z,
+                    Hue = staticTile.Hue
+                });
+            }
+        }
+
+        return details;
+    }
+
+    private byte[]? ReadMapBlock(
+    string uoFolderPath,
+    UoMapOption map,
+    int blockX,
+    int blockY,
+    int blockWidth,
+    int blockHeight)
+    {
+        string mapMulPath = Path.Combine(uoFolderPath, $"map{map.FileIndex}.mul");
+        string mapUopPath = Path.Combine(uoFolderPath, $"map{map.FileIndex}LegacyMUL.uop");
+
+        if (File.Exists(mapUopPath))
+        {
+            UopFileReader? uopReader = GetCachedUopReader(mapUopPath);
+
+            if (uopReader != null)
+            {
+                int mulBlockIndex = (blockX * blockHeight) + blockY;
+
+                const int BlocksPerUopChunk = 4096;
+
+                int chunkIndex = mulBlockIndex / BlocksPerUopChunk;
+                int blockIndexInsideChunk = mulBlockIndex % BlocksPerUopChunk;
+
+                string virtualPath = $"build/map{map.FileIndex}legacymul/{chunkIndex:D8}.dat";
+
+                byte[]? chunkData = GetCachedUopChunk(uopReader, virtualPath);
+
+                if (chunkData != null)
+                {
+                    int offsetInChunk = blockIndexInsideChunk * BlockSize;
+
+                    if (offsetInChunk >= 0 && offsetInChunk + BlockSize <= chunkData.Length)
+                    {
+                        byte[] blockData = new byte[BlockSize];
+                        Buffer.BlockCopy(chunkData, offsetInChunk, blockData, 0, BlockSize);
+                        return blockData;
+                    }
+                }
+            }
+        }
+
+        if (!File.Exists(mapMulPath))
+        {
+            return null;
+        }
+
+        long blockOffset = ((blockX * blockHeight) + blockY) * BlockSize;
+
+        using FileStream stream = File.OpenRead(mapMulPath);
+
+        if (blockOffset < 0 || blockOffset + BlockSize > stream.Length)
+        {
+            return null;
+        }
+
+        using BinaryReader reader = new(stream);
+        stream.Seek(blockOffset, SeekOrigin.Begin);
+
+        return reader.ReadBytes(BlockSize);
+    }
+
+    private static void DrawMarkers(
+    byte[] pixels,
+    int outputWidth,
+    int outputHeight,
+    int startX,
+    int startY,
+    int worldWidth,
+    int worldHeight,
+    List<UoMapMarker>? markers)
+    {
+        if (markers == null || markers.Count == 0)
+        {
+            return;
+        }
+
+        foreach (UoMapMarker marker in markers)
+        {
+            int relativeX = marker.X - startX;
+            int relativeY = marker.Y - startY;
+
+            if (relativeX < 0 || relativeY < 0 || relativeX >= worldWidth || relativeY >= worldHeight)
+            {
+                continue;
+            }
+
+            int drawX = (relativeX * outputWidth) / worldWidth;
+            int drawY = (relativeY * outputHeight) / worldHeight;
+
+            DrawMarkerCross(pixels, outputWidth, outputHeight, drawX, drawY);
+        }
+    }
+
+    private static void DrawMarkerCross(byte[] pixels, int width, int height, int x, int y)
+    {
+        // black outline
+        for (int offset = -10; offset <= 10; offset++)
+        {
+            WriteBgraMarkerPixel(pixels, width, height, x + offset, y, 0, 0, 0);
+            WriteBgraMarkerPixel(pixels, width, height, x, y + offset, 0, 0, 0);
+        }
+
+        // red cross
+        for (int offset = -8; offset <= 8; offset++)
+        {
+            WriteBgraMarkerPixel(pixels, width, height, x + offset, y, 0, 0, 255);
+            WriteBgraMarkerPixel(pixels, width, height, x, y + offset, 0, 0, 255);
+        }
+
+        // white center
+        for (int yy = -2; yy <= 2; yy++)
+        {
+            for (int xx = -2; xx <= 2; xx++)
+            {
+                WriteBgraMarkerPixel(pixels, width, height, x + xx, y + yy, 255, 255, 255);
+            }
+        }
+    }
+
+    private static void WriteBgraMarkerPixel(
+        byte[] pixels,
+        int width,
+        int height,
+        int x,
+        int y,
+        byte r,
+        byte g,
+        byte b)
+    {
+        if (x < 0 || y < 0 || x >= width || y >= height)
+        {
+            return;
+        }
+
+        int index = ((y * width) + x) * 4;
+
+        pixels[index + 0] = b;
+        pixels[index + 1] = g;
+        pixels[index + 2] = r;
+        pixels[index + 3] = 255;
+    }
+
+    private static void ApplyReliefShade(
+    byte[] pixels,
+    int width,
+    int height,
+    sbyte[] zBuffer,
+    UoMapAltitudePreset preset,
+    int intensity)
+    {
+        int strength = preset switch
+        {
+            UoMapAltitudePreset.Sharp => 18,
+            UoMapAltitudePreset.Normal => 12,
+            UoMapAltitudePreset.Soft => 7,
+            _ => 10
+        };
+
+        strength = Math.Clamp(strength + (intensity - 10), 2, 30);
+
+        byte[] original = new byte[pixels.Length];
+        Buffer.BlockCopy(pixels, 0, original, 0, pixels.Length);
+
+        for (int y = 1; y < height - 1; y++)
+        {
+            for (int x = 1; x < width - 1; x++)
+            {
+                int index = y * width + x;
+
+                int zHere = zBuffer[index];
+                int zLeft = zBuffer[index - 1];
+                int zUp = zBuffer[index - width];
+
+                int slope = (zHere - zLeft) + (zHere - zUp);
+                int adjust = Math.Clamp(slope * strength / 4, -35, 35);
+
+                int pixel = index * 4;
+
+                int b = original[pixel + 0] + adjust;
+                int g = original[pixel + 1] + adjust;
+                int r = original[pixel + 2] + adjust;
+
+                pixels[pixel + 0] = (byte)Math.Clamp(b, 0, 255);
+                pixels[pixel + 1] = (byte)Math.Clamp(g, 0, 255);
+                pixels[pixel + 2] = (byte)Math.Clamp(r, 0, 255);
+            }
+        }
     }
 }

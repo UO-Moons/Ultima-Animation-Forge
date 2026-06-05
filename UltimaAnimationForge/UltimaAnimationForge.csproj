@@ -39,8 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Scripts\Dragon\**\*.*"
-          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Scripts\Dragon\**\*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

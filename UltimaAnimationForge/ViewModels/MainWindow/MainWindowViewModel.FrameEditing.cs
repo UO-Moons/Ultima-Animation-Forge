@@ -32,9 +32,11 @@ public partial class MainWindowViewModel
 
     private sealed class FrameEditSnapshot
     {
-        public List<VdFrameData> Frames { get; init; } = new();
-        public int CurrentFrameIndex { get; init; }
-        public string Description { get; init; } = string.Empty;
+        public List<VdFrameData> Frames { get; set; } = new();
+        public int CurrentFrameIndex { get; set; }
+        public string Description { get; set; } = string.Empty;
+
+        public Dictionary<string, CompareFramePose> SelectedAnimationFramePoses { get; set; } = new(StringComparer.Ordinal);
     }
 
     private sealed class FramePixels
@@ -255,7 +257,8 @@ public partial class MainWindowViewModel
         {
             Frames = CloneFrameList(editableFrames),
             CurrentFrameIndex = currentFrameIndex,
-            Description = description
+            Description = description,
+            SelectedAnimationFramePoses = ClonePoseDictionary(selectedAnimationFramePoses)
         };
 
         undoFrameEditStack.Push(snapshot);
@@ -324,6 +327,20 @@ public partial class MainWindowViewModel
         editableFrames.Clear();
         editableFrames.AddRange(CloneFrameList(snapshot.Frames));
 
+        selectedAnimationFramePoses.Clear();
+
+        foreach (KeyValuePair<string, CompareFramePose> pair in snapshot.SelectedAnimationFramePoses)
+        {
+            selectedAnimationFramePoses[pair.Key] = new CompareFramePose
+            {
+                OffsetX = pair.Value.OffsetX,
+                OffsetY = pair.Value.OffsetY
+            };
+        }
+
+        SelectedAnimationOffsetX = 0;
+        SelectedAnimationOffsetY = 0;
+
         currentFrameIndex = snapshot.CurrentFrameIndex;
 
         if (currentFrameIndex < 0)
@@ -341,9 +358,29 @@ public partial class MainWindowViewModel
         }
 
         RefreshDecodedFramesFromEditableFrames();
+        CaptureLivePreviewSourceFromCurrentFrame();
+        RefreshLivePreviewImage();
+
         hasFrameEdits = true;
         OnPropertyChanged(nameof(HasFrameEdits));
         RefreshUnsavedChangesState();
+    }
+
+    private Dictionary<string, CompareFramePose> ClonePoseDictionary(
+    Dictionary<string, CompareFramePose> source)
+    {
+        Dictionary<string, CompareFramePose> result = new(StringComparer.Ordinal);
+
+        foreach (KeyValuePair<string, CompareFramePose> pair in source)
+        {
+            result[pair.Key] = new CompareFramePose
+            {
+                OffsetX = pair.Value.OffsetX,
+                OffsetY = pair.Value.OffsetY
+            };
+        }
+
+        return result;
     }
 
     private void UndoFrameEdit()
@@ -1838,6 +1875,7 @@ public partial class MainWindowViewModel
     private void InvalidateCompareOverlayCache()
     {
         compareOverlayFrames.Clear();
+        compareOverlayFrameData.Clear();
         compareOverlayCacheKey = string.Empty;
     }
 
@@ -1876,7 +1914,33 @@ public partial class MainWindowViewModel
 
     private WriteableBitmap BuildPreviewWithActiveOverlays(VdFrameData sourceFrame)
     {
-        WriteableBitmap previewBitmap = CloneBitmap(sourceFrame.Bitmap);
+        int selectedOffsetX = currentFrameIndex >= 0
+            ? GetEffectiveSelectedPoseForFrame(currentFrameIndex).OffsetX
+            : SelectedAnimationOffsetX;
+
+        int selectedOffsetY = currentFrameIndex >= 0
+            ? GetEffectiveSelectedPoseForFrame(currentFrameIndex).OffsetY
+            : SelectedAnimationOffsetY;
+
+        if (currentFrameIndex >= 0)
+        {
+            selectedOffsetX += SelectedAnimationOffsetX;
+            selectedOffsetY += SelectedAnimationOffsetY;
+        }
+
+        if (CompareOverlayEnabled &&
+            CompareSelectedAnimation != null)
+        {
+            return BuildPreviewWithCompareOverlay(
+                sourceFrame,
+                selectedOffsetX,
+                selectedOffsetY);
+        }
+
+        WriteableBitmap previewBitmap = BuildSelectedOffsetPreviewBitmap(
+            sourceFrame.Bitmap,
+            selectedOffsetX,
+            selectedOffsetY);
 
         if (PropOverlayEnabled &&
             loadedPropOverlayBitmap != null)
@@ -1884,13 +1948,65 @@ public partial class MainWindowViewModel
             previewBitmap = BuildPreviewWithPropOverlay(sourceFrame);
         }
 
-        if (CompareOverlayEnabled &&
-            CompareSelectedAnimation != null)
+        return previewBitmap;
+    }
+
+    private WriteableBitmap BuildSelectedOffsetPreviewBitmap(
+    WriteableBitmap sourceBitmap,
+    int offsetX,
+    int offsetY)
+    {
+        if (offsetX == 0 && offsetY == 0)
         {
-            previewBitmap = BuildPreviewWithCompareOverlay(previewBitmap);
+            return CloneBitmap(sourceBitmap);
         }
 
-        return previewBitmap;
+        FramePixels sourcePixels = ReadWriteableBitmapPixels(sourceBitmap);
+
+        int paddingX = Math.Abs(offsetX) + 80;
+        int paddingY = Math.Abs(offsetY) + 80;
+
+        int outputWidth = sourcePixels.Width + (paddingX * 2);
+        int outputHeight = sourcePixels.Height + (paddingY * 2);
+
+        byte[] outputPixels = new byte[outputWidth * outputHeight * 4];
+
+        int drawX = paddingX + offsetX;
+        int drawY = paddingY + offsetY;
+
+        DrawBitmapOntoBuffer(
+            outputPixels,
+            outputWidth,
+            outputHeight,
+            sourcePixels,
+            drawX,
+            drawY);
+
+        return CreateWriteableBitmapFromPixels(outputWidth, outputHeight, outputPixels);
+    }
+
+    private VdFrameData OffsetFrameForPreviewOnly(VdFrameData sourceFrame, int offsetX, int offsetY)
+    {
+        return new VdFrameData
+        {
+            Bitmap = sourceFrame.Bitmap,
+            Palette565 = sourceFrame.Palette565 != null
+                ? new List<ushort>(sourceFrame.Palette565)
+                : null,
+
+            CenterX = (short)(sourceFrame.CenterX - offsetX),
+            CenterY = (short)(sourceFrame.CenterY - offsetY),
+
+            Width = sourceFrame.Width,
+            Height = sourceFrame.Height,
+            InitCoordsX = sourceFrame.InitCoordsX,
+            InitCoordsY = sourceFrame.InitCoordsY,
+            EndCoordsX = sourceFrame.EndCoordsX,
+            EndCoordsY = sourceFrame.EndCoordsY,
+            FrameId = sourceFrame.FrameId,
+            FrameNumber = sourceFrame.FrameNumber,
+            DataOffset = sourceFrame.DataOffset
+        };
     }
 
     private string BuildCompareOverlayCacheKey()
@@ -1917,13 +2033,14 @@ public partial class MainWindowViewModel
 
         string cacheKey = BuildCompareOverlayCacheKey();
 
-        if (compareOverlayFrames.Count > 0 &&
+        if (compareOverlayFrameData.Count > 0 &&
             string.Equals(compareOverlayCacheKey, cacheKey, StringComparison.Ordinal))
         {
             return true;
         }
 
         compareOverlayFrames.Clear();
+        compareOverlayFrameData.Clear();
         compareOverlayCacheKey = string.Empty;
 
         DetachedPreviewLoadResult result = LoadDetachedPreview(
@@ -1931,12 +2048,14 @@ public partial class MainWindowViewModel
             Math.Max(0, CompareOverlayActionIndex),
             Math.Clamp(CompareOverlayDirectionIndex, 0, 4));
 
-        if (!result.Success || result.Frames == null || result.Frames.Count == 0)
+        if (!result.Success || result.FrameData == null || result.FrameData.Count == 0)
         {
             return false;
         }
 
-        compareOverlayFrames.AddRange(result.Frames);
+        compareOverlayFrameData.AddRange(result.FrameData);
+        compareOverlayFrames.AddRange(result.FrameData.Select(x => x.Bitmap));
+
         compareOverlayCacheKey = cacheKey;
         return true;
     }
@@ -2025,11 +2144,25 @@ public partial class MainWindowViewModel
         };
     }
 
-    private WriteableBitmap BuildPreviewWithCompareOverlay(WriteableBitmap baseBitmap)
+    private WriteableBitmap BuildPreviewWithCompareOverlay(
+        VdFrameData baseFrame,
+        int selectedOffsetX,
+        int selectedOffsetY)
     {
         if (!EnsureCompareOverlayFramesLoaded())
         {
-            return CloneBitmap(baseBitmap);
+            return BuildSelectedOffsetPreviewBitmap(
+                baseFrame.Bitmap,
+                selectedOffsetX,
+                selectedOffsetY);
+        }
+
+        if (currentFrameIndex < 0 || currentFrameIndex >= editableFrames.Count)
+        {
+            return BuildSelectedOffsetPreviewBitmap(
+                baseFrame.Bitmap,
+                selectedOffsetX,
+                selectedOffsetY);
         }
 
         int overlayFrameIndex = ResolveCompareOverlayFrameIndex(currentFrameIndex);
@@ -2037,22 +2170,75 @@ public partial class MainWindowViewModel
         overlayFrameIndex = Math.Clamp(
             overlayFrameIndex,
             0,
-            Math.Max(0, compareOverlayFrames.Count - 1));
+            Math.Max(0, compareOverlayFrameData.Count - 1));
 
-        if (overlayFrameIndex < 0 || overlayFrameIndex >= compareOverlayFrames.Count)
+        if (overlayFrameIndex < 0 || overlayFrameIndex >= compareOverlayFrameData.Count)
         {
-            return CloneBitmap(baseBitmap);
+            return BuildSelectedOffsetPreviewBitmap(
+                baseFrame.Bitmap,
+                selectedOffsetX,
+                selectedOffsetY);
         }
 
-        WriteableBitmap overlayBitmap = compareOverlayFrames[overlayFrameIndex];
-        CompareFramePose pose = GetEffectiveComparePoseForFrame(currentFrameIndex);
+        VdFrameData overlayFrame = compareOverlayFrameData[overlayFrameIndex];
+        CompareFramePose comparePose = GetEffectiveComparePoseForFrame(currentFrameIndex);
 
         return CompositeCompareOntoBase(
-            baseBitmap,
-            overlayBitmap,
-            pose.OffsetX,
-            pose.OffsetY,
+            baseFrame,
+            overlayFrame,
+            selectedOffsetX,
+            selectedOffsetY,
+            comparePose.OffsetX,
+            comparePose.OffsetY,
             CompareOverlayOpacityPercent);
+    }
+
+    private WriteableBitmap CompositeCompareOntoBase(
+        VdFrameData baseFrame,
+        VdFrameData overlayFrame,
+        int selectedOffsetX,
+        int selectedOffsetY,
+        int compareOffsetX,
+        int compareOffsetY,
+        double opacityPercent)
+    {
+        FramePixels basePixels = ReadWriteableBitmapPixels(baseFrame.Bitmap);
+        FramePixels overlayPixels = ReadWriteableBitmapPixels(overlayFrame.Bitmap);
+
+        int padding = 220;
+
+        int outputWidth = Math.Max(basePixels.Width, overlayPixels.Width) + padding;
+        int outputHeight = Math.Max(basePixels.Height, overlayPixels.Height) + padding;
+
+        byte[] outputPixels = new byte[outputWidth * outputHeight * 4];
+
+        int originX = outputWidth / 2;
+        int originY = (outputHeight / 2) + 50;
+
+        int baseX = originX - baseFrame.CenterX + selectedOffsetX;
+        int baseY = originY - basePixels.Height - baseFrame.CenterY + selectedOffsetY;
+
+        int overlayX = originX - overlayFrame.CenterX + compareOffsetX;
+        int overlayY = originY - overlayPixels.Height - overlayFrame.CenterY + compareOffsetY;
+
+        DrawBitmapOntoBuffer(
+            outputPixels,
+            outputWidth,
+            outputHeight,
+            basePixels,
+            baseX,
+            baseY);
+
+        DrawBitmapOntoBufferWithOpacity(
+            outputPixels,
+            outputWidth,
+            outputHeight,
+            overlayPixels,
+            overlayX,
+            overlayY,
+            opacityPercent);
+
+        return CreateWriteableBitmapFromPixels(outputWidth, outputHeight, outputPixels);
     }
 
     private void RefreshCompareSidePreviewImage()
@@ -2390,9 +2576,109 @@ public partial class MainWindowViewModel
             "Click Save Changes to write the edit.";
     }
 
+    partial void OnSelectedAnimationOffsetXChanged(int value)
+    {
+        RefreshLivePreviewImage();
+    }
+
+    partial void OnSelectedAnimationOffsetYChanged(int value)
+    {
+        RefreshLivePreviewImage();
+    }
+
+    private void ClearSelectedAnimationOffset()
+    {
+        SelectedAnimationOffsetX = 0;
+        SelectedAnimationOffsetY = 0;
+        StatusText = "Selected animation offset cleared.";
+    }
+
+    private void ApplySelectedAnimationOffsetToCurrentFrame()
+    {
+        if (editableFrames.Count == 0 || currentFrameIndex < 0 || currentFrameIndex >= editableFrames.Count)
+        {
+            StatusText = "No selected frame to offset.";
+            return;
+        }
+
+        string key = GetComparePoseKey(currentFrameIndex);
+
+        CompareFramePose oldPose = GetEffectiveSelectedPoseForFrame(currentFrameIndex);
+        PushUndoSnapshot("Apply selected offset to frame " + (currentFrameIndex + 1));
+
+        selectedAnimationFramePoses[key] = new CompareFramePose
+        {
+            OffsetX = oldPose.OffsetX + SelectedAnimationOffsetX,
+            OffsetY = oldPose.OffsetY + SelectedAnimationOffsetY
+        };
+
+        SelectedAnimationOffsetX = 0;
+        SelectedAnimationOffsetY = 0;
+
+        RefreshLivePreviewImage();
+
+        StatusText = "Saved selected offset for this action/direction frame " + (currentFrameIndex + 1) + ".";
+    }
+
+    private void ApplySelectedAnimationOffsetToCurrentDirection()
+    {
+        if (editableFrames.Count == 0)
+        {
+            StatusText = "No frames loaded.";
+            return;
+        }
+
+        PushUndoSnapshot("Apply selected animation offset to direction");
+
+        for (int i = 0; i < editableFrames.Count; i++)
+        {
+            editableFrames[i] = OffsetFrameAnchor(
+                editableFrames[i],
+                SelectedAnimationOffsetX,
+                SelectedAnimationOffsetY);
+        }
+
+        SelectedAnimationOffsetX = 0;
+        SelectedAnimationOffsetY = 0;
+
+        hasFrameEdits = true;
+        OnPropertyChanged(nameof(HasFrameEdits));
+        RefreshUnsavedChangesState();
+
+        RefreshDecodedFramesFromEditableFrames();
+        CaptureLivePreviewSourceFromCurrentFrame();
+        RefreshLivePreviewImage();
+
+        StatusText = "Applied selected animation offset to all loaded frames.";
+    }
+
+    private VdFrameData OffsetFrameAnchor(VdFrameData sourceFrame, int offsetX, int offsetY)
+    {
+        return new VdFrameData
+        {
+            Bitmap = sourceFrame.Bitmap,
+            Palette565 = sourceFrame.Palette565 != null ? new List<ushort>(sourceFrame.Palette565) : null,
+
+            // Positive preview X/Y moves the selected animation right/down.
+            // UO center values move inverse, so subtract.
+            CenterX = (short)(sourceFrame.CenterX - offsetX),
+            CenterY = (short)(sourceFrame.CenterY - offsetY),
+
+            Width = sourceFrame.Width,
+            Height = sourceFrame.Height,
+            InitCoordsX = sourceFrame.InitCoordsX,
+            InitCoordsY = sourceFrame.InitCoordsY,
+            EndCoordsX = sourceFrame.EndCoordsX,
+            EndCoordsY = sourceFrame.EndCoordsY,
+            FrameId = sourceFrame.FrameId,
+            FrameNumber = sourceFrame.FrameNumber,
+            DataOffset = sourceFrame.DataOffset
+        };
+    }
+
     private VdFrameData ApplyCompareOverlayToFrame(VdFrameData sourceFrame, int frameIndex)
     {
-        if (!EnsureCompareOverlayFramesLoaded() || compareOverlayFrames.Count == 0)
+        if (!EnsureCompareOverlayFramesLoaded() || compareOverlayFrameData.Count == 0)
         {
             return sourceFrame;
         }
@@ -2402,14 +2688,15 @@ public partial class MainWindowViewModel
         overlayFrameIndex = Math.Clamp(
             overlayFrameIndex,
             0,
-            Math.Max(0, compareOverlayFrames.Count - 1));
+            Math.Max(0, compareOverlayFrameData.Count - 1));
 
-        if (overlayFrameIndex < 0 || overlayFrameIndex >= compareOverlayFrames.Count)
+        if (overlayFrameIndex < 0 || overlayFrameIndex >= compareOverlayFrameData.Count)
         {
             return sourceFrame;
         }
 
-        WriteableBitmap overlayBitmap = compareOverlayFrames[overlayFrameIndex];
+        VdFrameData overlayFrame = compareOverlayFrameData[overlayFrameIndex];
+        WriteableBitmap overlayBitmap = overlayFrame.Bitmap;
         CompareFramePose pose = GetEffectiveComparePoseForFrame(frameIndex);
 
         CompareCompositeResult composite = CompositeCompareOntoFrame(
@@ -3779,7 +4066,7 @@ public partial class MainWindowViewModel
         CompareOverlayOpacityPercent = 65.0;
 
         CompareOverlayOffsetX = 0;
-        CompareOverlayOffsetY = -20;
+        CompareOverlayOffsetY = 0;
 
         InvalidateCompareOverlayCache();
         RefreshLivePreviewImage();
