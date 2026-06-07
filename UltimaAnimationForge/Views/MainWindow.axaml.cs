@@ -17,13 +17,10 @@ namespace UltimaAnimationForge.Views;
 
 public partial class MainWindow : Window
 {
-    private Border? previewDropBorder;
 
     public MainWindow()
     {
         InitializeComponent();
-
-        previewDropBorder = this.FindControl<Border>("PreviewDropBorder");
 
         Opened += async (_, _) =>
         {
@@ -35,12 +32,6 @@ public partial class MainWindow : Window
 
         DragDrop.AddDragOverHandler(this, OnWindowDragOver);
         DragDrop.AddDropHandler(this, OnWindowDrop);
-
-        if (previewDropBorder != null)
-        {
-            DragDrop.AddDragOverHandler(previewDropBorder, OnPreviewDragOver);
-            DragDrop.AddDropHandler(previewDropBorder, OnPreviewDrop);
-        }
     }
 
     private static bool HasFileDrop(DragEventArgs e)
@@ -178,124 +169,6 @@ public partial class MainWindow : Window
         }
 
         await viewModel.HandlePreviewDroppedFilesAsync(paths);
-    }
-
-    private void ReplaceThumbnailMenuItem_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem menuItem)
-        {
-            return;
-        }
-
-        if (menuItem.Tag is not AnimationFrameThumbnail thumbnail)
-        {
-            return;
-        }
-
-        if (DataContext is not MainWindowViewModel viewModel)
-        {
-            return;
-        }
-
-        if (viewModel.ReplaceFrameThumbnailCommand.CanExecute(thumbnail))
-        {
-            viewModel.ReplaceFrameThumbnailCommand.Execute(thumbnail);
-        }
-    }
-
-    private void RemoveThumbnailMenuItem_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is not MenuItem menuItem)
-        {
-            return;
-        }
-
-        if (menuItem.Tag is not AnimationFrameThumbnail thumbnail)
-        {
-            return;
-        }
-
-        if (DataContext is not MainWindowViewModel viewModel)
-        {
-            return;
-        }
-
-        if (viewModel.RemoveFrameThumbnailCommand.CanExecute(thumbnail))
-        {
-            viewModel.RemoveFrameThumbnailCommand.Execute(thumbnail);
-        }
-    }
-
-    private void PreviewDragSurface_PointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (DataContext is not MainWindowViewModel vm)
-        {
-            return;
-        }
-
-        Point position = e.GetPosition(PreviewDropBorder);
-
-        if (vm.CompareOverlayDragModeEnabled)
-        {
-            vm.BeginCompareOverlayDrag(position);
-            e.Pointer.Capture((IInputElement?)sender);
-            e.Handled = true;
-            return;
-        }
-
-        if (vm.PreviewDragModeEnabled)
-        {
-            bool affectAllFrames = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-            vm.BeginPreviewDrag(position, affectAllFrames);
-            e.Pointer.Capture((IInputElement?)sender);
-            e.Handled = true;
-        }
-    }
-
-    private void PreviewDragSurface_PointerMoved(object? sender, PointerEventArgs e)
-    {
-        if (DataContext is not MainWindowViewModel vm)
-        {
-            return;
-        }
-
-        Point position = e.GetPosition(PreviewDropBorder);
-
-        if (vm.CompareOverlayDragModeEnabled)
-        {
-            vm.UpdateCompareOverlayDrag(position);
-            e.Handled = true;
-            return;
-        }
-
-        if (vm.PreviewDragModeEnabled)
-        {
-            vm.UpdatePreviewDrag(position);
-            e.Handled = true;
-        }
-    }
-
-    private void PreviewDragSurface_PointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        if (DataContext is not MainWindowViewModel vm)
-        {
-            return;
-        }
-
-        vm.EndCompareOverlayDrag();
-        vm.EndPreviewDrag();
-
-        e.Pointer.Capture(null);
-        e.Handled = true;
-    }
-
-    private void PreviewDragSurface_PointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel vm)
-        {
-            vm.EndCompareOverlayDrag();
-            vm.EndPreviewDrag();
-        }
     }
 
     private async void CopyAnimationBrowserBodyIdMenuItem_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
