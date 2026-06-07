@@ -196,6 +196,11 @@ public partial class MainWindowViewModel
     {
         OnPropertyChanged(nameof(SelectedDirectionSliderValue));
 
+        if (CompareOverlayEnabled && CompareSelectedAnimation != null)
+        {
+            CompareOverlayDirectionIndex = GetSelectedDirectionIndex();
+        }
+
         if (hasImportedSpriteSheetSession)
         {
             int actionIndex = GetSelectedActionIndex();

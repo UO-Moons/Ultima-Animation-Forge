@@ -31,6 +31,31 @@ public partial class MainWindowViewModel
         MapMaker = 15
     }
 
+    public string CurrentFrameCenterX =>
+    editableFrames.Count == 0 || currentFrameIndex < 0 || currentFrameIndex >= editableFrames.Count
+        ? "-"
+        : editableFrames[currentFrameIndex].CenterX.ToString();
+
+    public string CurrentFrameCenterY =>
+        editableFrames.Count == 0 || currentFrameIndex < 0 || currentFrameIndex >= editableFrames.Count
+            ? "-"
+            : editableFrames[currentFrameIndex].CenterY.ToString();
+
+    public string CurrentFrameBoundsText =>
+        editableFrames.Count == 0 || currentFrameIndex < 0 || currentFrameIndex >= editableFrames.Count
+            ? "-"
+            : "Init " + editableFrames[currentFrameIndex].InitCoordsX +
+              ", " + editableFrames[currentFrameIndex].InitCoordsY +
+              " / End " + editableFrames[currentFrameIndex].EndCoordsX +
+              ", " + editableFrames[currentFrameIndex].EndCoordsY;
+
+    private void NotifyCurrentFramePositionChanged()
+    {
+        OnPropertyChanged(nameof(CurrentFrameCenterX));
+        OnPropertyChanged(nameof(CurrentFrameCenterY));
+        OnPropertyChanged(nameof(CurrentFrameBoundsText));
+    }
+
     public string HeaderStatusText => ShowGumpEditorPanel ? GumpInfoText : StatusText;
 
     public bool ShowMulActionDirectionControls => ShowMulSlotView && !IsSelectedAnimationFileUop();

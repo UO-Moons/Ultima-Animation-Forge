@@ -22,6 +22,21 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    public ICommand SetAnimationAlignReferenceCommand { get; }
+    public ICommand MatchCurrentFrameToAlignReferenceCommand { get; }
+    public ICommand AlignCurrentDirectionToReferenceCommand { get; }
+    public ICommand AutoAlignCurrentDirectionFramesCommand { get; }
+
+    private VdFrameData? animationAlignReferenceFrame;
+
+    [ObservableProperty]
+    private string animationAlignReferenceText = "None";
+
+    [ObservableProperty]
+    private bool originalFrameCompareEnabled = false;
+
+    public ICommand ToggleOriginalFrameCompareCommand { get; }
+
     [ObservableProperty]
     private int selectedAnimationOffsetX = 0;
 
@@ -1055,6 +1070,12 @@ public partial class MainWindowViewModel : ViewModelBase
         ShowSoundsCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Sounds);
         ShowMapsCommand = new RelayCommand(() => ActiveToolTab = MainToolTab.Maps);
         InitializeMapsTab();
+        ToggleOriginalFrameCompareCommand = new RelayCommand(ToggleOriginalFrameCompare);
+        SetAnimationAlignReferenceCommand = new RelayCommand(SetAnimationAlignReference);
+        MatchCurrentFrameToAlignReferenceCommand = new RelayCommand(MatchCurrentFrameToAlignReference);
+        AlignCurrentDirectionToReferenceCommand = new RelayCommand(AlignCurrentDirectionToReference);
+        AutoAlignCurrentDirectionFramesCommand = new RelayCommand(AutoAlignCurrentDirectionFrames);
+
         ShowMapMakerCommand = new RelayCommand(() =>
         {
             ActiveToolTab = MainToolTab.MapMaker;

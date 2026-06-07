@@ -150,6 +150,7 @@ public partial class MainWindowViewModel
         RefreshLivePreviewImage();
 
         OnPropertyChanged(nameof(CurrentFrameDisplayText));
+        NotifyCurrentFramePositionChanged();
         StatusText = "Showing frame " + (currentFrameIndex + 1) + " of " + decodedFrames.Count + ".";
     }
 
@@ -188,6 +189,7 @@ public partial class MainWindowViewModel
 
         OnPropertyChanged(nameof(HasFrameThumbnails));
         OnPropertyChanged(nameof(CurrentFrameDisplayText));
+        NotifyCurrentFramePositionChanged();
     }
 
     private void ClearDecodedFramesAndThumbnails()
@@ -223,6 +225,7 @@ public partial class MainWindowViewModel
 
         OnPropertyChanged(nameof(HasFrameThumbnails));
         OnPropertyChanged(nameof(CurrentFrameDisplayText));
+        NotifyCurrentFramePositionChanged();
         OnPropertyChanged(nameof(HasFrameEdits));
     }
 
@@ -244,6 +247,7 @@ public partial class MainWindowViewModel
         }
 
         OnPropertyChanged(nameof(CurrentFrameDisplayText));
+        NotifyCurrentFramePositionChanged();
     }
 
     private void PushUndoSnapshot(string description)
@@ -1937,10 +1941,16 @@ public partial class MainWindowViewModel
                 selectedOffsetY);
         }
 
-        WriteableBitmap previewBitmap = BuildSelectedOffsetPreviewBitmap(
-            sourceFrame.Bitmap,
-            selectedOffsetX,
-            selectedOffsetY);
+        WriteableBitmap previewBitmap = OriginalFrameCompareEnabled
+            ? BuildOriginalFrameComparePreviewBitmap(
+                sourceFrame.Bitmap,
+                selectedOffsetX,
+                selectedOffsetY,
+                45.0)
+            : BuildSelectedOffsetPreviewBitmap(
+                sourceFrame.Bitmap,
+                selectedOffsetX,
+                selectedOffsetY);
 
         if (PropOverlayEnabled &&
             loadedPropOverlayBitmap != null)
@@ -1949,6 +1959,48 @@ public partial class MainWindowViewModel
         }
 
         return previewBitmap;
+    }
+
+    private WriteableBitmap BuildOriginalFrameComparePreviewBitmap(
+    WriteableBitmap sourceBitmap,
+    int offsetX,
+    int offsetY,
+    double originalOpacityPercent)
+    {
+        FramePixels sourcePixels = ReadWriteableBitmapPixels(sourceBitmap);
+
+        int paddingX = Math.Abs(offsetX) + 80;
+        int paddingY = Math.Abs(offsetY) + 80;
+
+        int outputWidth = sourcePixels.Width + (paddingX * 2);
+        int outputHeight = sourcePixels.Height + (paddingY * 2);
+
+        byte[] outputPixels = new byte[outputWidth * outputHeight * 4];
+
+        int originalX = paddingX;
+        int originalY = paddingY;
+
+        int movedX = paddingX + offsetX;
+        int movedY = paddingY + offsetY;
+
+        DrawBitmapOntoBufferWithOpacity(
+            outputPixels,
+            outputWidth,
+            outputHeight,
+            sourcePixels,
+            originalX,
+            originalY,
+            originalOpacityPercent);
+
+        DrawBitmapOntoBuffer(
+            outputPixels,
+            outputWidth,
+            outputHeight,
+            sourcePixels,
+            movedX,
+            movedY);
+
+        return CreateWriteableBitmapFromPixels(outputWidth, outputHeight, outputPixels);
     }
 
     private WriteableBitmap BuildSelectedOffsetPreviewBitmap(
@@ -2205,21 +2257,37 @@ public partial class MainWindowViewModel
         FramePixels basePixels = ReadWriteableBitmapPixels(baseFrame.Bitmap);
         FramePixels overlayPixels = ReadWriteableBitmapPixels(overlayFrame.Bitmap);
 
-        int padding = 220;
+        const int minimumMargin = 120;
 
-        int outputWidth = Math.Max(basePixels.Width, overlayPixels.Width) + padding;
-        int outputHeight = Math.Max(basePixels.Height, overlayPixels.Height) + padding;
+        int overlayRelativeX =
+            baseFrame.CenterX -
+            overlayFrame.CenterX +
+            compareOffsetX;
+
+        int overlayRelativeY =
+            (basePixels.Height + baseFrame.CenterY) -
+            (overlayPixels.Height + overlayFrame.CenterY) +
+            compareOffsetY;
+
+        int marginX = minimumMargin;
+        int marginY = minimumMargin;
+
+        marginX = Math.Max(marginX, Math.Max(0, -overlayRelativeX));
+        marginX = Math.Max(marginX, Math.Max(0, overlayRelativeX + overlayPixels.Width - basePixels.Width));
+
+        marginY = Math.Max(marginY, Math.Max(0, -overlayRelativeY));
+        marginY = Math.Max(marginY, Math.Max(0, overlayRelativeY + overlayPixels.Height - basePixels.Height));
+
+        int outputWidth = basePixels.Width + (marginX * 2);
+        int outputHeight = basePixels.Height + (marginY * 2);
 
         byte[] outputPixels = new byte[outputWidth * outputHeight * 4];
 
-        int originX = outputWidth / 2;
-        int originY = (outputHeight / 2) + 50;
+        int baseX = marginX + selectedOffsetX;
+        int baseY = marginY + selectedOffsetY;
 
-        int baseX = originX - baseFrame.CenterX + selectedOffsetX;
-        int baseY = originY - basePixels.Height - baseFrame.CenterY + selectedOffsetY;
-
-        int overlayX = originX - overlayFrame.CenterX + compareOffsetX;
-        int overlayY = originY - overlayPixels.Height - overlayFrame.CenterY + compareOffsetY;
+        int overlayX = marginX + overlayRelativeX;
+        int overlayY = marginY + overlayRelativeY;
 
         DrawBitmapOntoBuffer(
             outputPixels,
@@ -2591,6 +2659,22 @@ public partial class MainWindowViewModel
         SelectedAnimationOffsetX = 0;
         SelectedAnimationOffsetY = 0;
         StatusText = "Selected animation offset cleared.";
+    }
+
+    private void ToggleOriginalFrameCompare()
+    {
+        OriginalFrameCompareEnabled = !OriginalFrameCompareEnabled;
+
+        RefreshLivePreviewImage();
+
+        StatusText = OriginalFrameCompareEnabled
+            ? "Original frame compare enabled."
+            : "Original frame compare disabled.";
+    }
+
+    partial void OnOriginalFrameCompareEnabledChanged(bool value)
+    {
+        RefreshLivePreviewImage();
     }
 
     private void ApplySelectedAnimationOffsetToCurrentFrame()
@@ -4184,5 +4268,218 @@ public partial class MainWindowViewModel
         StatusText =
     "Applied current compare offset to all frames in this action/direction for preview alignment only. " +
     "This does not edit MUL/IDX.";
+    }
+
+    private struct VisibleFrameAnchor
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+    }
+
+    private void SetAnimationAlignReference()
+    {
+        if (editableFrames.Count == 0 || currentFrameIndex < 0 || currentFrameIndex >= editableFrames.Count)
+        {
+            StatusText = "No frame selected to use as align reference.";
+            return;
+        }
+
+        animationAlignReferenceFrame = CloneFrameList(new List<VdFrameData>
+    {
+        editableFrames[currentFrameIndex]
+    })[0];
+
+        AnimationAlignReferenceText =
+            "Frame " + (currentFrameIndex + 1) +
+            " | X " + animationAlignReferenceFrame.CenterX +
+            " | Y " + animationAlignReferenceFrame.CenterY;
+
+        StatusText = "Alignment reference set from frame " + (currentFrameIndex + 1) + ".";
+    }
+
+    private void MatchCurrentFrameToAlignReference()
+    {
+        if (!TryGetAlignOffsetForCurrentFrame(out int offsetX, out int offsetY))
+        {
+            return;
+        }
+
+        SelectedAnimationOffsetX = offsetX;
+        SelectedAnimationOffsetY = offsetY;
+
+        StatusText = "Suggested align offset: X " + offsetX + ", Y " + offsetY + ". Use Apply Frame to save it.";
+    }
+
+    private void AlignCurrentDirectionToReference()
+    {
+        if (!TryGetAlignOffsetForCurrentFrame(out int offsetX, out int offsetY))
+        {
+            return;
+        }
+
+        if (editableFrames.Count == 0)
+        {
+            StatusText = "No frames loaded.";
+            return;
+        }
+
+        PushUndoSnapshot("Align current direction to reference");
+
+        for (int i = 0; i < editableFrames.Count; i++)
+        {
+            editableFrames[i] = OffsetFrameAnchor(editableFrames[i], offsetX, offsetY);
+        }
+
+        SelectedAnimationOffsetX = 0;
+        SelectedAnimationOffsetY = 0;
+
+        hasFrameEdits = true;
+        OnPropertyChanged(nameof(HasFrameEdits));
+        RefreshUnsavedChangesState();
+
+        RefreshDecodedFramesFromEditableFrames();
+        CaptureLivePreviewSourceFromCurrentFrame();
+        RefreshLivePreviewImage();
+
+        StatusText = "Aligned current direction using X " + offsetX + ", Y " + offsetY + ".";
+    }
+
+    private void AutoAlignCurrentDirectionFrames()
+    {
+        if (animationAlignReferenceFrame == null)
+        {
+            StatusText = "Set an alignment reference first.";
+            return;
+        }
+
+        if (!TryGetVisibleFrameAnchor(animationAlignReferenceFrame, out VisibleFrameAnchor referenceAnchor))
+        {
+            StatusText = "Reference frame has no visible pixels.";
+            return;
+        }
+
+        if (editableFrames.Count == 0)
+        {
+            StatusText = "No frames loaded.";
+            return;
+        }
+
+        PushUndoSnapshot("Auto align direction frames");
+
+        int alignedCount = 0;
+
+        for (int i = 0; i < editableFrames.Count; i++)
+        {
+            if (!TryGetVisibleFrameAnchor(editableFrames[i], out VisibleFrameAnchor currentAnchor))
+            {
+                continue;
+            }
+
+            int offsetX = referenceAnchor.X - currentAnchor.X;
+            int offsetY = referenceAnchor.Y - currentAnchor.Y;
+
+            editableFrames[i] = OffsetFrameAnchor(editableFrames[i], offsetX, offsetY);
+            alignedCount++;
+        }
+
+        SelectedAnimationOffsetX = 0;
+        SelectedAnimationOffsetY = 0;
+
+        hasFrameEdits = true;
+        OnPropertyChanged(nameof(HasFrameEdits));
+        RefreshUnsavedChangesState();
+
+        RefreshDecodedFramesFromEditableFrames();
+        CaptureLivePreviewSourceFromCurrentFrame();
+        RefreshLivePreviewImage();
+
+        StatusText = "Auto aligned " + alignedCount + " frame(s) to the reference.";
+    }
+
+    private bool TryGetAlignOffsetForCurrentFrame(out int offsetX, out int offsetY)
+    {
+        offsetX = 0;
+        offsetY = 0;
+
+        if (animationAlignReferenceFrame == null)
+        {
+            StatusText = "Set an alignment reference first.";
+            return false;
+        }
+
+        if (editableFrames.Count == 0 || currentFrameIndex < 0 || currentFrameIndex >= editableFrames.Count)
+        {
+            StatusText = "No current frame selected.";
+            return false;
+        }
+
+        if (!TryGetVisibleFrameAnchor(animationAlignReferenceFrame, out VisibleFrameAnchor referenceAnchor))
+        {
+            StatusText = "Reference frame has no visible pixels.";
+            return false;
+        }
+
+        if (!TryGetVisibleFrameAnchor(editableFrames[currentFrameIndex], out VisibleFrameAnchor currentAnchor))
+        {
+            StatusText = "Current frame has no visible pixels.";
+            return false;
+        }
+
+        offsetX = referenceAnchor.X - currentAnchor.X;
+        offsetY = referenceAnchor.Y - currentAnchor.Y;
+
+        return true;
+    }
+
+    private bool TryGetVisibleFrameAnchor(VdFrameData frame, out VisibleFrameAnchor anchor)
+    {
+        anchor = new VisibleFrameAnchor();
+
+        FramePixels pixels = ReadWriteableBitmapPixels(frame.Bitmap);
+
+        int left = pixels.Width;
+        int right = -1;
+        int bottom = -1;
+
+        for (int y = 0; y < pixels.Height; y++)
+        {
+            for (int x = 0; x < pixels.Width; x++)
+            {
+                int index = ((y * pixels.Width) + x) * 4;
+                byte alpha = pixels.Pixels[index + 3];
+
+                if (alpha == 0)
+                {
+                    continue;
+                }
+
+                if (x < left)
+                {
+                    left = x;
+                }
+
+                if (x > right)
+                {
+                    right = x;
+                }
+
+                if (y > bottom)
+                {
+                    bottom = y;
+                }
+            }
+        }
+
+        if (right < left || bottom < 0)
+        {
+            return false;
+        }
+
+        int visibleCenterX = left + ((right - left) / 2);
+
+        anchor.X = visibleCenterX - frame.CenterX;
+        anchor.Y = bottom - pixels.Height - frame.CenterY;
+
+        return true;
     }
 }
