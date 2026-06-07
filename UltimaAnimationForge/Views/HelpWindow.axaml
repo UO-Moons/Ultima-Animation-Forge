@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UltimaAnimationForge.Views.HelpWindow"
+        x:CompileBindings="False"
+        Width="760"
+        Height="680"
+        MinWidth="640"
+        MinHeight="520"
+        Title="Ultima Animation Forge Help"
+        Background="#0B0F14"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid RowDefinitions="*,Auto"
+          Margin="16"
+          RowSpacing="12">
+
+        <Border Grid.Row="0"
+                Background="#111820"
+                BorderBrush="#2D3743"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14">
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+
+                <TextBlock Text="{Binding HelpText}"
+                           TextWrapping="Wrap"
+                           Foreground="#D5DCE4"
+                           FontSize="14"
+                           LineHeight="20"/>
+            </ScrollViewer>
+        </Border>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+
+            <Button Content="Close"
+                    Width="100"
+                    Click="Close_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

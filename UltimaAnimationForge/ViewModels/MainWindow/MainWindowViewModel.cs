@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -22,6 +23,23 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    [ObservableProperty]
+    private bool isAiAssistantAvailable;
+
+    [ObservableProperty]
+    private string aiAssistantRequirementText = string.Empty;
+
+    private readonly AiAssistantService aiAssistantService = new();
+
+    [ObservableProperty]
+    private string aiQuestionText = string.Empty;
+
+    [ObservableProperty]
+    private string aiAnswerText = "Ask me about the selected animation, UOP/MUL import errors, frame alignment, bodyconv, mobtypes, or tool workflow.";
+
+    [ObservableProperty]
+    private bool isAiBusy;
+
     public ICommand SetAnimationAlignReferenceCommand { get; }
     public ICommand MatchCurrentFrameToAlignReferenceCommand { get; }
     public ICommand AlignCurrentDirectionToReferenceCommand { get; }
@@ -1075,6 +1093,7 @@ public partial class MainWindowViewModel : ViewModelBase
         MatchCurrentFrameToAlignReferenceCommand = new RelayCommand(MatchCurrentFrameToAlignReference);
         AlignCurrentDirectionToReferenceCommand = new RelayCommand(AlignCurrentDirectionToReference);
         AutoAlignCurrentDirectionFramesCommand = new RelayCommand(AutoAlignCurrentDirectionFrames);
+        _ = CheckAiAvailabilityAsync();
 
         ShowMapMakerCommand = new RelayCommand(() =>
         {
@@ -1175,6 +1194,14 @@ public partial class MainWindowViewModel : ViewModelBase
         SetRandomLoadingTip();
 
         LoadActiveProfileIntoUi();
+    }
+
+    private async Task CheckAiAvailabilityAsync()
+    {
+        AiAvailabilityResult result = await HardwareInfoService.CheckAiAvailabilityAsync();
+
+        IsAiAssistantAvailable = result.IsAvailable;
+        AiAssistantRequirementText = result.Message;
     }
 
     private Window? GetMainWindow()
@@ -2952,5 +2979,388 @@ public partial class MainWindowViewModel : ViewModelBase
             "Cleared " + clearedFileName +
             " body index " + clearedBodyIndex +
             " / true body " + clearedTrueBodyId + ".";
+    }
+
+    [RelayCommand]
+    private async Task AskAi()
+    {
+        if (IsAiBusy)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(AiQuestionText))
+        {
+            AiAnswerText = "Type a question first.";
+            return;
+        }
+
+        IsAiBusy = true;
+
+        try
+        {
+            string context = BuildAiContext();
+            AiAnswerText = await aiAssistantService.AskAsync(AiQuestionText, context);
+        }
+        finally
+        {
+            IsAiBusy = false;
+        }
+    }
+
+    private string BuildAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine(BuildAiToolKnowledge());
+
+        context.AppendLine(BuildGeneralAiContext());
+        context.AppendLine(BuildAnimationTabAiContext());
+        context.AppendLine(BuildArtTabAiContext());
+        context.AppendLine(BuildGumpBuilderAiContext());
+        context.AppendLine(BuildMapTabAiContext());
+        context.AppendLine(BuildSoundTabAiContext());
+        context.AppendLine(BuildLightEditorAiContext());
+        context.AppendLine(BuildRadarColAiContext());
+        context.AppendLine(BuildMultisAiContext());
+
+        return context.ToString();
+    }
+
+    private static string BuildAiToolKnowledge()
+    {
+        return
+            "Known tabs and features:\n\n" +
+
+            "Animation Editor Tab:\n" +
+            "- Loads MUL and UOP animations.\n" +
+            "- Previews body/action/direction frames.\n" +
+            "- Supports play, pause, frame stepping, zoom, checker background.\n" +
+            "- Supports selected frame offsets, direction offsets, full animation offsets.\n" +
+            "- Supports mounted rider compare, mount/rider alignment, frame compare offsets.\n" +
+            "- Supports props/overlays and import/export workflows.\n\n" +
+
+            "Art Tab:\n" +
+            "- Loads art.mul/artidx.mul or artLegacyMUL.uop.\n" +
+            "- Shows land/static art, thumbnails, browser mode, search, filters, free slots.\n" +
+            "- Supports import/export, mass import/export, drag-drop replace, preview window.\n" +
+            "- Shows TileData info and can edit TileData flags and AnimData.\n\n" +
+
+            "TileData Tab:\n" +
+            "- Reads and edits tiledata.mul values.\n" +
+            "- Handles item names, flags, weight, quality, quantity, animation, hue, height, value, texture IDs.\n\n" +
+
+            "Gump Builder Tab:\n" +
+            "- Visual gump layout editor.\n" +
+            "- Supports backgrounds, images, art picker, gump picker, moving/resizing elements, z-order planning.\n\n" +
+
+            "Gumps Tab:\n" +
+            "- Loads and previews gump art.\n" +
+            "- Supports import/export and image adjustment workflows.\n\n" +
+
+            "Light Editor Tab:\n" +
+            "- Loads light.mul/lightidx.mul.\n" +
+            "- Supports paint, erase, brush size, strength, soften, sharpen, reset, import/export.\n\n" +
+
+            "RadarCol Tab:\n" +
+            "- Loads and edits radarcol.mul colors.\n" +
+            "- Supports generated colors, apply selected, apply checked, revert, save.\n\n" +
+
+            "Map Tab:\n" +
+            "- Renders UO maps from map MUL/UOP files.\n" +
+            "- Supports statics, altitude modes, markers, zoom/pan, and map editing tools.\n\n" +
+
+            "Multis Tab:\n" +
+            "- Builds and previews UO multis/houses.\n" +
+            "- Supports components, filters, roof tools, clear roof, and layout editing.\n\n" +
+
+            "Sounds Tab:\n" +
+            "- Loads sound files.\n" +
+            "- Supports playback, import/export, WAV checking/fixing, waveform viewer.\n\n" +
+
+            "Settings/Profile System:\n" +
+            "- Stores UO folder path, output folder, selected file/filter/action/direction, preview settings.\n" +
+            "- Uses cache files to speed up animation loading.\n\n";
+    }
+
+    private string BuildGeneralAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("General current state:");
+        AppendVmProperty(context, "UoFolderPath");
+        AppendVmProperty(context, "OutputFolderPath");
+        AppendVmProperty(context, "StatusText");
+        AppendVmProperty(context, "LastErrorText");
+        AppendVmProperty(context, "SelectedProfile");
+        AppendVmProperty(context, "SelectedAnimationFile");
+        AppendVmProperty(context, "SearchText");
+        AppendVmProperty(context, "PreviewZoomLevel");
+        AppendVmProperty(context, "ShowCheckerBackground");
+        AppendVmProperty(context, "LoopPlayback");
+        context.AppendLine();
+
+        return context.ToString();
+    }
+
+    private string BuildAnimationTabAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("Animation Editor live state:");
+        AppendVmProperty(context, "ShowAnimationEditorPanel");
+        AppendVmProperty(context, "SelectedBodyType");
+        AppendVmProperty(context, "SelectedAction");
+        AppendVmProperty(context, "SelectedDirection");
+        AppendVmProperty(context, "SelectedFrameIndex");
+        AppendVmProperty(context, "CurrentFrameIndex");
+        AppendVmProperty(context, "PlaybackSpeed");
+        AppendVmProperty(context, "SelectedAnimationOffsetX");
+        AppendVmProperty(context, "SelectedAnimationOffsetY");
+        AppendVmProperty(context, "SelectedAnimationOffsetXText");
+        AppendVmProperty(context, "SelectedAnimationOffsetYText");
+        AppendVmProperty(context, "SelectedFrameOffsetX");
+        AppendVmProperty(context, "SelectedFrameOffsetY");
+        AppendVmProperty(context, "MountRiderCompareEnabled");
+        AppendVmProperty(context, "ShowMountRiderCompare");
+        AppendVmProperty(context, "SelectedMountBodyId");
+        AppendVmProperty(context, "SelectedRiderBodyId");
+        AppendVmProperty(context, "AnimationStatusText");
+
+        if (SelectedAnimation == null)
+        {
+            context.AppendLine("SelectedAnimation: null");
+        }
+        else
+        {
+            context.AppendLine("SelectedAnimation:");
+            context.AppendLine("DisplayName: " + SelectedAnimation.DisplayName);
+            context.AppendLine("SecondaryText: " + SelectedAnimation.SecondaryText);
+            context.AppendLine("BodyId: " + SelectedAnimation.BodyId);
+            context.AppendLine("ActionId: " + SelectedAnimation.ActionId);
+            context.AppendLine("SourceMode: " + SelectedAnimation.SourceMode);
+            context.AppendLine("SourceFile: " + SelectedAnimation.SourceFile);
+            context.AppendLine("IndexNumber: " + SelectedAnimation.IndexNumber);
+            context.AppendLine("Offset: " + SelectedAnimation.Offset);
+            context.AppendLine("Length: " + SelectedAnimation.Length);
+            context.AppendLine("Extra: " + SelectedAnimation.Extra);
+            context.AppendLine("FrameCount: " + SelectedAnimation.FrameCount);
+            context.AppendLine("FrameSize: " + SelectedAnimation.FrameSize);
+        }
+
+        AppendCollectionCount(context, "AnimationEntries");
+        AppendCollectionCount(context, "AnimationBrowserTiles");
+        AppendCollectionCount(context, "FrameThumbnails");
+        AppendCollectionCount(context, "ActionOptions");
+        AppendCollectionCount(context, "DirectionOptions");
+        AppendCollectionCount(context, "MulSlotEntries");
+        AppendCollectionCount(context, "FreeMulSlots");
+
+        context.AppendLine();
+        return context.ToString();
+    }
+
+    private string BuildArtTabAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("Art Tab live state:");
+        AppendVmProperty(context, "ShowArtPanel");
+        AppendVmProperty(context, "SelectedArtEntry");
+        AppendVmProperty(context, "SelectedArtId");
+        AppendVmProperty(context, "SelectedArtType");
+        AppendVmProperty(context, "ArtSearchText");
+        AppendVmProperty(context, "ShowArtThumbnails");
+        AppendVmProperty(context, "ShowArtBrowserPreview");
+        AppendVmProperty(context, "ShowFreeArtSlots");
+        AppendVmProperty(context, "SelectedArtFilter");
+        AppendVmProperty(context, "SelectedTileDataEntry");
+        AppendVmProperty(context, "ArtStatusText");
+
+        AppendCollectionCount(context, "ArtEntries");
+        AppendCollectionCount(context, "FilteredArtEntries");
+        AppendCollectionCount(context, "ArtBrowserTiles");
+        AppendCollectionCount(context, "CheckedArtEntries");
+        AppendCollectionCount(context, "ArtFilterGroups");
+
+        context.AppendLine();
+        return context.ToString();
+    }
+
+    private string BuildGumpBuilderAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("Gump Builder live state:");
+        AppendVmProperty(context, "ShowGumpBuilderPanel");
+        AppendVmProperty(context, "SelectedGumpBuilderElement");
+        AppendVmProperty(context, "SelectedGumpId");
+        AppendVmProperty(context, "GumpBuilderZoom");
+        AppendVmProperty(context, "GumpBuilderStatusText");
+        AppendVmProperty(context, "SelectedGumpPickerEntry");
+        AppendVmProperty(context, "SelectedArtPickerEntry");
+
+        AppendCollectionCount(context, "GumpBuilderElements");
+        AppendCollectionCount(context, "GumpPickerEntries");
+        AppendCollectionCount(context, "ArtPickerEntries");
+
+        context.AppendLine();
+        return context.ToString();
+    }
+
+    private string BuildMapTabAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("Map Tab live state:");
+        AppendVmProperty(context, "ShowMapPanel");
+        AppendVmProperty(context, "SelectedMap");
+        AppendVmProperty(context, "MapStartX");
+        AppendVmProperty(context, "MapStartY");
+        AppendVmProperty(context, "MapWorldWidth");
+        AppendVmProperty(context, "MapWorldHeight");
+        AppendVmProperty(context, "MapOutputWidth");
+        AppendVmProperty(context, "MapOutputHeight");
+        AppendVmProperty(context, "MapZoom");
+        AppendVmProperty(context, "ShowStatics");
+        AppendVmProperty(context, "SelectedAltitudeMode");
+        AppendVmProperty(context, "SelectedAltitudePreset");
+        AppendVmProperty(context, "AltitudeIntensity");
+        AppendVmProperty(context, "MapStatusText");
+
+        AppendCollectionCount(context, "MapMarkers");
+        AppendCollectionCount(context, "MapOptions");
+
+        context.AppendLine();
+        return context.ToString();
+    }
+
+    private string BuildSoundTabAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("Sound Tab live state:");
+        AppendVmProperty(context, "ShowSoundPanel");
+        AppendVmProperty(context, "SelectedSoundEntry");
+        AppendVmProperty(context, "SelectedSoundId");
+        AppendVmProperty(context, "SoundSearchText");
+        AppendVmProperty(context, "SoundStatusText");
+        AppendVmProperty(context, "IsSoundPlaying");
+        AppendVmProperty(context, "ShowWaveform");
+
+        AppendCollectionCount(context, "SoundEntries");
+        AppendCollectionCount(context, "FilteredSoundEntries");
+        AppendCollectionCount(context, "WaveformSamples");
+
+        context.AppendLine();
+        return context.ToString();
+    }
+
+    private string BuildLightEditorAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("Light Editor live state:");
+        AppendVmProperty(context, "ShowLightEditorPanel");
+        AppendVmProperty(context, "SelectedLightEntry");
+        AppendVmProperty(context, "SelectedLightId");
+        AppendVmProperty(context, "LightBrushSize");
+        AppendVmProperty(context, "LightBrushStrength");
+        AppendVmProperty(context, "SelectedLightTool");
+        AppendVmProperty(context, "LightStatusText");
+
+        AppendCollectionCount(context, "LightEntries");
+
+        context.AppendLine();
+        return context.ToString();
+    }
+
+    private string BuildRadarColAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("RadarCol Tab live state:");
+        AppendVmProperty(context, "ShowRadarColPanel");
+        AppendVmProperty(context, "SelectedRadarColEntry");
+        AppendVmProperty(context, "SelectedRadarColId");
+        AppendVmProperty(context, "RadarColSearchText");
+        AppendVmProperty(context, "RadarColStatusText");
+
+        AppendCollectionCount(context, "RadarColEntries");
+        AppendCollectionCount(context, "FilteredRadarColEntries");
+        AppendCollectionCount(context, "CheckedRadarColEntries");
+
+        context.AppendLine();
+        return context.ToString();
+    }
+
+    private string BuildMultisAiContext()
+    {
+        StringBuilder context = new();
+
+        context.AppendLine("Multis Tab live state:");
+        AppendVmProperty(context, "ShowMultisPanel");
+        AppendVmProperty(context, "SelectedMultiEntry");
+        AppendVmProperty(context, "SelectedMultiComponent");
+        AppendVmProperty(context, "MultiSearchText");
+        AppendVmProperty(context, "MultiStatusText");
+        AppendVmProperty(context, "SelectedRoofProfile");
+
+        AppendCollectionCount(context, "MultiEntries");
+        AppendCollectionCount(context, "FilteredMultiEntries");
+        AppendCollectionCount(context, "MultiComponents");
+        AppendCollectionCount(context, "RoofProfiles");
+
+        context.AppendLine();
+        return context.ToString();
+    }
+
+    private void AppendVmProperty(StringBuilder context, string propertyName)
+    {
+        try
+        {
+            System.Reflection.PropertyInfo? property = GetType().GetProperty(propertyName);
+
+            if (property == null)
+            {
+                return;
+            }
+
+            object? value = property.GetValue(this);
+
+            if (value == null)
+            {
+                context.AppendLine(propertyName + ": null");
+                return;
+            }
+
+            context.AppendLine(propertyName + ": " + value);
+        }
+        catch
+        {
+        }
+    }
+
+    private void AppendCollectionCount(StringBuilder context, string propertyName)
+    {
+        try
+        {
+            System.Reflection.PropertyInfo? property = GetType().GetProperty(propertyName);
+
+            if (property == null)
+            {
+                return;
+            }
+
+            object? value = property.GetValue(this);
+
+            if (value is System.Collections.ICollection collection)
+            {
+                context.AppendLine(propertyName + ": " + collection.Count);
+            }
+        }
+        catch
+        {
+        }
     }
 }

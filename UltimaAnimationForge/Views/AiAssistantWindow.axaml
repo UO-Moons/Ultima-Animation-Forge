@@ -1,0 +1,50 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="UltimaAnimationForge.Views.AiAssistantWindow"
+        x:CompileBindings="False"
+        Width="520"
+        Height="650"
+        MinWidth="420"
+        MinHeight="500"
+        Title="AI Assistant"
+        Background="#0B0F14">
+
+    <Border Background="#111820"
+            BorderBrush="#2D3743"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="12"
+            Margin="12">
+
+        <Grid RowDefinitions="Auto,Auto,*,Auto"
+              RowSpacing="10">
+
+            <TextBlock Grid.Row="0"
+                       Text="AI Assistant"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="#E8EDF2"/>
+
+            <TextBox Grid.Row="1"
+                     Text="{Binding AiQuestionText, Mode=TwoWay}"
+                     Watermark="Ask about selected animation, offsets, imports..."
+                     AcceptsReturn="True"
+                     Height="90"
+                     TextWrapping="Wrap"/>
+
+            <ScrollViewer Grid.Row="2"
+                          VerticalScrollBarVisibility="Auto">
+                <TextBlock Text="{Binding AiAnswerText}"
+                           TextWrapping="Wrap"
+                           Foreground="#D5DCE4"/>
+            </ScrollViewer>
+
+            <Button Grid.Row="3"
+                    Content="Ask AI"
+                    Command="{Binding AskAiCommand}"
+                    IsEnabled="{Binding !IsAiBusy}"
+                    HorizontalAlignment="Right"
+                    MinWidth="110"/>
+        </Grid>
+    </Border>
+</Window>

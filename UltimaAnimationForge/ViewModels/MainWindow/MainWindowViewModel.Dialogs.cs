@@ -2891,137 +2891,96 @@ VdHueDialogResult? hueDialogResult)
             return;
         }
 
-        Window dialog = new Window
-        {
-            Title = "Ultima Animation Forge Help",
-            Width = 760,
-            Height = 680,
-            MinWidth = 640,
-            MinHeight = 520,
-            CanResize = true,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-
-        TextBlock helpText = new TextBlock
-        {
-            TextWrapping = TextWrapping.Wrap,
-            Text =
-    "Ultima Animation Forge Help" + Environment.NewLine +
-    Environment.NewLine +
-
-    BuildSystemInfoText() +
-
-                "Navigation" + Environment.NewLine +
-                "- Select an animation from the left list." + Environment.NewLine +
-                "- Use File, Type, Dir, and Action at the top to filter and change what is loaded." + Environment.NewLine +
-                "- The frame strip under the preview shows thumbnails for the currently loaded frames." + Environment.NewLine +
-                Environment.NewLine +
-
-"Keyboard Shortcuts" + Environment.NewLine +
-"- Ctrl+O = Open UO folder" + Environment.NewLine +
-"- Ctrl+S = Save changes" + Environment.NewLine +
-"- Ctrl+E = Export frames" + Environment.NewLine +
-"- Ctrl+Shift+E = Export VD" + Environment.NewLine +
-"- Ctrl+I = Import VD" + Environment.NewLine +
-"- Ctrl+Shift+I = Import VD into UOP" + Environment.NewLine +
-"- Ctrl+P = Play preview" + Environment.NewLine +
-"- Ctrl+Shift+P = Pause preview" + Environment.NewLine +
-"- Ctrl+Left = Previous frame" + Environment.NewLine +
-"- Ctrl+Right = Next frame" + Environment.NewLine +
-"- Ctrl+R = Replace selected frame" + Environment.NewLine +
-"- Ctrl+Shift+R = Import PNG sequence" + Environment.NewLine +
-"- Ctrl+Delete = Delete animation" + Environment.NewLine +
-"- Ctrl+Z = Undo last frame removed or replaced" + Environment.NewLine +
-"- Alt+1 = Direction North" + Environment.NewLine +
-"- Alt+2 = Direction Northeast" + Environment.NewLine +
-"- Alt+3 = Direction East" + Environment.NewLine +
-"- Alt+4 = Direction Southeast" + Environment.NewLine +
-"- Alt+5 = Direction South" + Environment.NewLine +
-"- Alt+C = Toggle checker background" + Environment.NewLine +
-"- Alt+L = Toggle loop playback" + Environment.NewLine +
-Environment.NewLine +
-
-"Preview and Playback" + Environment.NewLine +
-"- Play and Pause control animation playback." + Environment.NewLine +
-"- Prev Frame and Next Frame step through frames manually." + Environment.NewLine +
-"- Zoom changes the preview size." + Environment.NewLine +
-"- Speed changes playback rate." + Environment.NewLine +
-"- Checker toggles the preview background and can be saved per profile." + Environment.NewLine +
-"- Loop controls whether playback restarts automatically and can be saved per profile." + Environment.NewLine +
-"- Dir can be changed with the dropdown, slider, or Alt+1 through Alt+5." + Environment.NewLine +
-Environment.NewLine +
-
-                "Drag and Drop" + Environment.NewLine +
-                "- Drop a single PNG on the preview to replace the selected frame." + Environment.NewLine +
-                "- Drop multiple PNG files on the preview to import a frame sequence." + Environment.NewLine +
-                "- Drop a UO folder on the main window to load it." + Environment.NewLine +
-                "- In slot view, drop a VD file on the main window to queue an import." + Environment.NewLine +
-                Environment.NewLine +
-
-                "Editing" + Environment.NewLine +
-                "- Replace Frame replaces the currently selected frame thumbnail." + Environment.NewLine +
-                "- Import PNG Sequence replaces the loaded direction using the selected PNG files." + Environment.NewLine +
-                "- Save Changes writes queued MUL changes and frame edits to disk." + Environment.NewLine +
-                "- Unsaved changes are shown in the top bar." + Environment.NewLine +
-                Environment.NewLine +
-
-                "Slot View" + Environment.NewLine +
-                "- Enable MUL Slot View to work with free MUL body slots or UOP body targets." + Environment.NewLine +
-                "- MUL targets are used for queued VD imports." + Environment.NewLine +
-                "- UOP targets are used when importing VD into a UOP file." + Environment.NewLine +
-                Environment.NewLine +
-
-                "Export" + Environment.NewLine +
-                "- Export Frames supports PNG, JPG, BMP, animated GIF, and sprite sheet PNG." + Environment.NewLine +
-                "- Export VD writes a VD animation using the currently selected body." + Environment.NewLine +
-                Environment.NewLine +
-
-                "Tips" + Environment.NewLine +
-                "- If a drag operation shows a blocked cursor, make sure you are dropping onto the preview area for PNG files." + Environment.NewLine +
-                "- If imported art looks wrong, check palette limits and frame size alignment." + Environment.NewLine +
-                "- Use the detached preview window for multi-monitor workflows and animation comparisons."
-        };
-
-        Button closeButton = new Button
-        {
-            Content = "Close",
-            Width = 100,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right
-        };
-
-        closeButton.Click += (_, _) => dialog.Close();
-
-        StackPanel contentPanel = new StackPanel
-        {
-            Spacing = 12,
-            Children =
-        {
-            helpText
-        }
-        };
-
-        ScrollViewer scrollViewer = new ScrollViewer
-        {
-            Content = contentPanel,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
-        };
-
-        Grid rootGrid = new Grid
-        {
-            Margin = new Thickness(16),
-            RowDefinitions = new RowDefinitions("*,Auto")
-        };
-
-        Grid.SetRow(scrollViewer, 0);
-        Grid.SetRow(closeButton, 1);
-
-        rootGrid.Children.Add(scrollViewer);
-        rootGrid.Children.Add(closeButton);
-
-        dialog.Content = rootGrid;
+        HelpWindow dialog = new HelpWindow(BuildHelpText());
 
         await dialog.ShowDialog(owner);
+    }
+
+    private string BuildHelpText()
+    {
+        return
+            "Ultima Animation Forge Help" + Environment.NewLine +
+            Environment.NewLine +
+
+            BuildSystemInfoText() +
+
+            "Navigation" + Environment.NewLine +
+            "- Select an animation from the left list." + Environment.NewLine +
+            "- Use File, Type, Dir, and Action at the top to filter and change what is loaded." + Environment.NewLine +
+            "- The frame strip under the preview shows thumbnails for the currently loaded frames." + Environment.NewLine +
+            Environment.NewLine +
+
+            "Keyboard Shortcuts" + Environment.NewLine +
+            "- Ctrl+O = Open UO folder" + Environment.NewLine +
+            "- Ctrl+S = Save changes" + Environment.NewLine +
+            "- Ctrl+E = Export frames" + Environment.NewLine +
+            "- Ctrl+Shift+E = Export VD" + Environment.NewLine +
+            "- Ctrl+I = Import VD" + Environment.NewLine +
+            "- Ctrl+Shift+I = Import VD into UOP" + Environment.NewLine +
+            "- Ctrl+P = Play preview" + Environment.NewLine +
+            "- Ctrl+Shift+P = Pause preview" + Environment.NewLine +
+            "- Ctrl+Left = Previous frame" + Environment.NewLine +
+            "- Ctrl+Right = Next frame" + Environment.NewLine +
+            "- Ctrl+R = Replace selected frame" + Environment.NewLine +
+            "- Ctrl+Shift+R = Import PNG sequence" + Environment.NewLine +
+            "- Ctrl+Delete = Delete animation" + Environment.NewLine +
+            "- Ctrl+Z = Undo last frame removed or replaced" + Environment.NewLine +
+            "- Alt+1 = Direction North" + Environment.NewLine +
+            "- Alt+2 = Direction Northeast" + Environment.NewLine +
+            "- Alt+3 = Direction East" + Environment.NewLine +
+            "- Alt+4 = Direction Southeast" + Environment.NewLine +
+            "- Alt+5 = Direction South" + Environment.NewLine +
+            "- Alt+C = Toggle checker background" + Environment.NewLine +
+            "- Alt+L = Toggle loop playback" + Environment.NewLine +
+            Environment.NewLine +
+
+            "Preview and Playback" + Environment.NewLine +
+            "- Play and Pause control animation playback." + Environment.NewLine +
+            "- Prev Frame and Next Frame step through frames manually." + Environment.NewLine +
+            "- Zoom changes the preview size." + Environment.NewLine +
+            "- Speed changes playback rate." + Environment.NewLine +
+            "- Checker toggles the preview background and can be saved per profile." + Environment.NewLine +
+            "- Loop controls whether playback restarts automatically and can be saved per profile." + Environment.NewLine +
+            "- Dir can be changed with the dropdown, slider, or Alt+1 through Alt+5." + Environment.NewLine +
+            Environment.NewLine +
+
+            "Drag and Drop" + Environment.NewLine +
+            "- Drop a single PNG on the preview to replace the selected frame." + Environment.NewLine +
+            "- Drop multiple PNG files on the preview to import a frame sequence." + Environment.NewLine +
+            "- Drop a UO folder on the main window to load it." + Environment.NewLine +
+            "- In slot view, drop a VD file on the main window to queue an import." + Environment.NewLine +
+            Environment.NewLine +
+
+            "Editing" + Environment.NewLine +
+            "- Replace Frame replaces the currently selected frame thumbnail." + Environment.NewLine +
+            "- Import PNG Sequence replaces the loaded direction using the selected PNG files." + Environment.NewLine +
+            "- Save Changes writes queued MUL changes and frame edits to disk." + Environment.NewLine +
+            "- Unsaved changes are shown in the top bar." + Environment.NewLine +
+            Environment.NewLine +
+
+            "Slot View" + Environment.NewLine +
+            "- Enable MUL Slot View to work with free MUL body slots or UOP body targets." + Environment.NewLine +
+            "- MUL targets are used for queued VD imports." + Environment.NewLine +
+            "- UOP targets are used when importing VD into a UOP file." + Environment.NewLine +
+            Environment.NewLine +
+
+            "Export" + Environment.NewLine +
+            "- Export Frames supports PNG, JPG, BMP, animated GIF, and sprite sheet PNG." + Environment.NewLine +
+            "- Export VD writes a VD animation using the currently selected body." + Environment.NewLine +
+            Environment.NewLine +
+
+            "AI Assistant" + Environment.NewLine +
+            "- AI Assistant is shown only when this PC meets the memory requirement and Ollama is available." + Environment.NewLine +
+            "- Requires 16 GB RAM." + Environment.NewLine +
+            "- Requires Ollama running locally." + Environment.NewLine +
+            "- Required model: llama3.1:8b." + Environment.NewLine +
+            "- If hidden, install Ollama and run: ollama pull llama3.1:8b" + Environment.NewLine +
+            Environment.NewLine +
+
+            "Tips" + Environment.NewLine +
+            "- If a drag operation shows a blocked cursor, make sure you are dropping onto the preview area for PNG files." + Environment.NewLine +
+            "- If imported art looks wrong, check palette limits and frame size alignment." + Environment.NewLine +
+            "- Use the detached preview window for multi-monitor workflows and animation comparisons.";
     }
 
     private async Task ShowDetachedPreviewAsync()

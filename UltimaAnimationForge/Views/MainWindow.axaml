@@ -333,7 +333,7 @@
     <Grid RowDefinitions="Auto,Auto,*">
 
         <!-- profile/action bar -->
-        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,360"
+        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,360,Auto"
               ColumnSpacing="8">
 
             <TextBlock Grid.Column="0"
@@ -457,6 +457,15 @@
                     Content="Uox3 - Discord"
                     Command="{Binding OpenDiscordCommand}"
                     MinHeight="32"
+                    MinWidth="128"
+                    Padding="12,6" />
+
+                     <Button Grid.Column="7"
+                    Content="AI Assistant"
+        Click="OpenAiAssistant_Click"
+        IsVisible="{Binding IsAiAssistantAvailable}"
+        ToolTip.Tip="{Binding AiAssistantRequirementText}"
+                            MinHeight="32"
                     MinWidth="128"
                     Padding="12,6" />
 

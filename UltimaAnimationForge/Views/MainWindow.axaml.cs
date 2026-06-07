@@ -5,7 +5,6 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -436,5 +435,33 @@ public partial class MainWindow : Window
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+    }
+
+    private AiAssistantWindow? aiAssistantWindow;
+
+    private void OpenAiAssistant_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm && !vm.IsAiAssistantAvailable)
+        {
+            return;
+        }
+
+        if (aiAssistantWindow != null)
+        {
+            aiAssistantWindow.Activate();
+            return;
+        }
+
+        aiAssistantWindow = new AiAssistantWindow
+        {
+            DataContext = DataContext
+        };
+
+        aiAssistantWindow.Closed += (_, _) =>
+        {
+            aiAssistantWindow = null;
+        };
+
+        aiAssistantWindow.Show(this);
     }
 }
