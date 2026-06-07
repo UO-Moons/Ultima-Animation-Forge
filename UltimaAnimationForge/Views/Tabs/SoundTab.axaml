@@ -1,0 +1,364 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.SoundTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid RowDefinitions="Auto,*"
+          RowSpacing="8"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+
+        <!-- Top Sound Toolbar -->
+        <Border Grid.Row="0"
+                Background="#20262E"
+                BorderBrush="#343B46"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="10">
+
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto"
+                  ColumnSpacing="8">
+
+                <Button Grid.Column="0"
+                        Content="Load Sounds"
+                        Command="{Binding LoadSoundsCommand}" />
+
+                <Button Grid.Column="1"
+                        Content="Save Sounds"
+                        Command="{Binding SaveSoundsCommand}" />
+
+                <Button Grid.Column="2"
+                        Content="Import Audio"
+                        Command="{Binding ImportSelectedSoundCommand}" />
+
+                <Button Grid.Column="3"
+                        Content="Export Selected"
+                        Command="{Binding ExportSelectedSoundCommand}" />
+
+                <Button Grid.Column="4"
+                        Content="Export All"
+                        Command="{Binding ExportAllSoundsCommand}" />
+
+                <Button Grid.Column="5"
+                        Content="Find Free"
+                        Command="{Binding FindFirstFreeSoundSlotCommand}" />
+
+                <TextBox Grid.Column="6"
+                         Watermark="Search sound ID, hex, or name..."
+                         Text="{Binding SoundSearchText, Mode=TwoWay}" />
+
+                <CheckBox Grid.Column="7"
+                          Content="Free"
+                          IsChecked="{Binding ShowFreeSoundSlots}" />
+
+                <CheckBox Grid.Column="8"
+                          Content="Sort Name"
+                          IsChecked="{Binding SortSoundsByName}" />
+
+                <Button Grid.Column="9"
+                        Content="Remove"
+                        Command="{Binding RemoveSelectedSoundCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Main Layout -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="360,360,*"
+              ColumnSpacing="8">
+
+            <!-- Sound List -->
+            <Border Grid.Column="0"
+                    Background="#181D24"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="8">
+
+                <Grid RowDefinitions="Auto,*"
+                      RowSpacing="8">
+
+                    <TextBlock Text="Sounds"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="#E4EAF2" />
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding SoundEntries}"
+                             SelectedItem="{Binding SelectedSoundEntry}"
+                             BorderThickness="0"
+                             Background="Transparent">
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid RowDefinitions="Auto,Auto">
+                                    <TextBlock Text="{Binding DisplayText}"
+                                               Foreground="#E4EAF2" />
+
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding LengthText}"
+                                               Foreground="#8F9AA8"
+                                               FontSize="11" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Music List -->
+            <Border Grid.Column="1"
+                    Background="#181D24"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="8">
+
+                <Grid RowDefinitions="Auto,Auto,*,Auto"
+                      RowSpacing="8">
+
+                    <TextBlock Text="Music / MP3"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="#E4EAF2" />
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*,Auto"
+                          ColumnSpacing="8">
+
+                        <TextBox Grid.Column="0"
+                                 Watermark="Search music ID or name..."
+                                 Text="{Binding MusicSearchText, Mode=TwoWay}" />
+
+                        <Button Grid.Column="1"
+                                Content="Load"
+                                Command="{Binding LoadMusicCommand}" />
+                    </Grid>
+
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding MusicEntries}"
+                             SelectedItem="{Binding SelectedMusicEntry}"
+                             BorderThickness="0"
+                             Background="Transparent">
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid RowDefinitions="Auto,Auto">
+                                    <TextBlock Text="{Binding DisplayText}"
+                                               Foreground="#E4EAF2" />
+
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding StatusText}"
+                                               Foreground="#8F9AA8"
+                                               FontSize="11" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock Grid.Row="3"
+                               Text="{Binding MusicStatusText}"
+                               Foreground="#8F9AA8"
+                               TextWrapping="Wrap" />
+                </Grid>
+            </Border>
+
+            <!-- Right Tools / Details -->
+            <Border Grid.Column="2"
+                    Background="#20262E"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12">
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12">
+
+                        <TextBlock Text="Audio Tools"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2" />
+
+                        <!-- Sound Preview -->
+                        <Border Background="#181D24"
+                                BorderBrush="#3A4350"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10">
+
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Sound Preview"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2" />
+
+                                <TextBlock Text="{Binding SelectedSoundInfoText}"
+                                           Foreground="#AAB4C0"
+                                           TextWrapping="Wrap" />
+
+                                <Border Background="#11161D"
+                                        BorderBrush="#3A4350"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Height="108"
+                                        Padding="6">
+
+                                    <Image Source="{Binding SoundWaveformBitmap}"
+                                           Stretch="Fill"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Stretch" />
+                                </Border>
+
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8">
+                                    <Button Content="Play Sound"
+                                            Command="{Binding PlaySelectedSoundCommand}" />
+
+                                    <Button Content="Stop"
+                                            Command="{Binding StopSoundCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Required Format -->
+                        <Border Background="#181D24"
+                                BorderBrush="#3A4350"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+
+                            <TextBlock Text="UO Format: PCM WAV  |  Mono  |  22050 Hz  |  16-bit"
+                                       Foreground="#AAB4C0"/>
+                        </Border>
+
+                        <!-- Music Controls -->
+                        <Border Background="#181D24"
+                                BorderBrush="#3A4350"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10">
+
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Music Controls"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2" />
+
+                                <WrapPanel>
+                                    <Button Content="Import Music"
+                                            Margin="0,0,8,8"
+                                            Command="{Binding ImportMusicCommand}" />
+
+                                    <CheckBox Content="Loop"
+                                              Margin="0,0,8,8"
+                                              IsChecked="{Binding ImportedMusicShouldLoop}" />
+
+                                    <Button Content="Play Music"
+                                            Margin="0,0,8,8"
+                                            Command="{Binding PlaySelectedMusicCommand}" />
+
+                                    <Button Content="Stop Music"
+                                            Margin="0,0,8,8"
+                                            Command="{Binding StopMusicCommand}" />
+
+                                    <Button Content="Music → Sound"
+                                            Margin="0,0,8,8"
+                                            Command="{Binding ConvertSelectedMusicToSoundCommand}" />
+
+                                    <Button Content="Remove Music"
+                                            Margin="0,0,8,8"
+                                            Command="{Binding RemoveSelectedMusicCommand}" />
+
+                                    <CheckBox Content="Delete MP3"
+                                              Margin="0,0,8,8"
+                                              IsChecked="{Binding DeleteMusicFileOnRemove}" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Edit Music Config Entry -->
+                        <Border Background="#181D24"
+                                BorderBrush="#3A4350"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10">
+
+                            <Grid RowDefinitions="Auto,Auto,Auto"
+                                  RowSpacing="10">
+
+                                <TextBlock Text="Edit Music Config Entry"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2" />
+
+                                <Grid Grid.Row="1"
+                                      ColumnDefinitions="80,*"
+                                      RowDefinitions="Auto,Auto,Auto"
+                                      ColumnSpacing="10"
+                                      RowSpacing="8">
+
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="0"
+                                               Text="ID"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0" />
+
+                                    <NumericUpDown Grid.Row="0"
+                                                   Grid.Column="1"
+                                                   Width="140"
+                                                   HorizontalAlignment="Left"
+                                                   Value="{Binding EditableMusicId, Mode=TwoWay}"
+                                                   Minimum="0"
+                                                   Maximum="9999"
+                                                   FormatString="0" />
+
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="0"
+                                               Text="File"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0" />
+
+                                    <TextBox Grid.Row="1"
+                                             Grid.Column="1"
+                                             MinWidth="320"
+                                             HorizontalAlignment="Stretch"
+                                             Text="{Binding EditableMusicFileName, Mode=TwoWay}" />
+
+                                    <CheckBox Grid.Row="2"
+                                              Grid.Column="1"
+                                              Content="Loop"
+                                              IsChecked="{Binding EditableMusicLoop}" />
+                                </Grid>
+
+                                <Button Grid.Row="2"
+                                        Content="Save Entry"
+                                        HorizontalAlignment="Left"
+                                        Command="{Binding SaveSelectedMusicEntryCommand}" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Music Info -->
+                        <Border Background="#181D24"
+                                BorderBrush="#3A4350"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10">
+
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Selected Music Info"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2" />
+
+                                <TextBlock Text="{Binding SelectedMusicInfoText}"
+                                           Foreground="#AAB4C0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding SoundStatusText}"
+                                   Foreground="#8F9AA8"
+                                   TextWrapping="Wrap" />
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,221 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.ClilocTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Border Grid.Row="0"
+                Background="#20262E"
+                BorderBrush="#3A4350"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="10">
+
+            <Grid RowDefinitions="Auto,8,Auto"
+                  RowSpacing="0">
+
+                <!-- Row 1: common controls -->
+                <ScrollViewer Grid.Row="0"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="8">
+
+                        <TextBlock Text="Search"
+                                   Foreground="#D5DCE4"
+                                   VerticalAlignment="Center"/>
+
+                        <TextBox Width="260"
+                                 Watermark="ID, hex, category, or text"
+                                 Text="{Binding ClilocSearchText, Mode=TwoWay}"/>
+
+                        <CheckBox Content="Use UOX3 Dictionary Mode"
+                                  IsChecked="{Binding UseUoxDictionaryMode}"
+                                  VerticalAlignment="Center"/>
+
+                        <CheckBox Content="Duplicates"
+                                  IsChecked="{Binding ShowOnlyDuplicateClilocs}"
+                                  VerticalAlignment="Center"/>
+
+                        <CheckBox Content="Empty"
+                                  IsChecked="{Binding ShowOnlyEmptyClilocs}"
+                                  VerticalAlignment="Center"/>
+
+                        <Separator Width="1"
+                                   Height="24"
+                                   Background="#3A4350"/>
+
+                        <Button Content="Import"
+                                Command="{Binding ImportClilocCommand}"/>
+
+                        <Button Content="Export"
+                                Command="{Binding ExportClilocCommand}"/>
+
+                        <Button Content="Save"
+                                Command="{Binding SaveClilocCommand}"/>
+
+                        <Button Content="Add Entry"
+                                Command="{Binding AddClilocEntryCommand}"/>
+
+                        <Button Content="Delete Entry"
+                                Command="{Binding DeleteClilocEntryCommand}"/>
+
+                        <TextBox Width="110"
+                                 Watermark="Jump ID"
+                                 Text="{Binding JumpToClilocText, Mode=TwoWay}"/>
+
+                        <Button Content="Go"
+                                Command="{Binding JumpToClilocCommand}"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Row 2: mode-specific controls -->
+                <ScrollViewer Grid.Row="2"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled">
+
+                    <Grid>
+                        <!-- Normal cliloc controls -->
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8"
+                                    IsVisible="{Binding ShowClilocFileControls}">
+
+                            <TextBlock Text="Cliloc File"
+                                       Foreground="#AAB4C0"
+                                       VerticalAlignment="Center"/>
+
+                            <ComboBox Width="160"
+                                      ItemsSource="{Binding ClilocFileOptions}"
+                                      SelectedItem="{Binding SelectedClilocFile}"/>
+
+                            <Button Content="Load Cliloc"
+                                    Command="{Binding LoadClilocCommand}"/>
+
+                        </StackPanel>
+
+                        <!-- UOX3 dictionary controls -->
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8"
+                                    IsVisible="{Binding ShowUoxDictionaryControls}">
+
+                            <Button Content="Select UOX3 Folder"
+                                    Command="{Binding SelectUoxDictionaryFolderCommand}"/>
+
+                            <ComboBox Width="220"
+                                      ItemsSource="{Binding DictionaryFileOptions}"
+                                      SelectedItem="{Binding SelectedDictionaryFile}"/>
+
+                            <Button Content="Load Dictionary"
+                                    Command="{Binding LoadDictionaryCommand}"/>
+
+                            <TextBlock Text="Category"
+                                       Foreground="#AAB4C0"
+                                       VerticalAlignment="Center"/>
+
+                            <ComboBox Width="180"
+                                      ItemsSource="{Binding UoxDictionaryCategoryOptions}"
+                                      SelectedItem="{Binding SelectedUoxDictionaryCategory}"/>
+
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="520,10,*">
+
+            <Border Grid.Column="0"
+                    Background="#171B21"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="8">
+                <ListBox ItemsSource="{Binding FilteredClilocEntries}"
+                         SelectedItem="{Binding SelectedClilocEntry}"
+                         Background="#11151A">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="90,90,80,*" Margin="4">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding Number}"
+                                           Foreground="#86C5FF"/>
+
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding NumberHex}"
+                                           Foreground="#AAB4C0"/>
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding RowStatus}"
+                                           Foreground="#FFD580"/>
+
+                                <TextBlock Grid.Column="3"
+                                           Text="{Binding Text}"
+                                           Foreground="#EDF1F5"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Background="#20262E"
+                    BorderBrush="#3A4350"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="14">
+                <Grid RowDefinitions="Auto,*,Auto"
+                      RowSpacing="12">
+
+                    <StackPanel Grid.Row="0" Spacing="8">
+                        <TextBlock Text="{Binding ClilocEditorTitle}"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="#EDF1F5"/>
+
+                        <TextBlock Text="{Binding SelectedClilocEntry.Number}"
+                                   Foreground="#86C5FF"/>
+
+                        <TextBlock Text="{Binding SelectedClilocEntry.NumberHex}"
+                                   Foreground="#AAB4C0"/>
+                    </StackPanel>
+
+                    <TextBox Grid.Row="1"
+                             Text="{Binding SelectedClilocEntry.Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             MinHeight="220"/>
+
+                    <Border Grid.Row="2"
+                            Background="#171B21"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="{Binding FreeNumberTitle}"
+                                       FontWeight="Bold"
+                                       Foreground="#EDF1F5"/>
+
+                            <Button Content="{Binding FindFreeNumbersButtonText}"
+                                    Command="{Binding FindFreeClilocNumbersCommand}"/>
+
+                            <ListBox ItemsSource="{Binding FreeClilocNumbers}"
+                                     SelectedItem="{Binding SelectedFreeClilocNumber}"
+                                     Height="180"
+                                     Background="#11151A"/>
+
+                            <Button Content="{Binding UseFreeNumberButtonText}"
+                                    Command="{Binding AddClilocEntryFromFreeNumberCommand}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

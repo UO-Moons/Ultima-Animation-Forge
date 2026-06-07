@@ -1,0 +1,188 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.TileDataTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <!-- Tiledata Tab -->
+    <Grid RowDefinitions="Auto,*">
+
+        <Border Grid.Row="0"
+                Background="#1E232A"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="8">
+                <CheckBox Content="Land"
+                          IsChecked="{Binding ShowLandTileData}" />
+
+                <CheckBox Content="Items"
+                          IsChecked="{Binding ShowItemTileData}" />
+
+                <TextBox Width="220"
+                         Watermark="Search ID / name..."
+                         Text="{Binding TileDataSearchText}" />
+
+
+                <Button Content="Save TileData Changes"
+                        Command="{Binding SaveTileDataChangesCommand}" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="360,*"
+              ColumnSpacing="10"
+              Margin="10">
+
+            <Border Grid.Column="0"
+                    Background="#20262E"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                <ListBox ItemsSource="{Binding FilteredTileDataEntries}"
+                         SelectedItem="{Binding SelectedTileDataEntry}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayText}"
+                                       Foreground="#E4EAF2"
+                                       Margin="6"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Background="#20262E"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="12">
+                <Grid ColumnDefinitions="280,*"
+                      ColumnSpacing="12">
+
+                    <StackPanel Grid.Column="0"
+                                Spacing="6">
+
+                        <TextBlock Text="{Binding SelectedTileDataEntry.DisplayText}"
+                                   FontSize="18"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Text="{Binding SelectedTileDataEntry.Flags, StringFormat='Flags: 0x{0:X16}'}"/>
+
+                        <TextBlock Text="Name"/>
+                        <TextBox Text="{Binding SelectedTileDataEntry.Name, Mode=TwoWay}"
+                                 LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Animation/Gump"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Animation, Mode=TwoWay}"
+                                       Minimum="-32768"
+                                       Maximum="32767"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Weight"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Weight, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Quality/Layer/Light"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Quality, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Quantity"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Quantity, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Hue"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Hue, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Stack Offset"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.StackingOffset, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Value"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Value, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Height"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Height, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="MiscData"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.MiscData, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="65535"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Unk2"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Unknown2, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+
+                        <TextBlock Text="Unk3"/>
+                        <NumericUpDown Value="{Binding SelectedTileDataEntry.Unknown3, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="255"
+                                       LostFocus="TileDataEditField_LostFocus"/>
+                    </StackPanel>
+
+                    <Border Grid.Column="1"
+                            Background="#151A20"
+                            BorderBrush="#343B46"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+
+                        <Grid RowDefinitions="Auto,*"
+                              RowSpacing="8">
+
+                            <CheckBox Grid.Row="0"
+                                      Content="Apply flag changes to checked art tiles"
+                                      IsChecked="{Binding ApplyTileDataFlagsToCheckedArt}"
+                                      Foreground="#C7D1DB"/>
+
+                            <ScrollViewer Grid.Row="1"
+                                          VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding SelectedTileDataFlagOptions}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Width="150"
+                                                      Margin="2"
+                                                      Content="{Binding Name}"
+                                                      IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                      Command="{Binding $parent[ItemsControl].DataContext.ToggleSelectedTileDataFlagCommand}"
+                                                      CommandParameter="{Binding}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+
+</UserControl>

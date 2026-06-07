@@ -1,0 +1,510 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.WearableWizardTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid RowDefinitions="Auto,*"
+          RowSpacing="10"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+
+        <TextBlock Grid.Row="0"
+                   Text="Wearable Creation Wizard"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   Foreground="#E4EAF2"/>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="410,*,520"
+              ColumnSpacing="12"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch">
+
+            <!-- LEFT: Setup -->
+            <Border Grid.Column="0"
+                    Background="#20242B"
+                    BorderBrush="#303844"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12">
+
+                <ScrollViewer>
+                    <StackPanel Spacing="8">
+
+                        <TextBlock Text="Basic Info" FontWeight="Bold" Foreground="#E4EAF2"/>
+
+                        <TextBlock Text="Name" Foreground="#AAB4C0"/>
+                        <TextBox Text="{Binding WearableWizardName, Mode=TwoWay}"/>
+
+                        <TextBlock Text="Wearable Type" Foreground="#AAB4C0"/>
+                        <ComboBox ItemsSource="{Binding WearableWizardTypes}"
+                                  SelectedItem="{Binding WearableWizardType, Mode=TwoWay}"/>
+
+                        <TextBlock Text="Layer" Foreground="#AAB4C0"/>
+                        <ComboBox ItemsSource="{Binding WearableWizardLayers}"
+                                  SelectedItem="{Binding WearableWizardLayer, Mode=TwoWay}"/>
+
+                        <Separator Margin="0,8,0,8"/>
+
+                        <TextBlock Text="Images" FontWeight="Bold" Foreground="#E4EAF2"/>
+
+                        <Button Content="Load Male / Default Paperdoll Image"
+                                Command="{Binding BrowseWearablePaperdollImageCommand}"/>
+                        <TextBlock Text="{Binding WearableWizardPaperdollImagePath}"
+                                   Foreground="#AAB4C0"
+                                   TextWrapping="Wrap"
+                                   MaxHeight="40"/>
+
+                        <CheckBox Content="Create female variant"
+                                  IsChecked="{Binding WearableWizardCreateFemaleVariant, Mode=TwoWay}"/>
+
+                        <Button Content="Load Female Paperdoll Image"
+                                Command="{Binding BrowseWearableFemalePaperdollImageCommand}"/>
+                        <TextBlock Text="{Binding WearableWizardFemalePaperdollImagePath}"
+                                   Foreground="#AAB4C0"
+                                   TextWrapping="Wrap"
+                                   MaxHeight="40"/>
+
+                        <Button Content="Load Inventory / World Art Image"
+                                Command="{Binding BrowseWearableArtImageCommand}"/>
+                        <TextBlock Text="{Binding WearableWizardArtImagePath}"
+                                   Foreground="#AAB4C0"
+                                   TextWrapping="Wrap"
+                                   MaxHeight="40"/>
+
+                        <Separator Margin="0,8,0,8"/>
+
+                        <TextBlock Text="Slot Planning" FontWeight="Bold" Foreground="#E4EAF2"/>
+
+                        <Border Background="#3A2020"
+                                BorderBrush="#AA5555"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="8"
+                                IsVisible="{Binding WearableWizardMaleGumpConflict}">
+                            <TextBlock Text="{Binding WearableWizardConflictText}"
+                                       Foreground="#FFB0B0"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+
+                        <CheckBox Content="Use sitting-safe wearable range 50400-50999"
+                                  IsChecked="{Binding WearableWizardUseSittingSafeRange, Mode=TwoWay}"/>
+
+                        <CheckBox Content="Partial hueable"
+                                  IsChecked="{Binding WearableWizardPartialHue, Mode=TwoWay}"/>
+
+                        <Button Content="Auto Pick Free IDs"
+                                Command="{Binding AutoPickWearableWizardIdsCommand}"/>
+
+                        <Grid ColumnDefinitions="*,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto"
+                              ColumnSpacing="8"
+                              RowSpacing="6">
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Male Gump ID" Foreground="#AAB4C0"/>
+                            <NumericUpDown Grid.Row="0" Grid.Column="1"
+                                           Value="{Binding WearableWizardMaleGumpId, Mode=TwoWay}"
+                                           Minimum="50000"
+                                           Maximum="50999"
+                                           Increment="1"
+                                           FormatString="0"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Female Gump ID" Foreground="#AAB4C0"/>
+                            <NumericUpDown Grid.Row="1" Grid.Column="1"
+                                           Value="{Binding WearableWizardFemaleGumpId, Mode=TwoWay}"
+                                           Minimum="60000"
+                                           Maximum="60999"
+                                           Increment="1"
+                                           FormatString="0"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Art ID" Foreground="#AAB4C0"/>
+                            <NumericUpDown Grid.Row="2" Grid.Column="1"
+                                           Value="{Binding WearableWizardArtId, Mode=TwoWay}"
+                                           Minimum="50000"
+                                           Maximum="50999"
+                                           Increment="1"
+                                           FormatString="0"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Animation ID" Foreground="#AAB4C0"/>
+                            <NumericUpDown Grid.Row="3" Grid.Column="1"
+                                           Value="{Binding WearableWizardAnimationId, Mode=TwoWay}"
+                                           Minimum="0"
+                                           Maximum="9999"
+                                           Increment="1"
+                                           FormatString="0"/>
+                        </Grid>
+
+                        <Separator Margin="0,8,0,8"/>
+
+                        <TextBlock Text="Animation Attachment" FontWeight="Bold" Foreground="#E4EAF2"/>
+
+                        <ComboBox ItemsSource="{Binding WearableWizardAnimationModes}"
+                                  SelectedItem="{Binding WearableWizardAnimationMode, Mode=TwoWay}"/>
+
+                        <TextBlock Text="Existing Animation ID" Foreground="#AAB4C0"/>
+                        <NumericUpDown Value="{Binding WearableWizardExistingAnimationId, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="9999"
+                                       Increment="1"
+                                       FormatString="0"/>
+
+                        <TextBlock Text="Body.def Hue" Foreground="#AAB4C0"/>
+                        <TextBox Text="{Binding WearableWizardHue, Mode=TwoWay}"/>
+
+                        <Separator Margin="0,8,0,8"/>
+
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0" Content="Rebuild" Command="{Binding RebuildWearableWizardPlanCommand}"/>
+                            <Button Grid.Column="1" Content="Reset" Command="{Binding ResetWearableWizardCommand}"/>
+                            <Button Grid.Column="2" Content="Apply" Command="{Binding ApplyWearableWizardCommand}"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding WearableWizardStatusText}"
+                                   Foreground="#AAB4C0"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- CENTER: Big Preview -->
+            <Border Grid.Column="1"
+                    Background="#20242B"
+                    BorderBrush="#303844"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12">
+
+                <Grid RowDefinitions="150,*"
+                      RowSpacing="10">
+
+                    <!-- Image previews -->
+                    <Border Grid.Row="0"
+                            Background="#15191F"
+                            BorderBrush="#303844"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+
+                        <Grid RowDefinitions="Auto,*" RowSpacing="6">
+                            <TextBlock Grid.Row="0"
+                                       Text="Image Previews"
+                                       FontWeight="Bold"
+                                       Foreground="#E4EAF2"/>
+
+                            <Grid Grid.Row="1"
+                                  ColumnDefinitions="*,*,*"
+                                  ColumnSpacing="8">
+
+                                <Border Grid.Column="0" Background="#101318" BorderBrush="#303844" BorderThickness="1" CornerRadius="4" Padding="6">
+                                    <StackPanel>
+                                        <TextBlock Text="Male" HorizontalAlignment="Center" Foreground="#AAB4C0"/>
+                                        <Image Source="{Binding WearableWizardPaperdollPreview}" Stretch="Uniform" MaxHeight="95"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="1" Background="#101318" BorderBrush="#303844" BorderThickness="1" CornerRadius="4" Padding="6">
+                                    <StackPanel>
+                                        <TextBlock Text="Female" HorizontalAlignment="Center" Foreground="#AAB4C0"/>
+                                        <Image Source="{Binding WearableWizardFemalePaperdollPreview}" Stretch="Uniform" MaxHeight="95"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2" Background="#101318" BorderBrush="#303844" BorderThickness="1" CornerRadius="4" Padding="6">
+                                    <StackPanel>
+                                        <TextBlock Text="Art" HorizontalAlignment="Center" Foreground="#AAB4C0"/>
+                                        <Image Source="{Binding WearableWizardArtPreview}" Stretch="Uniform" MaxHeight="95"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Animation preview -->
+                    <Border Grid.Row="1"
+                            Background="#15191F"
+                            BorderBrush="#303844"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+
+                        <Grid RowDefinitions="Auto,Auto,*,Auto"
+                              RowSpacing="8">
+
+                            <Grid Grid.Row="0"
+                                  ColumnDefinitions="*,Auto"
+                                  ColumnSpacing="8">
+
+                                <TextBlock Grid.Column="0"
+                                           Text="Wearable Animation Overlay Preview"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2"/>
+
+                                <CheckBox Grid.Column="1"
+                                          Content="Enabled"
+                                          IsChecked="{Binding WearableWizardOverlayPreviewEnabled, Mode=TwoWay}"/>
+                            </Grid>
+
+                            <StackPanel Grid.Row="1"
+                                        Spacing="6">
+
+                                <Grid ColumnDefinitions="Auto,110,Auto,110,Auto,110"
+                                      ColumnSpacing="8">
+
+                                    <TextBlock Grid.Column="0"
+                                               Text="Base"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0"/>
+                                    <NumericUpDown Grid.Column="1"
+                                                   Width="110"
+                                                   Value="{Binding WearableWizardPreviewBaseBodyId, Mode=TwoWay}"
+                                                   Minimum="0"
+                                                   Maximum="9999"
+                                                   Increment="1"
+                                                   FormatString="0"/>
+
+                                    <TextBlock Grid.Column="2"
+                                               Text="Action"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0"/>
+                                    <NumericUpDown Grid.Column="3"
+                                                   Width="110"
+                                                   Value="{Binding WearableWizardPreviewAction, Mode=TwoWay}"
+                                                   Minimum="0"
+                                                   Maximum="34"
+                                                   Increment="1"
+                                                   FormatString="0"/>
+
+                                    <TextBlock Grid.Column="4"
+                                               Text="Dir"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0"/>
+                                    <NumericUpDown Grid.Column="5"
+                                                   Width="110"
+                                                   Value="{Binding WearableWizardPreviewDirection, Mode=TwoWay}"
+                                                   Minimum="0"
+                                                   Maximum="4"
+                                                   Increment="1"
+                                                   FormatString="0"/>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="Auto,110,Auto,110,Auto,110,Auto,110"
+                                      ColumnSpacing="8">
+
+                                    <TextBlock Grid.Column="0"
+                                               Text="Frame"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0"/>
+                                    <NumericUpDown Grid.Column="1"
+                                                   Width="110"
+                                                   Value="{Binding WearableWizardPreviewFrameIndex, Mode=TwoWay}"
+                                                   Minimum="0"
+                                                   Maximum="99"
+                                                   Increment="1"
+                                                   FormatString="0"/>
+
+                                    <TextBlock Grid.Column="2"
+                                               Text="X"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0"/>
+                                    <NumericUpDown Grid.Column="3"
+                                                   Width="110"
+                                                   Value="{Binding WearableWizardOverlayOffsetX, Mode=TwoWay}"
+                                                   Minimum="-500"
+                                                   Maximum="500"
+                                                   Increment="1"
+                                                   FormatString="0"/>
+
+                                    <TextBlock Grid.Column="4"
+                                               Text="Y"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0"/>
+                                    <NumericUpDown Grid.Column="5"
+                                                   Width="110"
+                                                   Value="{Binding WearableWizardOverlayOffsetY, Mode=TwoWay}"
+                                                   Minimum="-500"
+                                                   Maximum="500"
+                                                   Increment="1"
+                                                   FormatString="0"/>
+
+                                    <TextBlock Grid.Column="6"
+                                               Text="Scale"
+                                               VerticalAlignment="Center"
+                                               Foreground="#AAB4C0"/>
+                                    <NumericUpDown Grid.Column="7"
+                                                   Width="110"
+                                                   Value="{Binding WearableWizardOverlayScale, Mode=TwoWay}"
+                                                   Minimum="0.1"
+                                                   Maximum="5"
+                                                   Increment="0.1"
+                                                   FormatString="0.0"/>
+                                </Grid>
+                            </StackPanel>
+
+                            <Border Grid.Row="2"
+                                    Background="#101318"
+                                    BorderBrush="#303844"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="6">
+
+                                <Image Source="{Binding WearableWizardOverlayPreviewBitmap}"
+                                       Stretch="Uniform"/>
+                            </Border>
+
+                            <Grid Grid.Row="3"
+                                  ColumnDefinitions="*,Auto"
+                                  ColumnSpacing="8">
+
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding WearableWizardOverlayPreviewStatus}"
+                                           Foreground="#AAB4C0"
+                                           TextWrapping="Wrap"/>
+
+                                <Button Grid.Column="1"
+                                        Content="Refresh Preview"
+                                        Command="{Binding RefreshWearableWizardOverlayPreviewCommand}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- RIGHT: Plan + Browsers -->
+            <Grid Grid.Column="2"
+                  RowDefinitions="260,*"
+                  RowSpacing="10">
+
+                <Border Grid.Row="0"
+                        Background="#15191F"
+                        BorderBrush="#303844"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12">
+
+                    <Grid RowDefinitions="Auto,*"
+                          RowSpacing="8">
+
+                        <TextBlock Grid.Row="0"
+                                   Text="Planned Changes"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2"/>
+
+                        <TextBox Grid.Row="1"
+                                 Text="{Binding WearableWizardPlanText}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 FontFamily="Consolas"
+                                 Background="#101318"
+                                 Foreground="#DDE6F0"/>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1"
+                      RowDefinitions="*,*"
+                      RowSpacing="10">
+
+                    <Border Grid.Row="0"
+                            Background="#15191F"
+                            BorderBrush="#303844"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
+                              RowSpacing="6">
+
+                            <TextBlock Grid.Row="0"
+                                       Text="Free Animation Slot Browser"
+                                       FontWeight="Bold"
+                                       Foreground="#E4EAF2"/>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <ComboBox Grid.Column="0"
+                                          ItemsSource="{Binding WearableWizardSlotFileOptions}"
+                                          SelectedItem="{Binding WearableWizardSelectedSlotFile, Mode=TwoWay}"/>
+
+                                <Button Grid.Column="1"
+                                        Content="Refresh"
+                                        Command="{Binding RefreshWearableWizardFreeSlotsCommand}"/>
+                            </Grid>
+
+                            <TextBox Grid.Row="2"
+                                     Watermark="Search body/file/type..."
+                                     Text="{Binding WearableWizardSlotSearchText, Mode=TwoWay}"/>
+
+                            <WrapPanel Grid.Row="3">
+                                <CheckBox Content="H (Monster)" Margin="0,0,12,0" IsChecked="{Binding WearableWizardSlotShowHFilter, Mode=TwoWay}"/>
+                                <CheckBox Content="L (Animal)" Margin="0,0,12,0" IsChecked="{Binding WearableWizardSlotShowLFilter, Mode=TwoWay}"/>
+                                <CheckBox Content="P (Human/Equip)" IsChecked="{Binding WearableWizardSlotShowPFilter, Mode=TwoWay}"/>
+                            </WrapPanel>
+
+                            <ListBox Grid.Row="4"
+                                     ItemsSource="{Binding WearableWizardFreeSlots}"
+                                     SelectedItem="{Binding WearableWizardSelectedFreeSlot, Mode=TwoWay}">
+
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="45,70,*,70" ColumnSpacing="8" Margin="2">
+                                            <TextBlock Grid.Column="0" Text="{Binding TypeLetter}" Foreground="#E4EAF2" FontWeight="Bold"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding BodyIndex}" Foreground="#DDE6F0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding FileName}" Foreground="#AAB4C0"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding TrueBodyId}" Foreground="#8FD18F"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Button Grid.Row="5"
+                                    Content="Use Selected Slot"
+                                    HorizontalAlignment="Left"
+                                    Command="{Binding UseWearableWizardSelectedSlotCommand}"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Background="#15191F"
+                            BorderBrush="#303844"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8">
+
+                        <Grid RowDefinitions="Auto,Auto,*,Auto"
+                              RowSpacing="6">
+
+                            <TextBlock Grid.Row="0"
+                                       Text="Existing Animation Source Browser"
+                                       FontWeight="Bold"
+                                       Foreground="#E4EAF2"/>
+
+                            <TextBox Grid.Row="1"
+                                     Watermark="Search P-slot animations..."
+                                     Text="{Binding WearableWizardSourceAnimationSearchText, Mode=TwoWay}"/>
+
+                            <ListBox Grid.Row="2"
+                                     ItemsSource="{Binding WearableWizardSourceAnimations}"
+                                     SelectedItem="{Binding WearableWizardSelectedSourceAnimation, Mode=TwoWay}">
+
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="70,*,120" ColumnSpacing="8" Margin="2">
+                                            <TextBlock Grid.Column="0" Text="{Binding BodyId}" Foreground="#8FD18F" FontWeight="Bold"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding DisplayName}" Foreground="#DDE6F0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding SourceFile}" Foreground="#AAB4C0"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Button Grid.Row="3"
+                                    Content="Use Selected Source Animation"
+                                    HorizontalAlignment="Left"
+                                    Command="{Binding UseWearableWizardSourceAnimationCommand}"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,207 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             xmlns:converters="clr-namespace:UltimaAnimationForge.Converters"
+             x:Class="UltimaAnimationForge.Views.Tabs.MultisTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <UserControl.Resources>
+        <converters:IsMulMultiSourceConverter x:Key="IsMulMultiSourceConverter"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,*"
+          Background="#151A20">
+
+        <!-- Main toolbar -->
+        <Border Grid.Row="0"
+                Background="#1B222B"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="8">
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="8">
+
+                <Button Content="Load Multis"
+                        Command="{Binding LoadMultisCommand}"/>
+
+                <Button Content="Save Multis"
+                        Command="{Binding SaveMultisCommand}"/>
+
+                <Button Content="Open Editor"
+                        Command="{Binding OpenMultiEditorCommand}"/>
+
+                <Button Content="Free Slots"
+                        Command="{Binding ToggleMultiFreeSlotsCommand}"/>
+
+                <SplitButton Content="Export">
+                    <SplitButton.Flyout>
+                        <MenuFlyout>
+                            <MenuItem Header="Export UOX3"
+                                      Command="{Binding ExportSelectedMultiUox3Command}"/>
+                            <MenuItem Header="Export PNG"
+                                      Command="{Binding ExportSelectedMultiPngCommand}"/>
+                            <MenuItem Header="Export TXT"
+                                      Command="{Binding ExportSelectedMultiTxtCommand}"/>
+                            <MenuItem Header="Export CSV"
+                                      Command="{Binding ExportSelectedMultiCsvCommand}"/>
+                        </MenuFlyout>
+                    </SplitButton.Flyout>
+                </SplitButton>
+
+                <Button Content="Import"
+                        Command="{Binding ImportSelectedMultiCommand}"/>
+
+                <Separator Width="1"/>
+
+                <TextBlock Text="Source"
+                           VerticalAlignment="Center"
+                           Foreground="#C7D1DB"/>
+
+                <ComboBox Width="180"
+                          ItemsSource="{Binding MultiSourceOptions}"
+                          SelectedItem="{Binding SelectedMultiSource}"/>
+
+                <CheckBox Content="UOHSA 16-byte format"
+                          IsChecked="{Binding UseUohsaMultiFormat}"
+                          VerticalAlignment="Center"
+                          IsEnabled="{Binding SelectedMultiSource, Converter={StaticResource IsMulMultiSourceConverter}}"/>
+
+                <TextBlock Text="Height Cut"
+                           VerticalAlignment="Center"
+                           Foreground="#C7D1DB"/>
+
+                <Slider Width="240"
+                        Minimum="-128"
+                        Maximum="127"
+                        Value="{Binding MultiHeightCut, Mode=TwoWay}"/>
+
+                <TextBlock Text="{Binding MultiHeightCut}"
+                           Width="40"
+                           VerticalAlignment="Center"
+                           Foreground="#C7D1DB"/>
+
+                <ComboBox Width="160"
+                          ItemsSource="{Binding MultiPreviewModes}"
+                          SelectedItem="{Binding SelectedMultiPreviewMode}"/>
+
+                <TextBlock Text="{Binding MultiStatusText}"
+                           MinWidth="260"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="#AEB8C2"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Full tab body -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="320,*,380"
+              Background="#0F141A">
+
+            <!-- Left list -->
+            <Border Grid.Column="0"
+                    Background="#151A20"
+                    BorderBrush="#2D3440"
+                    BorderThickness="0,0,1,0"
+                    Padding="8">
+
+                <Grid RowDefinitions="Auto,Auto,*"
+                      RowSpacing="8">
+
+                    <Grid Grid.Row="0"
+                          ColumnDefinitions="Auto,*"
+                          ColumnSpacing="8">
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Multis"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"
+                                   Foreground="#E8EDF2"/>
+
+                        <ComboBox Grid.Column="1"
+                                  Width="115"
+                                  HorizontalAlignment="Right"
+                                  ItemsSource="{Binding MultiFilterOptions}"
+                                  SelectedItem="{Binding SelectedMultiFilter}"/>
+                    </Grid>
+
+                    <TextBox Grid.Row="1"
+                             Watermark="Search ID / hex"
+                             Text="{Binding MultiSearchText, Mode=TwoWay}"/>
+
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding MultiEntries}"
+                             SelectedItem="{Binding SelectedMulti}"
+                             Background="#1B222B">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayText}"
+                                           FontFamily="Consolas"
+                                           FontSize="12"
+                                           Foreground="#E8EDF2"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Center preview -->
+            <Border Grid.Column="1"
+                    Background="#0B0F14"
+                    Padding="8">
+
+                <Grid RowDefinitions="Auto,*"
+                      RowSpacing="8">
+
+                    <TextBlock Text="Preview"
+                               FontSize="15"
+                               FontWeight="Bold"
+                               Foreground="#E8EDF2"/>
+
+                    <Border Grid.Row="1"
+                            Background="#080B0F"
+                            BorderBrush="#2D3440"
+                            BorderThickness="1">
+
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto">
+
+                            <Image Source="{Binding SelectedMultiPreview}"
+                                   Stretch="None"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Right components -->
+            <Border Grid.Column="2"
+                    Background="#151A20"
+                    BorderBrush="#2D3440"
+                    BorderThickness="1,0,0,0"
+                    Padding="8">
+
+                <Grid RowDefinitions="Auto,*"
+                      RowSpacing="8">
+
+                    <TextBlock Text="Components"
+                               FontSize="15"
+                               FontWeight="Bold"
+                               Foreground="#E8EDF2"/>
+
+                    <TextBox Grid.Row="1"
+                             Text="{Binding SelectedMultiComponentsText}"
+                             AcceptsReturn="True"
+                             IsReadOnly="True"
+                             FontFamily="Consolas"
+                             FontSize="12"
+                             TextWrapping="NoWrap"
+                             Background="#0F141A"
+                             Foreground="#E8EDF2"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

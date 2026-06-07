@@ -1,0 +1,221 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.GumpsTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Border Grid.Row="0"
+                Background="#1E232A"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="8"
+                        VerticalAlignment="Center">
+
+                <ComboBox Width="145"
+                          ItemsSource="{Binding GumpSharpenModes}"
+                          SelectedItem="{Binding SelectedGumpSharpenMode}"/>
+
+                <Button Content="Sharpen"
+                        Command="{Binding SharpenSelectedGumpCommand}"/>
+
+                <Button Content="Contrast +"
+                        Command="{Binding IncreaseGumpContrastCommand}"/>
+
+                <Button Content="Contrast -"
+                        Command="{Binding DecreaseGumpContrastCommand}"/>
+
+                <Button Content="Brighten"
+                        Command="{Binding BrightenGumpCommand}"/>
+
+                <Button Content="Darken"
+                        Command="{Binding DarkenGumpCommand}"/>
+
+                <Button Content="Sat +"
+                        Command="{Binding IncreaseGumpSaturationCommand}"/>
+
+                <Button Content="Sat -"
+                        Command="{Binding DecreaseGumpSaturationCommand}"/>
+
+                <Button Content="Outline"
+                        Command="{Binding OutlineGumpCommand}"/>
+
+                <Button Content="Load Overlay Image"
+                        Command="{Binding LoadGumpOverlayImageCommand}"/>
+
+                <TextBlock Text="Overlay Opacity %"
+                           Foreground="#AAB4C0"
+                           VerticalAlignment="Center"/>
+
+                <NumericUpDown Minimum="0"
+                               Maximum="100"
+                               Increment="5"
+                               Width="125"
+                               Value="{Binding GumpOverlayOpacityPercent}"/>
+
+                <ComboBox Width="120"
+                          ItemsSource="{Binding GumpOverlayBlendModes}"
+                          SelectedItem="{Binding SelectedGumpOverlayBlendMode}"/>
+
+                <Button Content="Apply Overlay To Gump"
+                        Command="{Binding ApplyOverlayToGumpCommand}"/>
+
+                <Button Content="Save Edit"
+                        Command="{Binding SaveGumpEditCommand}"/>
+
+                <Button Content="Reset Edit"
+                        Command="{Binding ResetGumpEditPreviewCommand}"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="300,*,260"
+              Background="#111317">
+
+            <Border Grid.Column="0"
+                    BorderBrush="#343B46"
+                    BorderThickness="0,0,1,0"
+                    Background="#161A20"
+                    Padding="8">
+                <Grid RowDefinitions="Auto,*">
+
+                    <StackPanel Grid.Row="0"
+                                Spacing="6"
+                                Margin="0,0,0,8">
+                        <TextBlock Text="Search"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2"/>
+
+                        <TextBox Watermark="Gump ID..."
+                                 Text="{Binding GumpSearchText}"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding GumpEntries}"
+                             SelectedItem="{Binding SelectedGump}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*"
+                                      Margin="6">
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsSelectedForExport}"
+                                              IsVisible="{Binding IsValid}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,8,0"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding DisplayText}"
+                                               FontWeight="SemiBold"
+                                               Foreground="#E4EAF2"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Column="1">
+
+                <ScrollViewer IsVisible="{Binding !ShowGumpParallelView}"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                    <Grid HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Margin="16">
+
+                        <Border Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                Padding="20">
+                            <Canvas Width="300"
+                                    Height="400">
+
+                                <Image Source="{Binding PaperdollTemplateBitmap}"
+                                       IsVisible="{Binding ShowPaperdollTemplate}"
+                                       Opacity="{Binding PaperdollTemplateOpacity}"
+                                       Canvas.Left="{Binding PaperdollTemplateOffsetX}"
+                                       Canvas.Top="{Binding PaperdollTemplateOffsetY}"
+                                       Stretch="None"/>
+
+                                <Image Source="{Binding SelectedGumpBitmap}"
+                                       Canvas.Left="{Binding GumpWearableOffsetX}"
+                                       Canvas.Top="{Binding GumpWearableOffsetY}"
+                                       Stretch="None"/>
+                            </Canvas>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+
+                <Grid IsVisible="{Binding ShowGumpParallelView}"
+                      ColumnDefinitions="*,*">
+
+                    <ScrollViewer Grid.Column="0"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                        <StackPanel HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="8">
+                            <TextBlock Text="Selected"
+                                       HorizontalAlignment="Center"
+                                       FontWeight="Bold"
+                                       Foreground="#E4EAF2"/>
+                            <Border Margin="16"
+                                    Background="#20242B"
+                                    BorderBrush="#343B46"
+                                    BorderThickness="1"
+                                    Padding="20">
+                                <Image Source="{Binding SelectedGumpBitmap}"
+                                       Stretch="None"/>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <ScrollViewer Grid.Column="1"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                        <StackPanel HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="8">
+                            <TextBlock Text="{Binding GumpParallelPairText}"
+                                       HorizontalAlignment="Center"
+                                       FontWeight="Bold"
+                                       Foreground="#E4EAF2"/>
+                            <Border Margin="16"
+                                    Background="#20242B"
+                                    BorderBrush="#343B46"
+                                    BorderThickness="1"
+                                    Padding="20">
+                                <Image Source="{Binding PairedGumpBitmap}"
+                                       Stretch="None"/>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+
+            <Border Grid.Column="2"
+                    Background="#1A1F26"
+                    BorderBrush="#343B46"
+                    BorderThickness="1,0,0,0"
+                    Padding="12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="8">
+
+                        <TextBlock Text="Gump Info"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="#E4EAF2"/>
+
+                        <!-- keep the rest of your right panel exactly from your old paste here -->
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

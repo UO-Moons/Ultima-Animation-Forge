@@ -1,0 +1,642 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.ArtTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Border Grid.Row="0"
+                Background="#1E232A"
+                BorderBrush="#343B46"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="8">
+                <Button Content="Load Art"
+                        Command="{Binding LoadArtTabCommand}" />
+
+                <Button Content="Art Cutter"
+                        Command="{Binding OpenArtCutterCommand}" />
+
+                <Button Content="Import Selected"
+                        Command="{Binding ImportSelectedArtCommand}" />
+
+                <Button Content="Mass Import"
+                        Command="{Binding MassImportArtCommand}" />
+
+                <Button Content="Export Selected"
+                        Command="{Binding ExportSelectedArtCommand}" />
+
+                <Button Content="Mass Export"
+                        Command="{Binding MassExportArtCommand}" />
+
+                <Button Content="Remove Checked"
+                        Command="{Binding RemoveCheckedArtCommand}" />
+
+                <Button Content="Undo Art Change"
+                        Command="{Binding UndoArtChangeCommand}" />
+
+                <Button Content="Check All"
+                        Command="{Binding CheckAllArtCommand}" />
+
+                <Button Content="Uncheck All"
+                        Command="{Binding UncheckAllArtCommand}" />
+
+                <Button Content="Save Art Changes"
+                        Command="{Binding SaveArtChangesCommand}" />
+
+                <Button Content="Save TileData"
+                        Command="{Binding SaveTileDataChangesCommand}" />
+
+                <Button Content="Save AnimData"
+                        Command="{Binding SaveAnimDataCommand}" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="360,*,300"
+              ColumnSpacing="10"
+              Margin="10">
+
+            <!-- Left: Filters + Art List -->
+            <Grid Grid.Column="0"
+                  RowDefinitions="Auto,*"
+                  RowSpacing="8">
+
+                <Border Grid.Row="0"
+                        Background="#20262E"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="8">
+                    <StackPanel Spacing="6">
+                        <TextBox Watermark="Search ID / hex..."
+                                 Text="{Binding ArtSearchText}" />
+
+                        <ComboBox ItemsSource="{Binding ArtSlotFilterOptions}"
+                                  SelectedItem="{Binding SelectedArtSlotFilter}"
+                                  Width="180"/>
+
+                        <ComboBox ItemsSource="{Binding ArtEraFilters}"
+                                  SelectedItem="{Binding SelectedArtEraFilter}"
+                                  PlaceholderText="Art Filter"
+                                  Width="220"/>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="12">
+                            <CheckBox Content="Land"
+                                      IsChecked="{Binding ShowLandArt}" />
+
+                            <CheckBox Content="Statics"
+                                      IsChecked="{Binding ShowStaticArt}" />
+
+                            <CheckBox Content="ArtTiles"
+                                      IsChecked="{Binding ShowArtThumbnails}" />
+                            <CheckBox Content="Browser"
+                                      IsChecked="{Binding ShowArtBrowserMode}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1"
+                        Background="#20262E"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                    <ListBox ItemsSource="{Binding ArtEntries}"
+                             SelectedItem="{Binding SelectedArtEntry}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,54,*"
+                                      ColumnSpacing="8"
+                                      Margin="6"
+                                      Classes.pendingArt="{Binding IsPendingChange}">
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsChecked}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,6,0"/>
+
+                                    <Border Grid.Column="1"
+                                            Width="48"
+                                            Height="48"
+                                            Background="#151A20"
+                                            BorderBrush="#343B46"
+                                            BorderThickness="1">
+                                        <Image Source="{Binding Thumbnail}"
+                                               Stretch="Uniform"
+                                               RenderOptions.BitmapInterpolationMode="None"/>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="2"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayText}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#E4EAF2" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+            </Grid>
+
+            <!-- Middle: Preview -->
+            <Grid Grid.Column="1"
+                  RowDefinitions="*,Auto"
+                  RowSpacing="10">
+
+                <Border Grid.Row="0"
+                        Background="#20262E"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="8">
+
+                    <Grid>
+
+                        <!-- Normal single preview -->
+                        <ScrollViewer IsVisible="{Binding ShowArtSinglePreview}"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto">
+
+                            <Grid HorizontalAlignment="Center"
+                                  VerticalAlignment="Center">
+
+                                <Image Source="{Binding SelectedArtBitmap}"
+                                       Stretch="None"
+                                       RenderOptions.BitmapInterpolationMode="None"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+
+                                <!-- UO 44x44 tile base overlay -->
+                                <Path IsVisible="{Binding ShowArtTileBaseOverlay}"
+                                      Data="M 0,22 L 22,0 L 44,22 L 22,44 Z"
+                                      Stroke="#D14B4B"
+                                      StrokeThickness="1"
+                                      Fill="#22D14B4B"
+                                      Width="44"
+                                      Height="44"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Bottom"/>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <!-- browser preview -->
+                        <ListBox IsVisible="{Binding ShowArtBrowserPreview}"
+                                 ItemsSource="{Binding ArtEntries}"
+                                 SelectedItem="{Binding SelectedArtEntry, Mode=TwoWay}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="0">
+
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                </Style>
+
+                                <Style Selector="ListBoxItem:selected Border.browserTile">
+                                    <Setter Property="BorderBrush" Value="#2D8CFF"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                    <Setter Property="Background" Value="#163A5C"/>
+                                </Style>
+                            </ListBox.Styles>
+
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="browserTile"
+                                            Classes.pendingArt="{Binding IsPendingChange}"
+                                            Width="54"
+                                            Height="54"
+                                            Margin="2"
+                                            Background="#151A20"
+                                            BorderBrush="#3A4350"
+                                            BorderThickness="1"
+                                            PointerPressed="ArtBrowserTile_PointerPressed"
+                                            PointerEntered="ArtBrowserTile_PointerEntered"
+                                            DoubleTapped="ArtBrowserTile_DoubleTapped">
+
+                                        <Grid>
+                                            <Image Source="{Binding BrowserThumbnail}"
+                                                   Stretch="Uniform"
+                                                   RenderOptions.BitmapInterpolationMode="None" />
+
+                                            <!-- Checked marker, not a checkbox -->
+                                            <Border IsVisible="{Binding IsChecked}"
+                                                    BorderBrush="#2D8CFF"
+                                                    BorderThickness="2"
+                                                    Background="#22163A5C" />
+
+                                            <!-- Pending unsaved marker -->
+                                            <Border IsVisible="{Binding IsPendingChange}"
+                                                    BorderBrush="#D14B4B"
+                                                    BorderThickness="2"
+                                                    Background="#22332020" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1"
+                        IsVisible="{Binding ShowSelectedArtAnimDataPreview}"
+                        Background="#151A20"
+                        BorderBrush="#343B46"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="8">
+                    <StackPanel Spacing="6">
+
+                        <TextBlock Text="{Binding SelectedArtAnimDataEntry.SecondaryText}"
+                                   HorizontalAlignment="Center"
+                                   Foreground="#C7D1DB"
+                                   FontWeight="SemiBold"/>
+
+                        <Button Content="{Binding ArtAnimDataPlayButtonText}"
+                                Command="{Binding ToggleArtAnimDataPlaybackCommand}"
+                                HorizontalAlignment="Center"
+                                MinWidth="80"/>
+
+                        <ItemsControl ItemsSource="{Binding SelectedArtAnimDataFrames}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center"
+                                                Spacing="8"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="58"
+                                            Height="70"
+                                            Background="#20262E"
+                                            BorderBrush="#343B46"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="4">
+                                        <StackPanel>
+                                            <Image Source="{Binding Bitmap}"
+                                                   Stretch="None"
+                                                   RenderOptions.BitmapInterpolationMode="None"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Top"/>
+
+                                            <TextBlock Text="{Binding FrameIndex}"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="#E4EAF2"
+                                                       FontSize="11"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Right: Art Info + TileData Info -->
+            <Border Grid.Column="2"
+                    Background="#20262E"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="12">
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Art Info"
+                                       FontWeight="Bold"
+                                       Foreground="#E4EAF2" />
+
+                            <TextBlock Text="{Binding SelectedArtEntry.DisplayText}"
+                                       Foreground="#C7D1DB"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock Text="{Binding SelectedArtEntry.SecondaryText}"
+                                       Foreground="#AAB4C0"
+                                       FontSize="12"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock Text="{Binding SelectedArtVisibleBounds.FullSizeText, StringFormat='Full size: {0}'}"
+                                       Foreground="#AAB4C0"
+                                       FontSize="12"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock Text="{Binding SelectedArtVisibleBounds.BoundsText, StringFormat='Visible bounds: {0}'}"
+                                       Foreground="#AAB4C0"
+                                       FontSize="12"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock Text="{Binding SelectedArtVisibleBounds.VisibleSizeText, StringFormat='Visible size: {0}'}"
+                                       Foreground="#AAB4C0"
+                                       FontSize="12"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock Text="{Binding SelectedArtVisibleBounds.PaddingText, StringFormat='Transparent padding: {0}'}"
+                                       Foreground="#AAB4C0"
+                                       FontSize="12"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock Text="Radar Color"
+                                       Foreground="#E4EAF2"
+                                       FontWeight="SemiBold"
+                                       Margin="0,8,0,0"/>
+
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8"
+                                        VerticalAlignment="Center">
+
+                                <Border Width="34"
+                                        Height="20"
+                                        Background="{Binding SelectedArtRadarBrush}"
+                                        BorderBrush="#566273"
+                                        BorderThickness="1"
+                                        CornerRadius="3"/>
+
+                                <TextBlock Text="{Binding SelectedArtRadarColorText}"
+                                           Foreground="#AAB4C0"
+                                           FontSize="12"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <TextBlock Text="Current radarcol.mul Color"
+                                       Foreground="#E4EAF2"
+                                       FontWeight="SemiBold"
+                                       Margin="0,8,0,0"/>
+
+                            <StackPanel Spacing="4">
+
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="8"
+                                            VerticalAlignment="Center">
+
+                                    <Border Width="34"
+                                            Height="20"
+                                            Background="{Binding SelectedArtCurrentRadarBrush}"
+                                            BorderBrush="#566273"
+                                            BorderThickness="1"
+                                            CornerRadius="3"/>
+
+                                    <TextBlock Text="{Binding SelectedArtCurrentRadarColorText}"
+                                               Foreground="#AAB4C0"
+                                               FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding SelectedArtRadarMatchText}"
+                                           Foreground="#E6C86E"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Margin="42,2,0,0"/>
+
+                            </StackPanel>
+
+                            <WrapPanel Orientation="Horizontal"
+                                       Margin="0,6,0,0">
+
+                                <Button Content="Apply Generated"
+                                        Command="{Binding ApplyGeneratedRadarColorToSelectedArtCommand}"
+                                        MinWidth="120"
+                                        Margin="0,0,6,6"/>
+
+                                <Button Content="Apply Checked"
+                                        Command="{Binding ApplyGeneratedRadarColorToCheckedArtCommand}"
+                                        MinWidth="110"
+                                        Margin="0,0,6,6"/>
+
+                                <Button Content="Revert"
+                                        Command="{Binding RevertSelectedRadarColorCommand}"
+                                        MinWidth="80"
+                                        Margin="0,0,6,6"/>
+
+                                <Button Content="Save RadarCol"
+                                        Command="{Binding SaveRadarColCommand}"
+                                        MinWidth="110"
+                                        Margin="0,0,6,6"/>
+                            </WrapPanel>
+                        </StackPanel>
+
+                        <Border Height="1"
+                                Background="#343B46"
+                                Margin="0,4"/>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="TileData Info"
+                                       FontWeight="Bold"
+                                       Foreground="#E4EAF2" />
+
+                            <TextBlock Text="{Binding SelectedArtTileDataEntry.DisplayText}"
+                                       Foreground="#C7D1DB"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock Text="{Binding SelectedArtTileDataEntry.Flags, StringFormat='Flags: 0x{0:X16}'}"
+                                       Foreground="#AAB4C0"
+                                       TextWrapping="Wrap" />
+
+                            <TextBlock Text="{Binding SelectedArtTileDataFlagNames, StringFormat='Flag Names: {0}'}"
+                                       Foreground="#AAB4C0"
+                                       TextWrapping="Wrap" />
+
+                            <Button Content="Edit Flags..."
+                                    Command="{Binding OpenArtTileDataFlagsCommand}" />
+
+                            <Button Content="{Binding ArtAnimDataEditButtonText}"
+                                    Command="{Binding OpenArtAnimDataEditorCommand}" />
+
+                            <CheckBox Content="Show TileData Editor"
+                                      IsChecked="{Binding ShowArtTileDataEditor}"
+                                      Foreground="#C7D1DB"/>
+
+                            <CheckBox Content="Apply field changes to checked art tiles"
+                                      IsChecked="{Binding ApplyTileDataFieldsToCheckedArt}"
+                                      Foreground="#C7D1DB"
+                                      Margin="0,6,0,8"/>
+
+                            <StackPanel IsVisible="{Binding ShowArtTileDataEditor}"
+                                        Spacing="4">
+
+                                <TextBlock Text="Name" Foreground="#AAB4C0"/>
+                                <TextBox Text="{Binding SelectedArtTileDataEntry.Name, Mode=TwoWay}"
+                                         LostFocus="ArtTileDataEditField_LostFocus"/>
+
+                                <TextBlock Text="Animation/Gump" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding SelectedArtTileDataEntry.Animation, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="640000"
+                                               Increment="1"
+                                               FormatString="0"
+                                               LostFocus="ArtTileDataEditField_LostFocus"/>
+
+                                <TextBlock Text="Weight" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding SelectedArtTileDataEntry.Weight, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="255"
+                                               Increment="1"
+                                               FormatString="0"
+                                               LostFocus="ArtTileDataEditField_LostFocus"/>
+
+                                <TextBlock Text="Quality/Layer/Light" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding SelectedArtTileDataEntry.Quality, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="255"
+                                               Increment="1"
+                                               FormatString="0"
+                                               LostFocus="ArtTileDataEditField_LostFocus"/>
+
+                                <TextBlock Text="Quantity" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding SelectedArtTileDataEntry.Quantity, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="255"
+                                               Increment="1"
+                                               FormatString="0"
+                                               LostFocus="ArtTileDataEditField_LostFocus"/>
+
+                                <TextBlock Text="Hue" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding SelectedArtTileDataEntry.Hue, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="255"
+                                               Increment="1"
+                                               FormatString="0"
+                                               LostFocus="ArtTileDataEditField_LostFocus"/>
+
+                                <TextBlock Text="Stack Offset" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding SelectedArtTileDataEntry.StackingOffset, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="255"
+                                               Increment="1"
+                                               FormatString="0"
+                                               LostFocus="ArtTileDataEditField_LostFocus"/>
+
+                                <TextBlock Text="Value" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding SelectedArtTileDataEntry.Value, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="255"
+                                               Increment="1"
+                                               FormatString="0"
+                                               LostFocus="ArtTileDataEditField_LostFocus"/>
+
+                                <TextBlock Text="Height" Foreground="#AAB4C0"/>
+                                <NumericUpDown Value="{Binding SelectedArtTileDataEntry.Height, Mode=TwoWay}"
+                                               Minimum="0"
+                                               Maximum="255"
+                                               Increment="1"
+                                               FormatString="0"
+                                               LostFocus="ArtTileDataEditField_LostFocus"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Expander Header="Image Tools"
+                                  IsExpanded="{Binding ShowArtImageTools}">
+                            <StackPanel Spacing="8"
+                                        Margin="0,8,0,0">
+
+                                <TextBlock Text="Enhance"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2"/>
+
+                                <TextBlock Text="{Binding ArtBrightness, StringFormat='Brightness: {0:0}'}"/>
+                                <Slider Minimum="-80"
+                                        Maximum="80"
+                                        Value="{Binding ArtBrightness}"/>
+
+                                <TextBlock Text="{Binding ArtContrast, StringFormat='Contrast: {0:0}'}"/>
+                                <Slider Minimum="-80"
+                                        Maximum="80"
+                                        Value="{Binding ArtContrast}"/>
+
+                                <TextBlock Text="{Binding ArtSharpness, StringFormat='Sharpness: {0:0}'}"/>
+                                <Slider Minimum="0"
+                                        Maximum="100"
+                                        Value="{Binding ArtSharpness}"/>
+
+                                <ComboBox Width="110"
+                                          ItemsSource="{Binding ArtSharpenModes}"
+                                          SelectedItem="{Binding SelectedArtSharpenMode}"/>
+
+                                <Button Content="Apply Enhancement"
+                                        Command="{Binding ApplyArtEnhancementCommand}"/>
+
+                                <Border Height="1"
+                                        Background="#343B46"
+                                        Margin="0,4"/>
+
+                                <TextBlock Text="Overlay"
+                                           FontWeight="Bold"
+                                           Foreground="#E4EAF2"/>
+
+                                <Button Content="Load Overlay Image"
+                                        Command="{Binding LoadArtOverlayImageCommand}"/>
+
+                                <TextBlock Text="{Binding ArtOverlayOpacity, StringFormat='Opacity: {0:0}%'}"/>
+                                <Slider Minimum="0"
+                                        Maximum="100"
+                                        Value="{Binding ArtOverlayOpacity}"/>
+
+                                <ComboBox ItemsSource="{Binding ArtOverlayBlendModes}"
+                                          SelectedItem="{Binding SelectedArtOverlayBlendMode}"/>
+
+                                <Button Content="Apply Overlay To Art"
+                                        Command="{Binding ApplyArtOverlayCommand}"/>
+
+                                <Border Height="1"
+                                        Background="#343B46"
+                                        Margin="0,4"/>
+
+                                <Button Content="Queue Art Edit"
+                                        Command="{Binding QueueSelectedArtEditCommand}"/>
+
+                                <Button Content="Reset Edit"
+                                        Command="{Binding ResetArtEditCommand}"/>
+                            </StackPanel>
+                        </Expander>
+
+                        <CheckBox Content="Show UO tile base"
+                                  IsChecked="{Binding ShowArtTileBaseOverlay}"
+                                  Foreground="#C7D1DB"
+                                  Margin="0,6,0,0"/>
+
+                        <Border Height="1"
+                                Background="#343B46"
+                                Margin="0,8,0,4"/>
+
+                        <StackPanel Spacing="4"
+                                    IsVisible="{Binding ShowSelectedArtEquipmentGump}">
+                            <TextBlock Text="Equipment Gump"
+                                       FontWeight="Bold"
+                                       Foreground="#E4EAF2" />
+
+                            <TextBlock Text="{Binding SelectedArtMaleEquipmentGumpText}"
+                                       Foreground="#AAB4C0"
+                                       TextWrapping="Wrap" />
+
+                            <Border Background="#151A20"
+                                    BorderBrush="#343B46"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="8"
+                                    HorizontalAlignment="Left">
+                                <Image Source="{Binding SelectedArtMaleEquipmentGumpBitmap}"
+                                       Stretch="None"
+                                       RenderOptions.BitmapInterpolationMode="None" />
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+
+</UserControl>

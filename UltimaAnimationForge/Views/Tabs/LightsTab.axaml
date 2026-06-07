@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:UltimaAnimationForge.ViewModels"
+             x:Class="UltimaAnimationForge.Views.Tabs.LightsTab"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Border Grid.Row="0" Background="#1E232A" Padding="12,8">
+            <WrapPanel Orientation="Horizontal">
+                <Button Content="Load" Command="{Binding LoadLightsCommand}" Margin="0,0,6,6"/>
+                <Button Content="Save" Command="{Binding SaveLightsCommand}" Margin="0,0,6,6"/>
+                <Button Content="Reset" Command="{Binding ResetLightsCommand}" Margin="0,0,6,6"/>
+                <Button Content="Undo" Command="{Binding UndoLightEditCommand}" Margin="0,0,6,6"/>
+                <Button Content="Redo" Command="{Binding RedoLightEditCommand}" Margin="0,0,6,6"/>
+
+                <CheckBox Content="Show Removed"
+                          IsChecked="{Binding ShowRemovedLightSlots, Mode=TwoWay}"
+                          VerticalAlignment="Center"
+                          Margin="0,0,10,6"/>
+
+                <Button Content="Import PNG" Command="{Binding ImportSelectedLightPngCommand}" Margin="0,0,6,6"/>
+                <Button Content="Export PNG" Command="{Binding ExportSelectedLightPngCommand}" Margin="0,0,10,6"/>
+
+                <TextBlock Text="W" VerticalAlignment="Center" Foreground="#AAB4C0" Margin="0,0,4,6"/>
+                <NumericUpDown Value="{Binding NewLightWidth, Mode=TwoWay}"
+                               Minimum="8"
+                               Maximum="600"
+                               Width="120"
+                               FormatString="0"/>
+
+                <TextBlock Text="H" VerticalAlignment="Center" Foreground="#AAB4C0" Margin="0,0,4,6"/>
+                <NumericUpDown Value="{Binding NewLightHeight, Mode=TwoWay}"
+                               Minimum="8"
+                               Maximum="600"
+                               Width="120"
+                               FormatString="0"/>
+
+                <TextBlock Text="Strength" VerticalAlignment="Center" Foreground="#AAB4C0" Margin="0,0,4,6"/>
+                <NumericUpDown Value="{Binding LightPresetStrength, Mode=TwoWay}"
+                               Minimum="1"
+                               Maximum="31"
+                               Width="120"
+                               FormatString="0"
+                               Margin="0,0,10,6"/>
+
+                <Button Content="Light Tools" Margin="0,0,10,6">
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuItem Header="New Blank" Command="{Binding CreateBlankLightCommand}" />
+                            <MenuItem Header="Clear Selected" Command="{Binding ClearSelectedLightCommand}" />
+                            <MenuItem Header="Remove Selected" Command="{Binding RemoveSelectedLightCommand}" />
+                            <MenuItem Header="Round Preset" Command="{Binding CreateRoundLightCommand}" />
+                            <MenuItem Header="Window Preset" Command="{Binding CreateWindowLightCommand}" />
+                            <MenuItem Header="Door Slit Preset" Command="{Binding CreateDoorSlitLightCommand}" />
+                            <MenuItem Header="Soften Selected" Command="{Binding SoftenSelectedLightCommand}" />
+                            <MenuItem Header="Sharpen Selected" Command="{Binding SharpenSelectedLightCommand}" />
+                            <MenuItem Header="Flip Horizontal" Command="{Binding FlipSelectedLightHorizontalCommand}" />
+                            <MenuItem Header="Flip Vertical" Command="{Binding FlipSelectedLightVerticalCommand}" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+
+                <TextBlock Text="Brush" VerticalAlignment="Center" Foreground="#AAB4C0" Margin="0,0,4,6"/>
+                <NumericUpDown Value="{Binding LightBrushSize, Mode=TwoWay}"
+                               Minimum="1"
+                               Maximum="100"
+                               Width="120"
+                               FormatString="0"
+                               Margin="0,0,6,6"/>
+
+                <TextBlock Text="Paint" VerticalAlignment="Center" Foreground="#AAB4C0" Margin="0,0,4,6"/>
+                <NumericUpDown Value="{Binding LightBrushStrength, Mode=TwoWay}"
+                               Minimum="1"
+                               Maximum="31"
+                               Width="120"
+                               FormatString="0"
+                               Margin="0,0,6,6"/>
+
+                <CheckBox Content="Erase"
+                          IsChecked="{Binding LightBrushErase, Mode=TwoWay}"
+                          VerticalAlignment="Center"
+                          Margin="0,0,6,6"/>
+            </WrapPanel>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="300,*"
+              Margin="10"
+              ColumnSpacing="10">
+
+            <ListBox Grid.Column="0"
+                     ItemsSource="{Binding LightEntries}"
+                     SelectedItem="{Binding SelectedLightEntry}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding DisplayText}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding SizeText}" Foreground="#AAB4C0"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Border x:Name="LightPreviewPaintSurface"
+                    Grid.Column="1"
+                    Background="#D0D0D0"
+                    BorderBrush="#343B46"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20"
+                    PointerPressed="LightPreviewPaintSurface_PointerPressed"
+                    PointerMoved="LightPreviewPaintSurface_PointerMoved"
+                    PointerReleased="LightPreviewPaintSurface_PointerReleased">
+
+                <Image x:Name="LightPreviewImage"
+                       Source="{Binding SelectedLightEntry.Preview, TargetNullValue={x:Null}}"
+                       Stretch="None"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
