@@ -527,34 +527,70 @@ public partial class MainWindowViewModel
             return new List<UopFrameIndexData>();
         }
 
-        List<UopFrameIndexData> directionFrames = frameIndexes
-            .Where(frame => frame.Direction == directionIndex)
-            .OrderBy(frame => frame.FrameNumber)
-            .ThenBy(frame => frame.StreamPosition)
+        List<UopFrameIndexData> ordered = frameIndexes
+            .OrderBy(x => x.FrameNumber)
+            .ThenBy(x => x.StreamPosition)
             .ToList();
 
-        if (directionFrames.Count == 0)
+        List<UopFrameIndexData> filled = new();
+
+        int lastId = 1;
+
+        foreach (UopFrameIndexData frame in ordered)
         {
-            List<UopFrameIndexData> orderedFrameIndexes = new List<UopFrameIndexData>(frameIndexes);
-            orderedFrameIndexes.Sort((left, right) =>
-                left.StreamPosition.CompareTo(right.StreamPosition));
-
-            uint framesPerDirection = (uint)Math.Ceiling(orderedFrameIndexes.Count / 5.0);
-            if (framesPerDirection == 0 && orderedFrameIndexes.Count > 0)
+            while (frame.FrameNumber - lastId > 1)
             {
-                framesPerDirection = 1;
+                lastId++;
+
+                filled.Add(new UopFrameIndexData
+                {
+                    Direction = 0,
+                    FrameNumber = (ushort)lastId,
+                    Left = 0,
+                    Top = 0,
+                    Right = 0,
+                    Bottom = 0,
+                    FrameDataOffset = 0,
+                    StreamPosition = 0
+                });
             }
 
-            int startIndex = directionIndex * (int)framesPerDirection;
-            int endIndex = Math.Min(startIndex + (int)framesPerDirection, orderedFrameIndexes.Count);
-
-            for (int index = startIndex; index < endIndex; index++)
-            {
-                directionFrames.Add(orderedFrameIndexes[index]);
-            }
+            filled.Add(frame);
+            lastId = frame.FrameNumber;
         }
 
-        return directionFrames;
+        int realFrameCount = (int)Math.Round(filled.Count / 5.0f);
+
+        if (realFrameCount <= 0)
+        {
+            return new List<UopFrameIndexData>();
+        }
+
+        List<UopFrameIndexData> result = new();
+
+        foreach (UopFrameIndexData frame in filled)
+        {
+            int frameDir = (frame.FrameNumber - 1) / realFrameCount;
+
+            if (frameDir < directionIndex)
+            {
+                continue;
+            }
+
+            if (frameDir > directionIndex)
+            {
+                break;
+            }
+
+            if (frame.StreamPosition == 0 || frame.FrameDataOffset == 0)
+            {
+                continue;
+            }
+
+            result.Add(frame);
+        }
+
+        return result;
     }
 
     private WriteableBitmap? DecodeUopFrame(byte[] blockData, List<UopFrameIndexData> allFrameIndexes, UopFrameIndexData targetFrame)
@@ -1102,10 +1138,7 @@ public partial class MainWindowViewModel
             return decoded;
         }
 
-        List<UopFrameIndexData> directionFrames = frameIndexes
-            .Where(x => x.Direction == directionIndex)
-            .OrderBy(x => x.FrameNumber)
-            .ToList();
+        List<UopFrameIndexData> directionFrames = GetUopDirectionFrames(frameIndexes, directionIndex);
 
         foreach (UopFrameIndexData frameIndex in directionFrames)
         {

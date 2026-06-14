@@ -8,6 +8,7 @@ namespace UltimaAnimationForge.Services;
 
 public class UopAnimationDataSource : IAnimationDataSource
 {
+    private const int MaxUopActions = 80;
     private readonly BodyConvDefService bodyConvDefService = new();
     private readonly MobTypesService mobTypesService = new();
 
@@ -189,8 +190,10 @@ public class UopAnimationDataSource : IAnimationDataSource
         switch (bodyTypeName)
         {
             case "MONSTER":
-            case "SEA_MONSTER":
                 return 22;
+
+            case "SEA_MONSTER":
+                return 9;
 
             case "ANIMAL":
                 return 13;
@@ -357,33 +360,19 @@ public class UopAnimationDataSource : IAnimationDataSource
 
     public List<int> GetAvailableActionIndices(int bodyId)
     {
-        HashSet<int> availableActions = new HashSet<int>();
+        List<int> actions = new List<int>();
 
-        Dictionary<int, UopGroupLocation>? groupMap = null;
-        groupLookupByBody.TryGetValue(bodyId, out groupMap);
-
-        if (groupMap != null)
+        for (int action = 0; action < MaxUopActions; action++)
         {
-            foreach (int groupIndex in groupMap.Keys)
+            int resolvedGroup = ResolveRequestedActionToUopGroup(bodyId, action);
+
+            if (TryGetGroupLocation(bodyId, resolvedGroup, out _))
             {
-                availableActions.Add(groupIndex);
+                actions.Add(action);
             }
         }
 
-        if (groupMap != null && actionRemapByBody.TryGetValue(bodyId, out Dictionary<int, int>? remaps))
-        {
-            foreach (KeyValuePair<int, int> pair in remaps)
-            {
-                if (groupMap.ContainsKey(pair.Value))
-                {
-                    availableActions.Add(pair.Key);
-                }
-            }
-        }
-
-        List<int> sortedActions = new List<int>(availableActions);
-        sortedActions.Sort();
-        return sortedActions;
+        return actions;
     }
 
     public bool TryResolveAnimationBlock(int bodyId, int actionIndex, int directionIndex, out ResolvedAnimationBlock resolvedBlock)
@@ -708,63 +697,49 @@ public class UopAnimationDataSource : IAnimationDataSource
             return;
         }
 
-        uint entryCount = reader.ReadUInt32();
+        int replacementCount = reader.ReadInt32();
 
-        if (!actionRemapByBody.TryGetValue(animationId, out Dictionary<int, int>? remaps))
+        Dictionary<int, int> remaps = new Dictionary<int, int>();
+
+        for (int i = 0; i < MaxUopActions; i++)
         {
-            remaps = new Dictionary<int, int>();
-            actionRemapByBody[animationId] = remaps;
-        }
-        else
-        {
-            remaps.Clear();
+            remaps[i] = i;
         }
 
-        if (!frameCountByBodyAndGroup.TryGetValue(animationId, out Dictionary<int, int>? groupFrameCounts))
-        {
-            groupFrameCounts = new Dictionary<int, int>();
-            frameCountByBodyAndGroup[animationId] = groupFrameCounts;
-        }
-        else
-        {
-            groupFrameCounts.Clear();
-        }
+        Dictionary<int, int> groupFrameCounts = new Dictionary<int, int>();
 
-        for (uint index = 0; index < entryCount; index++)
+        // Some sequence files use 48 or 68 as non-remap blocks.
+        if (replacementCount != 48 && replacementCount != 68)
         {
-            if (reader.BaseStream.Position + 72 > reader.BaseStream.Length)
+            for (int index = 0; index < replacementCount; index++)
             {
-                break;
-            }
-
-            uint uopGroupIndexValue = reader.ReadUInt32();
-            int frameCount = reader.ReadInt32();
-            uint mulGroupIndexValue = reader.ReadUInt32();
-            float speed = reader.ReadSingle();
-            byte[] extraData = reader.ReadBytes(56);
-
-            _ = speed;
-            _ = extraData;
-
-            if (uopGroupIndexValue >= 200)
-            {
-                continue;
-            }
-
-            int uopGroupIndex = (int)uopGroupIndexValue;
-
-            if (frameCount == 0)
-            {
-                if (mulGroupIndexValue < 200)
+                if (reader.BaseStream.Position + 72 > reader.BaseStream.Length)
                 {
-                    remaps[uopGroupIndex] = (int)mulGroupIndexValue;
+                    break;
                 }
-            }
-            else if (frameCount > 0)
-            {
-                groupFrameCounts[uopGroupIndex] = frameCount;
+
+                int oldGroup = reader.ReadInt32();
+                uint frameCount = reader.ReadUInt32();
+                int newGroup = reader.ReadInt32();
+
+                if (frameCount == 0 &&
+                    oldGroup >= 0 &&
+                    oldGroup < MaxUopActions &&
+                    newGroup >= 0)
+                {
+                    remaps[oldGroup] = newGroup;
+                }
+                else if (frameCount > 0 && oldGroup >= 0)
+                {
+                    groupFrameCounts[oldGroup] = (int)frameCount;
+                }
+
+                reader.BaseStream.Seek(60, SeekOrigin.Current);
             }
         }
+
+        actionRemapByBody[animationId] = remaps;
+        frameCountByBodyAndGroup[animationId] = groupFrameCounts;
     }
 
     private int ResolveRequestedActionToUopGroup(int resolvedBodyId, int actionIndex)
@@ -821,51 +796,22 @@ public class UopAnimationDataSource : IAnimationDataSource
 
     public List<int> GetAvailableActionIndicesForSourceFile(int bodyId, string? sourceFileName)
     {
-        HashSet<int> availableActions = new HashSet<int>();
+        List<int> actions = new List<int>();
 
-        int resolvedBodyId = bodyId;
-
-        string? preferredFileName = string.IsNullOrWhiteSpace(sourceFileName)
-            ? null
-            : Path.GetFileName(sourceFileName);
-
-        if (!string.IsNullOrWhiteSpace(preferredFileName) &&
-            allGroupLocationsByBody.TryGetValue(resolvedBodyId, out Dictionary<int, List<UopGroupLocation>>? allGroupMap))
+        for (int action = 0; action < MaxUopActions; action++)
         {
-            foreach (KeyValuePair<int, List<UopGroupLocation>> pair in allGroupMap)
+            int resolvedGroup = ResolveRequestedActionToUopGroup(bodyId, action);
+
+            if (!TryGetGroupLocation(bodyId, resolvedGroup, out UopGroupLocation? location) ||
+                location == null ||
+                location.Reader == null)
             {
-                int groupIndex = pair.Key;
-
-                bool fileHasGroup = pair.Value.Any(x =>
-                    string.Equals(
-                        Path.GetFileName(x.Reader.FilePath),
-                        preferredFileName,
-                        StringComparison.OrdinalIgnoreCase));
-
-                if (fileHasGroup)
-                {
-                    availableActions.Add(groupIndex);
-                }
+                continue;
             }
 
-            if (actionRemapByBody.TryGetValue(resolvedBodyId, out Dictionary<int, int>? remaps))
-            {
-                foreach (KeyValuePair<int, int> pair in remaps)
-                {
-                    if (availableActions.Contains(pair.Value))
-                    {
-                        availableActions.Add(pair.Key);
-                    }
-                }
-            }
-        }
-        else
-        {
-            return GetAvailableActionIndices(bodyId);
+            actions.Add(action);
         }
 
-        List<int> sortedActions = new List<int>(availableActions);
-        sortedActions.Sort();
-        return sortedActions;
+        return actions;
     }
 }

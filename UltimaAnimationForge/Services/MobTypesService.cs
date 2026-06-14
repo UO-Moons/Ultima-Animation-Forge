@@ -50,7 +50,7 @@ public class MobTypesService
 
             string[] parts = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (parts.Length < 2)
+            if (parts.Length < 3)
             {
                 continue;
             }
@@ -61,7 +61,7 @@ public class MobTypesService
             }
 
             string typeName = parts[1].Trim().ToUpperInvariant();
-            string flagsText = parts.Length >= 3 ? parts[2].Trim() : "0";
+            string flagsText = parts[2].Trim();
 
             results[bodyId] = new MobTypeEntry
             {
