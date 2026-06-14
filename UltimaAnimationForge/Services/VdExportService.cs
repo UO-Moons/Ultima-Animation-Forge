@@ -65,22 +65,14 @@ public static class VdExportService
 
     public static short GetAnimTypeFromActionCount(int actionCount)
     {
-        if (actionCount == 13)
+        return actionCount switch
         {
-            return 1;
-        }
-
-        if (actionCount == 35)
-        {
-            return 2;
-        }
-
-        if (actionCount == 32)
-        {
-            return 4;
-        }
-
-        return 0;
+            13 => 1,
+            22 => 0,
+            35 => 2,
+            _ => throw new InvalidOperationException(
+                 "VD export only supports 13, 22, or 35 actions.")
+        };
     }
 
     public static int GetVdLength(short animType)
@@ -90,8 +82,8 @@ public static class VdExportService
             0 => 22,
             1 => 13,
             2 => 35,
-            4 => 32,
-            _ => 22
+            _ => throw new InvalidOperationException(
+                 "VD export only supports anim types 0, 1, or 2.")
         };
     }
 
@@ -130,41 +122,14 @@ public static class VdExportService
         writer.BaseStream.Seek(animPos, SeekOrigin.Begin);
 
         ushort[] palette = BuildExportPalette(frames);
+
         for (int i = 0; i < PaletteCapacity; i++)
         {
             writer.Write((ushort)(palette[i] ^ 0x8000));
         }
 
-        short animInitX = 0;
-        short animInitY = 0;
-
-        bool foundInitCoords = false;
-
-        for (int i = 0; i < frames.Count; i++)
-        {
-            VdFrameData frame = frames[i];
-
-            if (!foundInitCoords)
-            {
-                animInitX = frame.InitCoordsX;
-                animInitY = frame.InitCoordsY;
-                foundInitCoords = true;
-            }
-            else
-            {
-                if (frame.InitCoordsX < animInitX)
-                {
-                    animInitX = frame.InitCoordsX;
-                }
-
-                if (frame.InitCoordsY < animInitY)
-                {
-                    animInitY = frame.InitCoordsY;
-                }
-            }
-        }
-
         long startPosition = writer.BaseStream.Position;
+
         writer.Write(frames.Count);
 
         long seek = writer.BaseStream.Position;
@@ -177,7 +142,7 @@ public static class VdExportService
             seek = writer.BaseStream.Position;
 
             writer.BaseStream.Seek(curr, SeekOrigin.Begin);
-            SaveFrame(writer, frames[i], palette, animInitX, animInitY);
+            SaveFrame(writer, frames[i], palette);
             curr = writer.BaseStream.Position;
         }
 
@@ -186,8 +151,27 @@ public static class VdExportService
 
         writer.BaseStream.Seek(indexPos, SeekOrigin.Begin);
         writer.Write((int)length);
-        writer.Write(0);
+        writer.Write(GetDirectionExtra(frames));
+
         indexPos = writer.BaseStream.Position;
+    }
+
+    private static int GetDirectionExtra(List<VdFrameData> frames)
+    {
+        if (frames == null || frames.Count == 0)
+        {
+            return 0;
+        }
+
+        foreach (VdFrameData frame in frames)
+        {
+            if (frame.SourceExtra >= 0)
+            {
+                return frame.SourceExtra;
+            }
+        }
+
+        return 0;
     }
 
     private static ushort[] BuildExportPalette(List<VdFrameData> frames)
@@ -275,9 +259,7 @@ public static class VdExportService
     private static void SaveFrame(
         BinaryWriter writer,
         VdFrameData frame,
-        ushort[] palette,
-        short animInitX,
-        short animInitY)
+        ushort[] palette)
     {
         FramePixels pixels = ReadPixels(frame.Bitmap);
 
@@ -285,9 +267,6 @@ public static class VdExportService
         int height = pixels.Height;
         int centerX = frame.CenterX;
         int centerY = frame.CenterY;
-
-        int topX = Math.Abs(animInitX - frame.InitCoordsX);
-        int topY = Math.Abs(animInitY - frame.InitCoordsY);
 
         writer.Write((short)centerX);
         writer.Write((short)centerY);
@@ -327,8 +306,8 @@ public static class VdExportService
                 {
                     int chunkLength = Math.Min(remaining, 0x0FFF);
 
-                    int offsetX = currentRunStart - centerX + topX + 512;
-                    int offsetY = y - centerY - height + topY + 512;
+                    int offsetX = currentRunStart - centerX + 512;
+                    int offsetY = y - centerY - height + 512;
 
                     int header = chunkLength | (offsetY << 12) | (offsetX << 22);
                     header ^= DoubleXor;

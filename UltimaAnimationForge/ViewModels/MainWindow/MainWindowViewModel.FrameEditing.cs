@@ -296,7 +296,8 @@ public partial class MainWindowViewModel
                 EndCoordsY = frame.EndCoordsY,
                 FrameId = frame.FrameId,
                 FrameNumber = frame.FrameNumber,
-                DataOffset = frame.DataOffset
+                DataOffset = frame.DataOffset,
+                SourceExtra = frame.SourceExtra
             });
         }
 
@@ -555,7 +556,8 @@ public partial class MainWindowViewModel
             EndCoordsY = sourceFrame.EndCoordsY,
             FrameId = sourceFrame.FrameId,
             FrameNumber = sourceFrame.FrameNumber,
-            DataOffset = sourceFrame.DataOffset
+            DataOffset = sourceFrame.DataOffset,
+            SourceExtra = sourceFrame.SourceExtra
         };
     }
 
@@ -1573,7 +1575,8 @@ public partial class MainWindowViewModel
                 EndCoordsY = frame.EndCoordsY,
                 FrameId = frame.FrameId,
                 FrameNumber = frame.FrameNumber,
-                DataOffset = frame.DataOffset
+                DataOffset = frame.DataOffset,
+                SourceExtra = frame.SourceExtra
             });
         }
 
@@ -2057,7 +2060,8 @@ public partial class MainWindowViewModel
             EndCoordsY = sourceFrame.EndCoordsY,
             FrameId = sourceFrame.FrameId,
             FrameNumber = sourceFrame.FrameNumber,
-            DataOffset = sourceFrame.DataOffset
+            DataOffset = sourceFrame.DataOffset,
+            SourceExtra = sourceFrame.SourceExtra
         };
     }
 
@@ -2813,7 +2817,8 @@ public partial class MainWindowViewModel
             EndCoordsY = (short)(sourceFrame.EndCoordsY + composite.TopPadding),
             FrameId = sourceFrame.FrameId,
             FrameNumber = sourceFrame.FrameNumber,
-            DataOffset = sourceFrame.DataOffset
+            DataOffset = sourceFrame.DataOffset,
+            SourceExtra = sourceFrame.SourceExtra
         };
     }
 

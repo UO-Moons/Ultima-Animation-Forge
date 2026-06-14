@@ -150,9 +150,11 @@ public partial class MainWindowViewModel
             bool mulReady = await Task.Run(() => mulAnimationDataSource.Initialize(localPath));
             bool uopReady = shouldLoadUop &&
                             await Task.Run(() => uopAnimationDataSource.Initialize(localPath));
+            bool vdReady = await Task.Run(() => vdFolderAnimationDataSource.Initialize(localPath));
+
             UpdatePreferredAnimationSources();
 
-            if (!mulReady && !uopReady)
+            if (!mulReady && !uopReady && !vdReady)
             {
                 StatusText = "Cached data was found, but animation sources could not be initialized.";
                 IsLoading = false;
@@ -160,14 +162,14 @@ public partial class MainWindowViewModel
                 return;
             }
 
-            await ReportLoadingProgressAsync(40, "Loading cached MUL data...");
+            await ReportLoadingProgressAsync(40, "Loading cached animation data...");
 
             List<AnimationEntry> combinedEntries =
                 cacheData!.AnimationEntries ?? new List<AnimationEntry>();
 
             if (uopReady)
             {
-                await ReportLoadingProgressAsync(70, "Rebuilding UOP animation entries...");
+                await ReportLoadingProgressAsync(65, "Rebuilding UOP animation entries...");
 
                 const int uopBodiesToScan = 65536;
 
@@ -190,21 +192,39 @@ public partial class MainWindowViewModel
                     .ToList();
             }
 
+            if (vdReady)
+            {
+                await ReportLoadingProgressAsync(80, "Rebuilding VD animation entries...");
+
+                List<AnimationEntry> liveVdEntries =
+                    await Task.Run(() => vdFolderAnimationDataSource.BuildAnimationEntries(0));
+
+                foreach (AnimationEntry entry in liveVdEntries)
+                {
+                    entry.SourceMode = "VD";
+
+                    if (!entry.SecondaryText.Contains("| VD |", StringComparison.OrdinalIgnoreCase) &&
+                        !entry.SecondaryText.EndsWith("| VD", StringComparison.OrdinalIgnoreCase))
+                    {
+                        entry.SecondaryText += " | VD";
+                    }
+                }
+
+                combinedEntries = combinedEntries
+                    .Where(x => !string.Equals(x.SourceMode, "VD", StringComparison.OrdinalIgnoreCase))
+                    .Concat(liveVdEntries)
+                    .ToList();
+            }
+
             ApplyLoadedData(
                 combinedEntries,
-                new List<MulSlotEntry>());
+                cacheData.MulSlotEntries ?? new List<MulSlotEntry>());
 
-            await ReportLoadingProgressAsync(
-                100,
-                shouldLoadUop
-                    ? "Loaded cached MUL data and rebuilt UOP entries."
-                    : "Loaded cached MUL data.");
+            await ReportLoadingProgressAsync(100, "Loaded cached animation data.");
 
             StatusText =
                 "Loaded " + allAnimationEntries.Count +
-                " animation entries using " +
-                (shouldLoadUop ? "cached MUL data and live UOP scan" : "cached MUL data only") +
-                " for profile " +
+                " animation entries using cached data for profile " +
                 (activeProfile?.ProfileName ?? "Default") + ".";
 
             IsLoading = false;
@@ -245,9 +265,12 @@ public partial class MainWindowViewModel
                 await ReportLoadingProgressAsync(25, "Skipped UOP animation source for this profile.");
             }
 
+            loadResult.VdReady = await Task.Run(() => vdFolderAnimationDataSource.Initialize(localPath));
+            await ReportLoadingProgressAsync(30, "Initialized VD folder animation source.");
+
             UpdatePreferredAnimationSources();
 
-            if (!loadResult.MulReady && !loadResult.UopReady)
+            if (!loadResult.MulReady && !loadResult.UopReady && !loadResult.VdReady)
             {
                 StatusText = "No supported animation data source found.";
                 return;
@@ -256,7 +279,9 @@ public partial class MainWindowViewModel
             if (loadResult.MulReady)
             {
                 await ReportLoadingProgressAsync(35, "Scanning MUL animation entries...");
-                loadResult.MulEntries = await Task.Run(() => mulAnimationDataSource.BuildAnimationEntries(mulBodiesToScan));
+
+                loadResult.MulEntries =
+                    await Task.Run(() => mulAnimationDataSource.BuildAnimationEntries(mulBodiesToScan));
 
                 foreach (AnimationEntry entry in loadResult.MulEntries)
                 {
@@ -269,14 +294,16 @@ public partial class MainWindowViewModel
                     }
                 }
 
-                await ReportLoadingProgressAsync(58, "Finished scanning MUL animation entries.");
+                await ReportLoadingProgressAsync(55, "Finished scanning MUL animation entries.");
                 loadResult.MulSlots = new List<MulSlotEntry>();
             }
 
             if (loadResult.UopReady)
             {
-                await ReportLoadingProgressAsync(65, "Scanning UOP animation entries...");
-                loadResult.UopEntries = await Task.Run(() => uopAnimationDataSource.BuildAnimationEntries(uopBodiesToScan));
+                await ReportLoadingProgressAsync(60, "Scanning UOP animation entries...");
+
+                loadResult.UopEntries =
+                    await Task.Run(() => uopAnimationDataSource.BuildAnimationEntries(uopBodiesToScan));
 
                 foreach (AnimationEntry entry in loadResult.UopEntries)
                 {
@@ -289,14 +316,36 @@ public partial class MainWindowViewModel
                     }
                 }
 
-                await ReportLoadingProgressAsync(82, "Finished scanning UOP animation entries.");
+                await ReportLoadingProgressAsync(78, "Finished scanning UOP animation entries.");
             }
 
-            await ReportLoadingProgressAsync(86, "Building file lists...");
+            if (loadResult.VdReady)
+            {
+                await ReportLoadingProgressAsync(80, "Scanning VD animation entries...");
+
+                loadResult.VdEntries =
+                    await Task.Run(() => vdFolderAnimationDataSource.BuildAnimationEntries(0));
+
+                foreach (AnimationEntry entry in loadResult.VdEntries)
+                {
+                    entry.SourceMode = "VD";
+
+                    if (!entry.SecondaryText.Contains("| VD |", StringComparison.OrdinalIgnoreCase) &&
+                        !entry.SecondaryText.EndsWith("| VD", StringComparison.OrdinalIgnoreCase))
+                    {
+                        entry.SecondaryText += " | VD";
+                    }
+                }
+
+                await ReportLoadingProgressAsync(88, "Finished scanning VD animation entries.");
+            }
+
+            await ReportLoadingProgressAsync(90, "Building file lists...");
 
             List<AnimationEntry> combinedEntries = new List<AnimationEntry>();
             combinedEntries.AddRange(loadResult.MulEntries);
             combinedEntries.AddRange(loadResult.UopEntries);
+            combinedEntries.AddRange(loadResult.VdEntries);
 
             ApplyLoadedData(combinedEntries, loadResult.MulSlots);
 
@@ -310,13 +359,27 @@ public partial class MainWindowViewModel
 
             await Task.Run(() => animationCacheService.SaveCache(newCache));
 
+            List<string> loadedSources = new List<string>();
+
+            if (loadResult.MulReady)
+            {
+                loadedSources.Add("MUL");
+            }
+
+            if (loadResult.UopReady)
+            {
+                loadedSources.Add("UOP");
+            }
+
+            if (loadResult.VdReady)
+            {
+                loadedSources.Add("VD");
+            }
+
             StatusText =
-                "Loaded " + allAnimationEntries.Count + " animation entries from " +
-                (loadResult.MulReady && loadResult.UopReady
-                    ? "MUL and UOP"
-                    : loadResult.MulReady
-                        ? "MUL"
-                        : "UOP") + ".";
+                "Loaded " + allAnimationEntries.Count +
+                " animation entries from " +
+                string.Join(", ", loadedSources) + ".";
         }
         catch (Exception exception)
         {

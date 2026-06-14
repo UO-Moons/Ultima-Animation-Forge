@@ -198,7 +198,8 @@ public partial class MainWindowViewModel
                     EndCoordsY = 0,
                     FrameId = frameIndex,
                     FrameNumber = frameIndex,
-                    DataOffset = frameOffsets[frameIndex]
+                    DataOffset = frameOffsets[frameIndex],
+                    SourceExtra = currentResolvedAnimationBlock?.Extra ?? 0
                 };
 
                 editableFrames.Add(frameData);
@@ -994,7 +995,8 @@ public partial class MainWindowViewModel
                 EndCoordsY = 0,
                 FrameId = i,
                 FrameNumber = i,
-                DataOffset = 0
+                DataOffset = 0,
+                SourceExtra = currentResolvedAnimationBlock?.Extra ?? 0
             });
         }
 
@@ -1063,7 +1065,8 @@ public partial class MainWindowViewModel
                 EndCoordsY = 0,
                 FrameId = frameIndex,
                 FrameNumber = frameIndex,
-                DataOffset = frameOffsets[frameIndex]
+                DataOffset = frameOffsets[frameIndex],
+                SourceExtra = currentResolvedAnimationBlock?.Extra ?? 0
             });
         }
 

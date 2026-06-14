@@ -111,6 +111,7 @@ public sealed class VdFrameData
     public ushort FrameId { get; init; }
     public ushort FrameNumber { get; init; }
     public uint DataOffset { get; init; }
+    public int SourceExtra { get; init; }
 }
 
 public sealed class AnimationFrameThumbnail

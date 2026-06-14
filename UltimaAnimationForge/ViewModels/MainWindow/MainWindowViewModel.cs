@@ -23,6 +23,8 @@ namespace UltimaAnimationForge.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    private readonly VdFolderAnimationDataSource vdFolderAnimationDataSource = new();
+
     [ObservableProperty]
     private bool isAiAssistantAvailable;
 
@@ -783,10 +785,12 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         public bool MulReady { get; set; }
         public bool UopReady { get; set; }
+        public bool VdReady { get; set; }
 
-        public List<AnimationEntry> MulEntries { get; set; } = new List<AnimationEntry>();
-        public List<AnimationEntry> UopEntries { get; set; } = new List<AnimationEntry>();
-        public List<MulSlotEntry> MulSlots { get; set; } = new List<MulSlotEntry>();
+        public List<AnimationEntry> MulEntries { get; set; } = new();
+        public List<AnimationEntry> UopEntries { get; set; } = new();
+        public List<AnimationEntry> VdEntries { get; set; } = new();
+        public List<MulSlotEntry> MulSlots { get; set; } = new();
     }
 
     private readonly VdImportService vdImportService = new();
@@ -1585,15 +1589,25 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (entry == null)
         {
-            return null;
+            return activeAnimationDataSource;
         }
 
-        return entry.SourceMode switch
+        if (string.Equals(entry.SourceMode, "VD", StringComparison.OrdinalIgnoreCase))
         {
-            "UOP" => uopAnimationDataSource,
-            "MUL" => mulAnimationDataSource,
-            _ => null
-        };
+            return vdFolderAnimationDataSource;
+        }
+
+        if (string.Equals(entry.SourceMode, "UOP", StringComparison.OrdinalIgnoreCase))
+        {
+            return uopAnimationDataSource;
+        }
+
+        if (string.Equals(entry.SourceMode, "MUL", StringComparison.OrdinalIgnoreCase))
+        {
+            return mulAnimationDataSource;
+        }
+
+        return activeAnimationDataSource;
     }
 
 

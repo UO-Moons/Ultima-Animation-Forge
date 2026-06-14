@@ -277,7 +277,8 @@ public partial class MainWindowViewModel
             VdExportTargetType.Animal13 => 1,
             VdExportTargetType.Monster22 => 0,
             VdExportTargetType.Human35 => 2,
-            _ => 4
+            _ => throw new InvalidOperationException(
+                "Native 32-action VD export is not supported. Choose Animal13, Monster22, or Human35.")
         };
     }
 
@@ -1496,7 +1497,8 @@ public partial class MainWindowViewModel
                     EndCoordsY = frameIndex.Bottom,
                     FrameId = frameIndex.FrameNumber,
                     FrameNumber = frameIndex.FrameNumber,
-                    DataOffset = frameIndex.FrameDataOffset
+                    DataOffset = frameIndex.FrameDataOffset,
+                    SourceExtra = resolvedBlock.Extra
                 });
             }
 
@@ -1576,7 +1578,8 @@ public partial class MainWindowViewModel
                     EndCoordsY = 0,
                     FrameId = frameNumber,
                     FrameNumber = frameNumber,
-                    DataOffset = frameOffsets[frameNumber]
+                    DataOffset = frameOffsets[frameNumber],
+                    SourceExtra = resolvedBlock.Extra
                 });
             }
         }
@@ -1628,7 +1631,8 @@ public partial class MainWindowViewModel
 
                 FrameId = frame.FrameId,
                 FrameNumber = frame.FrameNumber,
-                DataOffset = frame.DataOffset
+                DataOffset = frame.DataOffset,
+                SourceExtra = frame.SourceExtra
             });
         }
 
